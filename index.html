@@ -29,30 +29,30 @@
       --c-plank:     #66BB6A;
       --c-crunches:  #FFCA28;
       --success:     #3FB950;
+      --gold:        #FFD700;
       --radius:      16px;
       --radius-sm:   10px;
-      --nav-h:       68px;
+      --nav-h:       64px;
       --sat:         env(safe-area-inset-top, 0px);
       --sab:         env(safe-area-inset-bottom, 0px);
     }
 
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow: hidden; }
 
-    /* ── Screen system ── */
     .screen { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
     .screen.hidden { display: none !important; }
 
-    /* ── Welcome screen ── */
+    /* ── Welcome ── */
     #screen-welcome {
       background: linear-gradient(160deg, #0D1117 0%, #1A1F2E 50%, #0D1117 100%);
-      align-items: center; justify-content: center; padding: 24px;
+      align-items: center; justify-content: center; padding: 24px; overflow-y: auto;
     }
     .welcome-logo { font-size: 56px; margin-bottom: 8px; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
     .welcome-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
-    .welcome-sub { font-size: 14px; color: var(--text-2); margin-bottom: 40px; text-align: center; }
+    .welcome-sub { font-size: 14px; color: var(--text-2); margin-bottom: 32px; text-align: center; }
     .welcome-card { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 380px; border: 1px solid var(--border); }
-    .welcome-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+    .welcome-card h2 { font-size: 13px; font-weight: 700; margin-bottom: 16px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
     .input-group { margin-bottom: 14px; }
     .input-group label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .input { width: 100%; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 16px; color: var(--text); outline: none; transition: border-color 0.2s; }
@@ -61,27 +61,40 @@
     .btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
     .btn:active { transform: scale(0.97); }
     .btn-primary { background: linear-gradient(135deg, #58A6FF, #1F6FEB); color: #fff; }
-    .btn-secondary { background: var(--surface-2); color: var(--text-2); margin-top: 10px; }
-    .divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--text-3); font-size: 12px; }
+    .btn-secondary { background: var(--surface-2); color: var(--text-2); margin-top: 10px; border: 1px solid var(--border); }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--text-3); font-size: 12px; }
     .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
-    .error-msg { color: #F85149; font-size: 13px; text-align: center; margin-top: 10px; min-height: 20px; }
+    .error-msg { color: #F85149; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
+
+    /* ── Avatar Picker ── */
+    #screen-avatar {
+      background: linear-gradient(160deg, #0D1117 0%, #1A1F2E 50%, #0D1117 100%);
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .avatar-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+    .avatar-sub { font-size: 14px; color: var(--text-2); margin-bottom: 24px; text-align: center; }
+    .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 24px; width: 100%; max-width: 360px; }
+    .avatar-opt { font-size: 30px; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .avatar-opt:active { transform: scale(0.9); }
+    .avatar-opt.selected { border-color: var(--primary); background: rgba(88,166,255,0.15); transform: scale(1.12); }
+    .avatar-preview { font-size: 64px; margin-bottom: 16px; transition: all 0.2s; }
 
     /* ── App shell ── */
     #screen-app { background: var(--bg); }
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 8px); padding-top: calc(var(--sat) + 8px); }
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 12px); padding-top: calc(var(--sat) + 4px); }
     .app-content::-webkit-scrollbar { display: none; }
 
-    /* ── Bottom nav ── */
+    /* ── Bottom nav (5 items) ── */
     #bottom-nav {
       position: absolute; bottom: 0; left: 0; right: 0;
       height: calc(var(--nav-h) + var(--sab));
-      background: rgba(13,17,23,0.92); backdrop-filter: blur(24px);
+      background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
       border-top: 1px solid var(--border);
-      display: flex; align-items: flex-start; padding-top: 8px;
+      display: flex; align-items: flex-start; padding-top: 6px;
       padding-bottom: var(--sab);
     }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 0; transition: color 0.15s; }
-    .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 9px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; padding: 3px 0; transition: color 0.15s; }
+    .nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .nav-btn.active { color: var(--primary); }
 
     /* ── Tab pages ── */
@@ -89,145 +102,161 @@
     .tab-page.active { display: block; }
 
     /* ── Today tab ── */
-    .today-header { padding: 20px 16px 8px; }
-    .today-label { font-size: 12px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-    .today-day { font-size: 36px; font-weight: 900; letter-spacing: -1px; line-height: 1; margin: 4px 0; }
+    .today-header { padding: 16px 16px 6px; }
+    .today-label { font-size: 11px; color: var(--text-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .today-day { font-size: 34px; font-weight: 900; letter-spacing: -1px; line-height: 1; margin: 3px 0; }
     .today-date { font-size: 13px; color: var(--text-2); }
-    .progress-bar-wrap { margin: 12px 16px 0; background: var(--surface); border-radius: 999px; height: 6px; overflow: hidden; }
+    .progress-bar-wrap { margin: 10px 16px 0; background: var(--surface); border-radius: 999px; height: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #58A6FF, #3FB950); transition: width 0.5s ease; }
-    .progress-label { display: flex; justify-content: space-between; padding: 6px 16px 0; font-size: 12px; color: var(--text-2); }
-
-    .daily-score { margin: 14px 16px; background: var(--surface); border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); }
-    .daily-score-left { font-size: 13px; color: var(--text-2); font-weight: 600; }
-    .daily-score-pts { font-size: 28px; font-weight: 900; }
-    .daily-score-pts span { font-size: 14px; color: var(--text-2); font-weight: 400; }
-    .score-dots { display: flex; gap: 8px; }
-    .score-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
-    .score-dot.done { background: var(--success); box-shadow: 0 0 8px rgba(63,185,80,0.5); }
-
-    .challenges-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
-
-    .challenge-card {
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      display: flex; align-items: center; gap: 14px;
-      transition: border-color 0.25s, background 0.25s;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      position: relative; overflow: hidden;
-    }
+    .progress-label { display: flex; justify-content: space-between; padding: 5px 16px 0; font-size: 11px; color: var(--text-2); }
+    .daily-score { margin: 12px 16px; background: var(--surface); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); }
+    .daily-score-left { font-size: 12px; color: var(--text-2); font-weight: 600; }
+    .daily-score-pts { font-size: 26px; font-weight: 900; }
+    .daily-score-pts span { font-size: 13px; color: var(--text-2); font-weight: 400; }
+    .score-dots { display: flex; gap: 7px; margin-top: 5px; }
+    .score-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+    .score-dot.done { background: var(--success); box-shadow: 0 0 6px rgba(63,185,80,0.5); }
+    .challenges-list { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 10px; }
+    .challenge-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; transition: border-color 0.25s, background 0.25s; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden; }
     .challenge-card.completed { border-color: var(--card-color, var(--success)); background: color-mix(in srgb, var(--card-color, var(--success)) 8%, var(--surface)); }
-    .challenge-card.rest-day { border-color: var(--border); opacity: 0.7; cursor: default; }
-    .challenge-card::before { content:''; position:absolute; inset:0; background:var(--card-color, #fff); opacity:0; transition:opacity 0.15s; border-radius: calc(var(--radius) - 2px); }
+    .challenge-card.rest-day { border-color: var(--border); opacity: 0.65; cursor: default; }
+    .challenge-card::before { content:''; position:absolute; inset:0; background:var(--card-color,#fff); opacity:0; transition:opacity 0.15s; border-radius: calc(var(--radius)-2px); }
     .challenge-card:active:not(.rest-day)::before { opacity: 0.06; }
-
-    .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: color-mix(in srgb, var(--card-color, #58A6FF) 15%, transparent); flex-shrink: 0; }
+    .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: color-mix(in srgb, var(--card-color,#58A6FF) 15%, transparent); flex-shrink: 0; }
     .card-body { flex: 1; min-width: 0; }
-    .card-name { font-size: 16px; font-weight: 700; }
-    .card-target { font-size: 24px; font-weight: 900; color: var(--card-color, var(--primary)); line-height: 1.1; }
-    .card-unit { font-size: 13px; color: var(--text-2); }
-    .card-rest { font-size: 14px; font-weight: 600; color: var(--text-2); }
-
-    .card-tick {
-      width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; transition: all 0.25s; background: transparent;
-    }
-    .challenge-card.completed .card-tick { background: var(--card-color, var(--success)); border-color: var(--card-color, var(--success)); }
-    .card-tick svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
-    .challenge-card.completed .card-tick svg { opacity: 1; }
+    .card-name { font-size: 15px; font-weight: 700; }
+    .card-target { font-size: 22px; font-weight: 900; color: var(--card-color, var(--primary)); line-height: 1.1; }
+    .card-unit { font-size: 12px; color: var(--text-2); }
+    .card-rest { font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .card-tick { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.25s; background: transparent; }
+    .challenge-card.completed .card-tick { background: var(--card-color,var(--success)); border-color: var(--card-color,var(--success)); }
+    .card-tick svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
+    .challenge-card.completed .card-tick svg, .challenge-card.rest-day .card-tick svg { opacity: 1; }
     .challenge-card.rest-day .card-tick { background: var(--text-3); border-color: var(--text-3); }
-    .challenge-card.rest-day .card-tick svg { opacity: 1; }
-
-    .completed-banner { display: none; margin: 0 16px 16px; background: linear-gradient(135deg, #1a3a1a, #0f2d0f); border: 1px solid #3FB950; border-radius: var(--radius); padding: 16px; text-align: center; }
+    .completed-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a3a1a,#0f2d0f); border: 1px solid #3FB950; border-radius: var(--radius); padding: 14px; text-align: center; }
     .completed-banner.show { display: block; animation: slideDown 0.4s ease; }
     @keyframes slideDown { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-    .completed-banner h3 { font-size: 18px; font-weight: 800; color: #3FB950; margin-bottom: 4px; }
-    .completed-banner p { font-size: 13px; color: #8B949E; }
+    .completed-banner h3 { font-size: 17px; font-weight: 800; color: #3FB950; margin-bottom: 3px; }
+    .completed-banner p { font-size: 12px; color: #8B949E; }
 
     /* ── Leaderboard tab ── */
-    .lb-header { padding: 20px 16px 12px; display: flex; align-items: center; justify-content: space-between; }
-    .lb-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+    .lb-header { padding: 16px 16px 10px; }
+    .lb-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
     .lb-subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
     .lb-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
-
-    .lb-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex; align-items: center; gap: 14px;
-      transition: border-color 0.2s;
-    }
+    .lb-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; gap: 12px; transition: border-color 0.2s; }
     .lb-row.me { border-color: var(--primary); background: rgba(88,166,255,0.05); }
-    .lb-rank { font-size: 20px; font-weight: 900; width: 32px; text-align: center; flex-shrink: 0; }
-    .lb-rank-1 { color: #FFD700; }
+    .lb-row.goat { border-color: var(--gold); background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,165,0,0.04)); position: relative; overflow: hidden; }
+    .lb-row.goat::before { content:''; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,215,0,0.05), transparent); animation: shimmer 2s infinite; }
+    @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+    .lb-rank { font-size: 18px; font-weight: 900; width: 28px; text-align: center; flex-shrink: 0; }
+    .lb-rank-1 { color: var(--gold); }
     .lb-rank-2 { color: #C0C0C0; }
     .lb-rank-3 { color: #CD7F32; }
-    .lb-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-2); flex-shrink: 0; }
+    .lb-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-2); flex-shrink: 0; transition: all 0.3s; }
+    .lb-row.goat .lb-avatar { background: linear-gradient(135deg,#3D2A00,#5C3D00); border: 2px solid var(--gold); box-shadow: 0 0 16px rgba(255,215,0,0.4); font-size: 26px; }
     .lb-info { flex: 1; min-width: 0; }
-    .lb-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .lb-detail { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .lb-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+    .goat-badge { font-size: 10px; background: linear-gradient(135deg,#FFD700,#FFA500); color: #000; font-weight: 900; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.05em; }
+    .lb-detail { font-size: 11px; color: var(--text-2); margin-top: 2px; }
     .lb-score { text-align: right; flex-shrink: 0; }
-    .lb-pts { font-size: 26px; font-weight: 900; color: var(--primary); line-height: 1; }
-    .lb-pts-label { font-size: 11px; color: var(--text-2); }
-    .lb-bar-wrap { margin-top: 6px; height: 3px; background: var(--bg); border-radius: 2px; }
+    .lb-pts { font-size: 24px; font-weight: 900; color: var(--primary); line-height: 1; }
+    .lb-row.goat .lb-pts { color: var(--gold); }
+    .lb-pts-label { font-size: 10px; color: var(--text-2); }
+    .lb-bar-wrap { margin-top: 5px; height: 3px; background: var(--bg); border-radius: 2px; }
     .lb-bar { height: 100%; border-radius: 2px; background: var(--primary); transition: width 0.5s ease; }
+    .lb-row.goat .lb-bar { background: linear-gradient(90deg, var(--gold), #FFA500); }
 
     /* ── History tab ── */
-    .hist-header { padding: 20px 16px 12px; }
-    .hist-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+    .hist-header { padding: 16px 16px 10px; }
+    .hist-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
     .hist-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
-
-    .hist-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .hist-day-num { font-size: 18px; font-weight: 900; width: 40px; flex-shrink: 0; }
-    .hist-date { font-size: 12px; color: var(--text-2); }
-    .hist-checks { display: flex; gap: 6px; flex: 1; justify-content: flex-end; }
-    .hist-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; background: var(--surface-2); }
+    .hist-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .hist-day-num { font-size: 17px; font-weight: 900; width: 36px; flex-shrink: 0; }
+    .hist-date { font-size: 11px; color: var(--text-2); }
+    .hist-checks { display: flex; gap: 5px; flex: 1; justify-content: flex-end; }
+    .hist-dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; background: var(--surface-2); }
     .hist-dot.done { background: var(--dot-color, var(--success)); }
-    .hist-dot.rest { background: var(--text-3); opacity: 0.5; }
-    .hist-pts { font-size: 16px; font-weight: 700; color: var(--primary); margin-left: 8px; width: 32px; text-align: right; }
-    .hist-row.future { opacity: 0.35; }
+    .hist-dot.rest { background: var(--text-3); opacity: 0.4; }
+    .hist-pts { font-size: 15px; font-weight: 700; color: var(--primary); margin-left: 6px; width: 28px; text-align: right; }
+    .hist-row.future { opacity: 0.3; }
+
+    /* ── Badges ── */
+    .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .badge-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; transition: all 0.2s; }
+    .badge-card.earned { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+    .badge-card.earned .badge-icon { filter: none; }
+    .badge-icon { font-size: 28px; margin-bottom: 5px; filter: grayscale(1) opacity(0.3); transition: filter 0.3s; }
+    .badge-name { font-size: 10px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
+    .badge-card.earned .badge-name { color: var(--gold); }
 
     /* ── Profile tab ── */
-    .profile-wrap { padding: 20px 16px; }
-    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--surface); font-size: 40px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; border: 2px solid var(--border); }
-    .profile-name { font-size: 22px; font-weight: 800; text-align: center; }
-    .profile-stat { font-size: 13px; color: var(--text-2); text-align: center; margin-top: 4px; }
-    .profile-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-    .stat-val { font-size: 32px; font-weight: 900; color: var(--primary); }
-    .stat-lbl { font-size: 12px; color: var(--text-2); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-
-    .section-header { font-size: 12px; color: var(--text-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 10px; }
-    .setting-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .profile-wrap { padding: 16px 16px 24px; }
+    .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--surface); font-size: 36px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border); flex-shrink: 0; cursor: pointer; position: relative; }
+    .profile-avatar::after { content: '✏️'; position: absolute; bottom: -2px; right: -2px; font-size: 14px; background: var(--bg); border-radius: 50%; padding: 2px; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 20px; font-weight: 800; }
+    .profile-rank { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+    .profile-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; }
+    .stat-val { font-size: 28px; font-weight: 900; color: var(--primary); }
+    .stat-lbl { font-size: 11px; color: var(--text-2); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .section-header { font-size: 11px; color: var(--text-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 8px; }
+    .setting-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
     .setting-row span { font-size: 14px; }
     .setting-row .setting-val { font-size: 13px; color: var(--text-2); }
-    .code-pill { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 4px 12px; font-size: 18px; font-weight: 800; letter-spacing: 0.1em; color: var(--primary); font-family: monospace; }
-    .btn-danger { background: rgba(248,81,73,0.12); color: #F85149; border: 1px solid rgba(248,81,73,0.3); border-radius: var(--radius-sm); padding: 13px; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }
+    .code-pill { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 3px 10px; font-size: 17px; font-weight: 800; letter-spacing: 0.1em; color: var(--primary); font-family: monospace; cursor: pointer; }
+    .btn-danger { background: rgba(248,81,73,0.10); color: #F85149; border: 1px solid rgba(248,81,73,0.25); border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 6px; }
 
-    /* ── Loading screen ── */
+    /* ── Feedback tab ── */
+    #tab-feedback { display: none; flex-direction: column; height: 100%; }
+    #tab-feedback.active { display: flex; }
+    .feed-header { padding: 16px 16px 10px; flex-shrink: 0; }
+    .feed-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+    .feed-subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .feed-messages { flex: 1; overflow-y: auto; padding: 0 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+    .feed-messages::-webkit-scrollbar { display: none; }
+    .feed-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.3s ease; }
+    .feed-msg.mine { flex-direction: row-reverse; }
+    .feed-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .feed-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 13px; max-width: 78%; }
+    .feed-msg.mine .feed-bubble { background: rgba(88,166,255,0.12); border-color: rgba(88,166,255,0.25); border-bottom-right-radius: 4px; }
+    .feed-msg:not(.mine) .feed-bubble { border-bottom-left-radius: 4px; }
+    .feed-sender { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+    .feed-msg.mine .feed-sender { text-align: right; color: var(--text-2); }
+    .feed-text { font-size: 14px; line-height: 1.4; }
+    .feed-time { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+    .feed-input-wrap { flex-shrink: 0; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg); display: flex; gap: 10px; align-items: flex-end; padding-bottom: calc(10px + var(--sab)); }
+    .feed-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; font-size: 15px; color: var(--text); outline: none; resize: none; max-height: 100px; font-family: inherit; }
+    .feed-input:focus { border-color: var(--primary); }
+    .feed-send { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#58A6FF,#1F6FEB); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.1s; }
+    .feed-send:active { transform: scale(0.9); }
+    .feed-send svg { width: 18px; height: 18px; fill: #fff; }
+    .feed-empty { text-align: center; padding: 40px 16px; color: var(--text-2); font-size: 14px; }
+    .feed-empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+    /* ── Loading ── */
     #screen-loading { background: var(--bg); align-items: center; justify-content: center; gap: 16px; }
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Toast ── */
-    #toast { position: fixed; bottom: calc(var(--nav-h) + var(--sab) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 1000; white-space: nowrap; border: 1px solid var(--border); }
+    #toast { position: fixed; bottom: calc(var(--nav-h) + var(--sab) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 1000; white-space: nowrap; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── Confetti ── */
-    #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+    /* ── Badge popup ── */
+    #badge-popup { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1001; pointer-events: none; }
+    .badge-popup-inner { background: linear-gradient(135deg,#1C2128,#22272E); border: 2px solid var(--gold); border-radius: var(--radius); padding: 28px 32px; text-align: center; transform: scale(0); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+    #badge-popup.show .badge-popup-inner { transform: scale(1); }
+    .badge-popup-icon { font-size: 56px; margin-bottom: 8px; animation: bounce 0.6s ease; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .badge-popup-title { font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .badge-popup-name { font-size: 20px; font-weight: 900; }
 
-    /* ── Animations ── */
+    #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
     .fade-in { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
 <body>
@@ -244,7 +273,6 @@
   <div class="welcome-logo">💪</div>
   <div class="welcome-title">CardioCrew</div>
   <div class="welcome-sub">30-Day Challenge Tracker</div>
-
   <div class="welcome-card">
     <h2>Join a Campaign</h2>
     <div class="input-group">
@@ -256,21 +284,18 @@
       <input class="input" id="join-code" placeholder="e.g. CREW42" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:20px">
     </div>
     <button class="btn btn-primary" id="btn-join">Join Campaign</button>
-
     <div class="divider">or</div>
-
     <button class="btn btn-secondary" id="btn-show-create">Create New Campaign</button>
     <div class="error-msg" id="join-error"></div>
   </div>
 </div>
 
-<!-- Create Campaign modal-style -->
+<!-- Create Campaign -->
 <div id="screen-create" class="screen hidden">
   <div style="flex:1;overflow-y:auto;padding:calc(var(--sat)+20px) 16px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-    <div style="font-size:40px;margin-bottom:12px">🏆</div>
-    <div style="font-size:24px;font-weight:900;margin-bottom:6px">Start a Campaign</div>
-    <div style="font-size:14px;color:var(--text-2);margin-bottom:28px;text-align:center">Create your crew's 30-day challenge</div>
-
+    <div style="font-size:40px;margin-bottom:10px">🏆</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:4px">Start a Campaign</div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:24px;text-align:center">Create your crew's 30-day challenge</div>
     <div class="welcome-card" style="max-width:400px;width:100%">
       <h2>Campaign Details</h2>
       <div class="input-group">
@@ -286,9 +311,20 @@
         <input class="input" id="create-start-date" type="date">
       </div>
       <button class="btn btn-primary" id="btn-create-go">Create &amp; Start</button>
-      <button class="btn btn-secondary" id="btn-back-to-join" style="margin-top:10px">← Back</button>
+      <button class="btn btn-secondary" id="btn-back-to-join">← Back</button>
       <div class="error-msg" id="create-error"></div>
     </div>
+  </div>
+</div>
+
+<!-- Avatar Picker -->
+<div id="screen-avatar" class="screen hidden">
+  <div style="flex:1;overflow-y:auto;padding:calc(var(--sat)+20px) 24px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="avatar-preview" id="avatar-preview">🦁</div>
+    <div class="avatar-title">Pick Your Avatar</div>
+    <div class="avatar-sub">Choose who represents you in the crew</div>
+    <div class="avatar-grid" id="avatar-grid"></div>
+    <button class="btn btn-primary" id="btn-avatar-confirm" style="max-width:320px;width:100%">Let's Go! 💪</button>
   </div>
 </div>
 
@@ -299,63 +335,48 @@
     <!-- TODAY TAB -->
     <div id="tab-today" class="tab-page active">
       <div class="today-header">
-        <div class="today-label" id="today-label">Campaign Day</div>
+        <div class="today-label">Campaign Day</div>
         <div class="today-day" id="today-day-num">Day 1</div>
         <div class="today-date" id="today-date-str"></div>
       </div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
-      </div>
-      <div class="progress-label">
-        <span id="progress-text">0 of 30 days</span>
-        <span id="progress-pct">0%</span>
-      </div>
-
-      <div class="daily-score" id="daily-score-row">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progress-text">Day 1 of 30</span><span id="progress-pct">0%</span></div>
+      <div class="daily-score">
         <div>
           <div class="daily-score-left">Today's Score</div>
           <div class="score-dots" id="score-dots">
-            <div class="score-dot" id="dot-0"></div>
-            <div class="score-dot" id="dot-1"></div>
-            <div class="score-dot" id="dot-2"></div>
-            <div class="score-dot" id="dot-3"></div>
+            <div class="score-dot" id="dot-0"></div><div class="score-dot" id="dot-1"></div>
+            <div class="score-dot" id="dot-2"></div><div class="score-dot" id="dot-3"></div>
           </div>
         </div>
         <div class="daily-score-pts" id="daily-pts">0 <span>/ 4 pts</span></div>
       </div>
-
       <div class="completed-banner hidden" id="completed-banner">
         <h3>🔥 Perfect Day!</h3>
         <p>All 4 challenges crushed. You're on fire!</p>
       </div>
-
       <div class="challenges-list" id="challenges-list"></div>
-
-      <div style="text-align:center;padding:0 16px 8px;color:var(--text-2);font-size:13px" id="today-info"></div>
+      <div style="text-align:center;padding:4px 16px 8px;color:var(--text-2);font-size:12px" id="today-info"></div>
     </div>
 
     <!-- LEADERBOARD TAB -->
     <div id="tab-leaderboard" class="tab-page">
       <div class="lb-header">
-        <div>
-          <div class="lb-title">🏆 Leaderboard</div>
-          <div class="lb-subtitle" id="lb-subtitle">Loading...</div>
-        </div>
+        <div class="lb-title">🏆 Leaderboard</div>
+        <div class="lb-subtitle" id="lb-subtitle">Loading...</div>
       </div>
       <div class="lb-list" id="lb-list"></div>
-      <div style="padding:20px 16px;text-align:center;color:var(--text-2);font-size:12px" id="lb-footer"></div>
+      <div style="padding:16px;text-align:center;color:var(--text-2);font-size:11px" id="lb-footer"></div>
     </div>
 
     <!-- HISTORY TAB -->
     <div id="tab-history" class="tab-page">
-      <div class="hist-header">
-        <div class="hist-title">📅 My History</div>
-      </div>
-      <div style="display:flex;gap:12px;padding:0 16px 12px;font-size:12px;color:var(--text-2)">
-        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:var(--c-squats);display:inline-block"></span>Squats</span>
-        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
-        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
-        <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
+      <div class="hist-header"><div class="hist-title">📅 My History</div></div>
+      <div style="display:flex;gap:10px;padding:0 16px 10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-squats);display:inline-block"></span>Squats</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
       </div>
       <div class="hist-list" id="hist-list"></div>
     </div>
@@ -363,45 +384,68 @@
     <!-- PROFILE TAB -->
     <div id="tab-profile" class="tab-page">
       <div class="profile-wrap">
-        <div class="profile-avatar" id="profile-avatar">👤</div>
-        <div class="profile-name" id="profile-name">—</div>
-        <div class="profile-stat" id="profile-rank-str">—</div>
-
+        <div class="profile-top">
+          <div class="profile-avatar" id="profile-avatar" title="Tap to change avatar">🦁</div>
+          <div class="profile-info">
+            <div class="profile-name" id="profile-name">—</div>
+            <div class="profile-rank" id="profile-rank-str">—</div>
+          </div>
+        </div>
         <div class="profile-stats-grid">
           <div class="stat-card"><div class="stat-val" id="stat-total-pts">0</div><div class="stat-lbl">Total Points</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-days-done">0</div><div class="stat-lbl">Perfect Days</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">Streak 🔥</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completion</div></div>
         </div>
-
-        <div class="section-header">Campaign</div>
+        <div class="section-header">🏅 Badges</div>
+        <div class="badges-grid" id="badges-grid"></div>
+        <div class="section-header">Campaign Info</div>
         <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
-        <div class="setting-row"><span>Join Code</span><span class="code-pill" id="prof-code">——</span></div>
+        <div class="setting-row" id="copy-code-row"><span>Join Code</span><span class="code-pill" id="prof-code">——</span></div>
         <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
-
-        <div class="section-header">Challenges</div>
+        <div class="section-header">My Challenges</div>
         <div id="challenge-progress-list"></div>
-
         <button class="btn-danger" id="btn-leave">Leave Campaign</button>
+      </div>
+    </div>
+
+    <!-- FEEDBACK TAB -->
+    <div id="tab-feedback" class="tab-page">
+      <div class="feed-header">
+        <div class="feed-title">💬 Crew Chat</div>
+        <div class="feed-subtitle" id="feed-subtitle">Cheer each other on!</div>
+      </div>
+      <div class="feed-messages" id="feed-messages">
+        <div class="feed-empty"><div class="feed-empty-icon">💬</div>No messages yet — be the first to shout out your crew!</div>
+      </div>
+      <div class="feed-input-wrap">
+        <textarea class="feed-input" id="feed-input" placeholder="Say something to the crew..." rows="1" maxlength="200"></textarea>
+        <button class="feed-send" id="feed-send-btn">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        </button>
       </div>
     </div>
 
   </div>
 
-  <!-- Bottom Nav -->
+  <!-- Bottom Nav (5 tabs) -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="today">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       Today
     </button>
     <button class="nav-btn" data-tab="leaderboard">
       <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      Leaderboard
+      Board
     </button>
     <button class="nav-btn" data-tab="history">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       History
+    </button>
+    <button class="nav-btn" data-tab="feedback">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
     </button>
     <button class="nav-btn" data-tab="profile">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -410,17 +454,20 @@
   </nav>
 </div>
 
+<!-- Badge popup -->
+<div id="badge-popup"><div class="badge-popup-inner">
+  <div class="badge-popup-icon" id="badge-popup-icon">🏅</div>
+  <div class="badge-popup-title">Badge Unlocked!</div>
+  <div class="badge-popup-name" id="badge-popup-name">—</div>
+</div></div>
+
 <canvas id="confetti-canvas"></canvas>
 <div id="toast"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, serverTimestamp, query, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-  // ════════════════════════════════════════════════════
-  // FIREBASE CONFIG — replace with your project values
-  // ════════════════════════════════════════════════════
   const firebaseConfig = {
     apiKey:            "AIzaSyARd79y3L8Bfew1ubdJVaY7zsIULJUf4Bs",
     authDomain:        "cardo-crew.firebaseapp.com",
@@ -434,340 +481,344 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  // ════════════════════════════════════════════════════
-  // CHALLENGE DATA
-  // ════════════════════════════════════════════════════
+  // ─── Challenge data ───────────────────────────────────
   const CHALLENGES = [
-    {
-      id: 'squats', name: 'Squats', emoji: '🏋️', color: 'var(--c-squats)', unit: 'reps',
-      schedule: [50,55,60,null,70,75,80,null,100,105,110,null,130,135,140,null,150,155,160,null,180,185,190,null,220,225,230,null,240,250]
-    },
-    {
-      id: 'pushups', name: 'Push-Ups', emoji: '💪', color: 'var(--c-pushups)', unit: 'reps',
-      schedule: [5,5,6,6,7,7,null,10,10,12,15,15,null,15,18,20,20,20,25,25,30,30,35,35,35,40,40,45,45,50]
-    },
-    {
-      id: 'plank', name: 'Plank', emoji: '🧘', color: 'var(--c-plank)', unit: 'sec',
-      schedule: [20,20,30,30,40,null,45,45,60,60,60,90,null,90,90,120,120,150,null,150,150,180,180,210,210,null,240,240,270,300]
-    },
-    {
-      id: 'crunches', name: 'Crunches', emoji: '🔥', color: 'var(--c-crunches)', unit: 'reps',
-      schedule: [25,30,35,40,45,45,null,55,60,65,70,75,null,80,90,null,100,105,110,115,115,120,120,null,125,130,135,140,145,150]
-    }
+    { id:'squats',   name:'Squats',    emoji:'🏋️', color:'var(--c-squats)',   unit:'reps',
+      schedule:[50,55,60,null,70,75,80,null,100,105,110,null,130,135,140,null,150,155,160,null,180,185,190,null,220,225,230,null,240,250] },
+    { id:'pushups',  name:'Push-Ups',  emoji:'💪', color:'var(--c-pushups)',  unit:'reps',
+      schedule:[5,5,6,6,7,7,null,10,10,12,15,15,null,15,18,20,20,20,25,25,30,30,35,35,35,40,40,45,45,50] },
+    { id:'plank',    name:'Plank',     emoji:'🧘', color:'var(--c-plank)',    unit:'sec',
+      schedule:[20,20,30,30,40,null,45,45,60,60,60,90,null,90,90,120,120,150,null,150,150,180,180,210,210,null,240,240,270,300] },
+    { id:'crunches', name:'Crunches',  emoji:'🔥', color:'var(--c-crunches)', unit:'reps',
+      schedule:[25,30,35,40,45,45,null,55,60,65,70,75,null,80,90,null,100,105,110,115,115,120,120,null,125,130,135,140,145,150] },
   ];
 
-  const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🦅','🐲','🦄','🔥','⚡','🌊','💎'];
+  const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🐼','🦅','🦆','🐲','🦈','🐊','🦄','🔥','⚡','💎','🌊','🚀','🌟','💪','🥊','👑','😈','🤖','🎯'];
+  const BADGE_DEFS = [
+    { id:'first_blood',   icon:'🔥', name:'First Rep',      desc:'Complete any challenge on Day 1' },
+    { id:'perfect_day',   icon:'⭐', name:'Perfect Day',    desc:'All 4 challenges in one day' },
+    { id:'week_warrior',  icon:'💪', name:'Week Warrior',   desc:'Active for 7 days' },
+    { id:'halfway',       icon:'🎯', name:'Halfway Hero',   desc:'Reach Day 15' },
+    { id:'squat_star',    icon:'🏋️', name:'Squat Star',     desc:'Complete all squat days' },
+    { id:'pushup_pro',    icon:'🤜', name:'Push-Up Pro',    desc:'Complete all push-up days' },
+    { id:'plank_king',    icon:'🧘', name:'Plank King',     desc:'Complete all plank days' },
+    { id:'crunch_champ',  icon:'💥', name:'Crunch Champ',  desc:'Complete all crunch days' },
+    { id:'champion',      icon:'🏆', name:'30-Day Champ',  desc:'Complete the full challenge' },
+  ];
 
-  // ════════════════════════════════════════════════════
-  // STATE
-  // ════════════════════════════════════════════════════
-  let state = {
-    userId:       null,
-    campaignId:   null,
-    campaignData: null,   // { name, startDate, code, createdAt }
-    members:      {},     // { userId: { name, avatar, completions:{...} } }
-    unsubscribers: [],
-  };
+  // ─── State ────────────────────────────────────────────
+  let state = { userId:null, campaignId:null, campaignData:null, members:{}, messages:[], pendingAvatar:null, unsubscribers:[] };
 
-  // ════════════════════════════════════════════════════
-  // UTILITIES
-  // ════════════════════════════════════════════════════
-  function genId(len = 8)  { return Math.random().toString(36).slice(2, 2+len).toUpperCase(); }
-  function genCode()        { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
-  function genAvatar()      { return AVATARS[Math.floor(Math.random() * AVATARS.length)]; }
+  // ─── Utilities ────────────────────────────────────────
+  const genId   = (n=8) => Math.random().toString(36).slice(2,2+n).toUpperCase();
+  const genCode = ()    => Math.random().toString(36).slice(2,8).toUpperCase();
 
   function getDayNumber(startDateStr) {
     const start = new Date(startDateStr + 'T00:00:00');
     const today = new Date(); today.setHours(0,0,0,0);
-    const diff = Math.floor((today - start) / 86400000) + 1;
-    return Math.max(1, Math.min(diff, 30));
+    return Math.max(1, Math.min(Math.floor((today-start)/86400000)+1, 30));
   }
 
-  function formatDate(d) {
-    return d.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
-  }
-
-  function formatTarget(challenge, dayIndex) {
-    const val = challenge.schedule[dayIndex];
-    if (val === null) return null; // rest day
-    if (challenge.unit === 'sec') {
-      if (val < 60) return { display: `${val}`, unit: 'sec' };
-      const m = Math.floor(val/60), s = val%60;
-      return s ? { display: `${m}:${String(s).padStart(2,'0')}`, unit: 'min' } : { display: `${m}`, unit: 'min' };
+  function formatTarget(ch, dayIndex) {
+    const v = ch.schedule[dayIndex];
+    if (v === null) return null;
+    if (ch.unit === 'sec') {
+      if (v < 60) return { display:`${v}`, unit:'sec' };
+      const m=Math.floor(v/60), s=v%60;
+      return s ? { display:`${m}:${String(s).padStart(2,'0')}`, unit:'min' } : { display:`${m}`, unit:'min' };
     }
-    return { display: `${val}`, unit: challenge.unit };
+    return { display:`${v}`, unit:ch.unit };
   }
 
-  function toast(msg, duration=2200) {
-    const el = document.getElementById('toast');
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), duration);
+  function toast(msg, dur=2200) {
+    const el=document.getElementById('toast');
+    el.textContent=msg; el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'),dur);
   }
 
   function showScreen(id) {
-    ['screen-loading','screen-welcome','screen-create','screen-app'].forEach(s => {
-      document.getElementById(s).classList.toggle('hidden', s !== id);
+    ['screen-loading','screen-welcome','screen-create','screen-avatar','screen-app'].forEach(s=>
+      document.getElementById(s).classList.toggle('hidden',s!==id));
+  }
+
+  // ─── LocalStorage ─────────────────────────────────────
+  const saveLocal = () => localStorage.setItem('cc_user',JSON.stringify({userId:state.userId,campaignId:state.campaignId}));
+  const loadLocal = () => { try{ return JSON.parse(localStorage.getItem('cc_user')||'null'); }catch{return null;} };
+
+  // ─── Avatar picker ────────────────────────────────────
+  let selectedAvatar = AVATARS[0];
+
+  function showAvatarPicker(defaultAvatar) {
+    selectedAvatar = defaultAvatar || AVATARS[Math.floor(Math.random()*AVATARS.length)];
+    const grid = document.getElementById('avatar-grid');
+    grid.innerHTML = '';
+    AVATARS.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'avatar-opt' + (a===selectedAvatar?' selected':'');
+      btn.textContent = a;
+      btn.addEventListener('click', () => {
+        selectedAvatar = a;
+        document.querySelectorAll('.avatar-opt').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('avatar-preview').textContent = a;
+      });
+      grid.appendChild(btn);
     });
+    document.getElementById('avatar-preview').textContent = selectedAvatar;
+    showScreen('screen-avatar');
   }
 
-  // ════════════════════════════════════════════════════
-  // LOCAL STORAGE
-  // ════════════════════════════════════════════════════
-  function saveLocal() {
-    localStorage.setItem('cc_user', JSON.stringify({ userId: state.userId, campaignId: state.campaignId }));
+  // ─── Scoring ──────────────────────────────────────────
+  function getCompletionsForDay(userId, day) {
+    const m = state.members[userId]; if(!m) return {};
+    const r = {};
+    CHALLENGES.forEach(ch => {
+      const isRest = ch.schedule[day-1] === null;
+      r[ch.id] = isRest || !!(m.completions?.[`d${day}_${ch.id}`]);
+    });
+    return r;
   }
 
-  function loadLocal() {
-    try { return JSON.parse(localStorage.getItem('cc_user') || 'null'); } catch { return null; }
+  function getDayPoints(userId, day) { return Object.values(getCompletionsForDay(userId,day)).filter(Boolean).length; }
+
+  function getTotalPoints(userId) {
+    const cur=getDayNumber(state.campaignData.startDate);
+    let t=0; for(let d=1;d<=cur;d++) t+=getDayPoints(userId,d); return t;
   }
 
-  // ════════════════════════════════════════════════════
-  // FIREBASE OPERATIONS
-  // ════════════════════════════════════════════════════
-  async function createCampaign(campaignName, yourName, startDate) {
-    const campaignId = genId(6);
-    const userId     = genId(8);
-    const code       = genCode();
-    const avatar     = genAvatar();
+  function getStreak(userId) {
+    const cur=getDayNumber(state.campaignData.startDate);
+    let s=0; for(let d=cur;d>=1;d--) { if(getDayPoints(userId,d)>=4)s++; else break; } return s;
+  }
 
-    const campaignDoc = {
-      name:      campaignName,
-      startDate: startDate,
-      code:      code,
-      createdBy: userId,
-      createdAt: serverTimestamp(),
-    };
+  function getPerfectDays(userId) {
+    const cur=getDayNumber(state.campaignData.startDate);
+    let c=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>=4) c++; return c;
+  }
 
-    const memberDoc = {
-      name:        yourName,
-      avatar:      avatar,
-      joinedAt:    serverTimestamp(),
-      completions: {},
-    };
+  // ─── Badge calculation ────────────────────────────────
+  function getEarnedBadges(userId) {
+    const cur = getDayNumber(state.campaignData.startDate);
+    const m   = state.members[userId]; if(!m) return new Set();
+    const earned = new Set();
 
-    await setDoc(doc(db, 'campaigns', campaignId), campaignDoc);
-    await setDoc(doc(db, 'campaigns', campaignId, 'members', userId), memberDoc);
+    // First Rep — any completion on day 1
+    if(getDayPoints(userId,1) > 0) earned.add('first_blood');
 
+    // Perfect Day
+    for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>=4){ earned.add('perfect_day'); break; }
+
+    // Week Warrior — any 7 days with ≥1 point
+    let activeDays=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>0)activeDays++;
+    if(activeDays>=7) earned.add('week_warrior');
+
+    // Halfway Hero
+    if(cur>=15) earned.add('halfway');
+
+    // Per-challenge completion badges
+    const chBadges = {squats:'squat_star',pushups:'pushup_pro',plank:'plank_king',crunches:'crunch_champ'};
+    CHALLENGES.forEach(ch=>{
+      let allDone=true;
+      for(let d=1;d<=cur;d++){
+        const isRest=ch.schedule[d-1]===null;
+        if(!isRest && !m.completions?.[`d${d}_${ch.id}`]){ allDone=false; break; }
+      }
+      if(allDone && cur>0) earned.add(chBadges[ch.id]);
+    });
+
+    // 30-Day Champion
+    if(cur>=30 && getTotalPoints(userId) >= 30*4*0.8) earned.add('champion');
+
+    return earned;
+  }
+
+  // ─── Badge popup ──────────────────────────────────────
+  let lastBadgeSet = new Set();
+  function checkBadges(userId) {
+    const now = getEarnedBadges(userId);
+    now.forEach(id=>{
+      if(!lastBadgeSet.has(id)){
+        const def = BADGE_DEFS.find(b=>b.id===id);
+        if(def) showBadgePopup(def);
+      }
+    });
+    lastBadgeSet = now;
+  }
+
+  function showBadgePopup(def) {
+    document.getElementById('badge-popup-icon').textContent = def.icon;
+    document.getElementById('badge-popup-name').textContent = def.name;
+    const popup = document.getElementById('badge-popup');
+    popup.classList.add('show');
+    setTimeout(()=>popup.classList.remove('show'), 2800);
+  }
+
+  // ─── Confetti ─────────────────────────────────────────
+  let wasPerfect=false;
+  function launchConfetti() {
+    const canvas=document.getElementById('confetti-canvas');
+    const ctx=canvas.getContext('2d');
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    const pieces=Array.from({length:80},()=>({
+      x:Math.random()*canvas.width, y:-10, r:Math.random()*6+3,
+      c:`hsl(${Math.random()*360},70%,60%)`,
+      vx:(Math.random()-.5)*4, vy:Math.random()*3+2,
+      angle:Math.random()*360, va:(Math.random()-.5)*6
+    }));
+    let frame=0;
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pieces.forEach(p=>{
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.angle*Math.PI/180);
+        ctx.fillStyle=p.c; ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2);
+        ctx.restore();
+        p.x+=p.vx; p.y+=p.vy; p.angle+=p.va;
+      });
+      frame++;
+      if(frame<120) requestAnimationFrame(draw);
+      else ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+    draw();
+  }
+
+  // ─── Firebase operations ──────────────────────────────
+  async function createCampaign(cName, yourName, startDate) {
+    const campaignId=genId(6), userId=genId(8), code=genCode();
+    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, code, createdBy:userId, createdAt:serverTimestamp() });
+    await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
     return { campaignId, userId, code };
   }
 
   async function joinCampaign(code, name) {
-    // Find campaign by code
-    const snap = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(m => {
-      return m.getDocs(m.query(m.collection(db, 'campaigns'), m.where('code', '==', code.toUpperCase())));
-    });
-
-    if (snap.empty) throw new Error('Campaign code not found. Check the code and try again.');
-
-    const campaignDoc = snap.docs[0];
-    const campaignId  = campaignDoc.id;
-    const userId      = genId(8);
-    const avatar      = genAvatar();
-
-    await setDoc(doc(db, 'campaigns', campaignId, 'members', userId), {
-      name:        name,
-      avatar:      avatar,
-      joinedAt:    serverTimestamp(),
-      completions: {},
-    });
-
-    return { campaignId, userId };
+    const snap = await getDocs(query(collection(db,'campaigns'),where('code','==',code.toUpperCase())));
+    if(snap.empty) throw new Error('Campaign code not found. Check the code and try again.');
+    const campaignDoc=snap.docs[0];
+    const userId=genId(8);
+    await setDoc(doc(db,'campaigns',campaignDoc.id,'members',userId),{ name, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
+    return { campaignId:campaignDoc.id, userId, campaignData:campaignDoc.data() };
   }
 
   async function toggleCompletion(day, challengeId) {
-    const key  = `d${day}_${challengeId}`;
-    const path = `completions.${key}`;
-    const memberRef = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
-    const myData    = state.members[state.userId];
-    if (!myData) return;
-
-    const current = myData.completions?.[key] || false;
-    await updateDoc(memberRef, { [path]: !current });
+    const key=`d${day}_${challengeId}`;
+    const m=state.members[state.userId]; if(!m) return;
+    const current=m.completions?.[key]||false;
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: !current });
   }
 
-  function subscribeToMembers() {
-    state.unsubscribers.forEach(u => u());
-    state.unsubscribers = [];
+  async function updateAvatar(newAvatar) {
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ avatar:newAvatar });
+    toast('Avatar updated! ' + newAvatar);
+  }
 
-    const membersRef = collection(db, 'campaigns', state.campaignId, 'members');
-    const unsub = onSnapshot(membersRef, (snap) => {
-      snap.forEach(d => { state.members[d.id] = d.data(); });
+  async function sendMessage(text) {
+    await addDoc(collection(db,'campaigns',state.campaignId,'messages'),{
+      userId:state.userId,
+      name: state.members[state.userId]?.name||'?',
+      avatar: state.members[state.userId]?.avatar||'💪',
+      text: text.trim(),
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  function subscribeAll() {
+    state.unsubscribers.forEach(u=>u());
+    state.unsubscribers=[];
+
+    // Members
+    state.unsubscribers.push(onSnapshot(collection(db,'campaigns',state.campaignId,'members'),(snap)=>{
+      snap.forEach(d=>{ state.members[d.id]=d.data(); });
       renderAll();
-    });
-    state.unsubscribers.push(unsub);
+      checkBadges(state.userId);
+    }));
+
+    // Messages (last 50)
+    const msgsQ = query(collection(db,'campaigns',state.campaignId,'messages'), orderBy('createdAt','asc'), limit(50));
+    state.unsubscribers.push(onSnapshot(msgsQ,(snap)=>{
+      state.messages=[];
+      snap.forEach(d=>state.messages.push({id:d.id,...d.data()}));
+      renderFeedback();
+    }));
   }
 
-  // ════════════════════════════════════════════════════
-  // SCORING
-  // ════════════════════════════════════════════════════
-  function getCompletionsForDay(userId, day) {
-    // Returns { squats: bool, pushups: bool, plank: bool, crunches: bool }
-    const member = state.members[userId];
-    if (!member) return {};
-    const result = {};
-    CHALLENGES.forEach(ch => {
-      const dayIdx = day - 1;
-      const isRest = ch.schedule[dayIdx] === null;
-      const key    = `d${day}_${ch.id}`;
-      result[ch.id] = isRest || !!(member.completions?.[key]);
-    });
-    return result;
-  }
-
-  function getDayPoints(userId, day) {
-    const comps = getCompletionsForDay(userId, day);
-    return Object.values(comps).filter(Boolean).length;
-  }
-
-  function getTotalPoints(userId) {
-    const currentDay = getDayNumber(state.campaignData.startDate);
-    let total = 0;
-    for (let d = 1; d <= currentDay; d++) total += getDayPoints(userId, d);
-    return total;
-  }
-
-  function getMaxPossiblePoints(userId) {
-    // Max points = 4 per day × days elapsed
-    const currentDay = getDayNumber(state.campaignData.startDate);
-    return currentDay * 4;
-  }
-
-  function getStreak(userId) {
-    const currentDay = getDayNumber(state.campaignData.startDate);
-    let streak = 0;
-    for (let d = currentDay; d >= 1; d--) {
-      if (getDayPoints(userId, d) >= 4) streak++;
-      else break;
-    }
-    return streak;
-  }
-
-  function getPerfectDays(userId) {
-    const currentDay = getDayNumber(state.campaignData.startDate);
-    let count = 0;
-    for (let d = 1; d <= currentDay; d++) {
-      if (getDayPoints(userId, d) >= 4) count++;
-    }
-    return count;
-  }
-
-  // ════════════════════════════════════════════════════
-  // RENDER
-  // ════════════════════════════════════════════════════
+  // ─── Render ───────────────────────────────────────────
   function renderAll() {
-    const currentDay = getDayNumber(state.campaignData.startDate);
-    renderToday(currentDay);
-    renderLeaderboard(currentDay);
-    renderHistory(currentDay);
-    renderProfile(currentDay);
+    const day = getDayNumber(state.campaignData.startDate);
+    renderToday(day);
+    renderLeaderboard(day);
+    renderHistory(day);
+    renderProfile(day);
   }
 
-  function renderToday(currentDay) {
-    const dayIndex = currentDay - 1;
-    document.getElementById('today-day-num').textContent = `Day ${currentDay}`;
-    document.getElementById('today-label').textContent = 'Campaign Day';
+  function renderToday(day) {
+    document.getElementById('today-day-num').textContent = `Day ${day}`;
+    document.getElementById('today-date-str').textContent = new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    const pct=Math.round((day/30)*100);
+    document.getElementById('progress-bar').style.width=pct+'%';
+    document.getElementById('progress-text').textContent=`Day ${day} of 30`;
+    document.getElementById('progress-pct').textContent=pct+'%';
 
-    const today = new Date();
-    document.getElementById('today-date-str').textContent = formatDate(today);
+    const comps=getCompletionsForDay(state.userId,day);
+    const pts=Object.values(comps).filter(Boolean).length;
+    document.getElementById('daily-pts').innerHTML=`${pts} <span>/ 4 pts</span>`;
+    for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('done',i<pts);
 
-    // Progress bar
-    const pct = Math.round((currentDay / 30) * 100);
-    document.getElementById('progress-bar').style.width = pct + '%';
-    document.getElementById('progress-text').textContent = `Day ${currentDay} of 30`;
-    document.getElementById('progress-pct').textContent = pct + '%';
+    const isPerfect=pts>=4;
+    const banner=document.getElementById('completed-banner');
+    banner.classList.toggle('hidden',!isPerfect);
+    banner.classList.toggle('show',isPerfect);
+    if(isPerfect && !wasPerfect){ launchConfetti(); toast('🔥 Perfect Day!',3000); }
+    wasPerfect=isPerfect;
 
-    // Today's completions
-    const comps = getCompletionsForDay(state.userId, currentDay);
-    const pts   = Object.values(comps).filter(Boolean).length;
-    document.getElementById('daily-pts').innerHTML = `${pts} <span>/ 4 pts</span>`;
-
-    // Score dots
-    let doneCount = 0;
-    CHALLENGES.forEach((ch, i) => {
-      if (comps[ch.id]) doneCount++;
-    });
-    for (let i = 0; i < 4; i++) {
-      document.getElementById(`dot-${i}`).classList.toggle('done', i < doneCount);
-    }
-
-    // Completed banner
-    const banner = document.getElementById('completed-banner');
-    banner.classList.toggle('hidden', doneCount < 4);
-    banner.classList.toggle('show', doneCount >= 4);
-
-    // Challenge cards
-    const list = document.getElementById('challenges-list');
-    list.innerHTML = '';
-    CHALLENGES.forEach(ch => {
-      const isRest = ch.schedule[dayIndex] === null;
-      const isDone = comps[ch.id];
-      const target = isRest ? null : formatTarget(ch, dayIndex);
-
-      const card = document.createElement('div');
-      card.className = `challenge-card${isDone ? ' completed' : ''}${isRest ? ' rest-day' : ''}`;
-      card.style.setProperty('--card-color', ch.color);
-
-      card.innerHTML = `
+    const list=document.getElementById('challenges-list');
+    list.innerHTML='';
+    CHALLENGES.forEach(ch=>{
+      const isRest=ch.schedule[day-1]===null, isDone=comps[ch.id];
+      const target=isRest?null:formatTarget(ch,day-1);
+      const card=document.createElement('div');
+      card.className=`challenge-card${isDone?' completed':''}${isRest?' rest-day':''}`;
+      card.style.setProperty('--card-color',ch.color);
+      card.innerHTML=`
         <div class="card-icon">${ch.emoji}</div>
         <div class="card-body">
           <div class="card-name">${ch.name}</div>
-          ${isRest
-            ? `<div class="card-rest">REST DAY 😴</div>`
-            : `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`
-          }
+          ${isRest?`<div class="card-rest">REST DAY 😴</div>`:`<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
         </div>
-        <div class="card-tick">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>`;
-
-      if (!isRest) {
-        card.addEventListener('click', async () => {
-          await toggleCompletion(currentDay, ch.id);
-        });
-      }
-
+        <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+      if(!isRest) card.addEventListener('click',()=>toggleCompletion(day,ch.id));
       list.appendChild(card);
     });
 
-    // Info line
-    const remaining = 30 - currentDay;
-    document.getElementById('today-info').textContent =
-      remaining > 0 ? `${remaining} days remaining in the challenge` : '🎉 Challenge complete!';
+    const rem=30-day;
+    document.getElementById('today-info').textContent = rem>0?`${rem} days remaining`:'🎉 Challenge complete!';
   }
 
-  function renderLeaderboard(currentDay) {
-    const memberIds = Object.keys(state.members);
-    const scores = memberIds.map(id => ({
-      id,
-      name:   state.members[id].name,
-      avatar: state.members[id].avatar || '💪',
-      pts:    getTotalPoints(id),
-      max:    getMaxPossiblePoints(id),
-      streak: getStreak(id),
-    }));
+  function renderLeaderboard(day) {
+    const scores=Object.keys(state.members).map(id=>({
+      id, name:state.members[id].name, avatar:state.members[id].avatar||'💪',
+      pts:getTotalPoints(id), streak:getStreak(id)
+    })).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));
 
-    scores.sort((a, b) => b.pts - a.pts || a.name.localeCompare(b.name));
-    const maxPts = scores[0]?.pts || 1;
+    const maxPts=scores[0]?.pts||1;
+    document.getElementById('lb-subtitle').textContent=`Day ${day} of 30 · ${scores.length} crew member${scores.length!==1?'s':''}`;
 
-    document.getElementById('lb-subtitle').textContent =
-      `Day ${currentDay} of 30 · ${memberIds.length} crew member${memberIds.length !== 1 ? 's' : ''}`;
-
-    const list = document.getElementById('lb-list');
-    list.innerHTML = '';
-    scores.forEach((m, i) => {
-      const rank = i + 1;
-      const pct  = Math.round((m.pts / Math.max(1, maxPts)) * 100);
-      const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
-      const rankClass = rank <= 3 ? `lb-rank-${rank}` : '';
-
-      const row = document.createElement('div');
-      row.className = `lb-row${m.id === state.userId ? ' me' : ''} fade-in`;
-      row.innerHTML = `
-        <div class="lb-rank ${rankClass}">${rankEmoji}</div>
-        <div class="lb-avatar">${m.avatar}</div>
+    const list=document.getElementById('lb-list');
+    list.innerHTML='';
+    scores.forEach((m,i)=>{
+      const rank=i+1, pct=Math.round((m.pts/Math.max(1,maxPts))*100);
+      const isGoat=rank===1;
+      const rankEmoji=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`#${rank}`;
+      const row=document.createElement('div');
+      row.className=`lb-row${m.id===state.userId?' me':''}${isGoat?' goat':''} fade-in`;
+      row.innerHTML=`
+        <div class="lb-rank lb-rank-${rank<=3?rank:''}">${rankEmoji}</div>
+        <div class="lb-avatar">${isGoat?'🐐':m.avatar}</div>
         <div class="lb-info">
-          <div class="lb-name">${m.name}${m.id === state.userId ? ' <span style="font-size:11px;color:var(--text-2)">(you)</span>' : ''}</div>
-          <div class="lb-detail">${m.streak > 0 ? `🔥 ${m.streak}-day streak` : `${Math.round((m.pts/m.max||0)*100)}% complete`}</div>
+          <div class="lb-name">
+            ${m.name}
+            ${isGoat?'<span class="goat-badge">G.O.A.T.</span>':''}
+            ${m.id===state.userId?'<span style="font-size:10px;color:var(--text-2)">(you)</span>':''}
+          </div>
+          <div class="lb-detail">${m.streak>0?`🔥 ${m.streak}-day streak`:`${m.pts} points earned`}</div>
           <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
         </div>
         <div class="lb-score">
@@ -777,93 +828,80 @@
       list.appendChild(row);
     });
 
-    document.getElementById('lb-footer').textContent =
-      `Max possible today: ${currentDay * 4} pts`;
+    document.getElementById('lb-footer').textContent=`Max possible: ${day*4} pts`;
   }
 
-  function renderHistory(currentDay) {
-    const list = document.getElementById('hist-list');
-    list.innerHTML = '';
-    const startDate = new Date(state.campaignData.startDate + 'T00:00:00');
-
-    for (let d = 1; d <= 30; d++) {
-      const date    = new Date(startDate);
-      date.setDate(date.getDate() + d - 1);
-      const isFuture = d > currentDay;
-      const pts = isFuture ? '-' : getDayPoints(state.userId, d);
-      const comps = isFuture ? {} : getCompletionsForDay(state.userId, d);
-
-      const row = document.createElement('div');
-      row.className = `hist-row${isFuture ? ' future' : ''} fade-in`;
-      row.innerHTML = `
-        <div>
-          <div class="hist-day-num">D${d}</div>
-          <div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div>
-        </div>
+  function renderHistory(day) {
+    const list=document.getElementById('hist-list');
+    list.innerHTML='';
+    const start=new Date(state.campaignData.startDate+'T00:00:00');
+    for(let d=1;d<=30;d++){
+      const date=new Date(start); date.setDate(date.getDate()+d-1);
+      const isFuture=d>day;
+      const comps=isFuture?{}:getCompletionsForDay(state.userId,d);
+      const pts=isFuture?'':getDayPoints(state.userId,d);
+      const row=document.createElement('div');
+      row.className=`hist-row${isFuture?' future':''} fade-in`;
+      row.innerHTML=`
+        <div><div class="hist-day-num">D${d}</div><div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
         <div class="hist-checks">
-          ${CHALLENGES.map(ch => {
-            const isRest = ch.schedule[d-1] === null;
-            const done   = isRest || comps[ch.id];
-            return `<div class="hist-dot${done&&!isFuture?' done':''}${isRest&&!isFuture?' rest':''}" style="--dot-color:${ch.color.replace('var(','').replace(')','')}" title="${ch.name}">${ch.emoji}</div>`;
+          ${CHALLENGES.map(ch=>{
+            const isRest=ch.schedule[d-1]===null, done=isRest||comps[ch.id];
+            return `<div class="hist-dot${done&&!isFuture?' done':''}${isRest&&!isFuture?' rest':''}" style="--dot-color:${ch.color}" title="${ch.name}">${ch.emoji}</div>`;
           }).join('')}
         </div>
-        <div class="hist-pts">${isFuture ? '' : pts}</div>`;
+        <div class="hist-pts">${pts}</div>`;
       list.appendChild(row);
     }
   }
 
-  function renderProfile(currentDay) {
-    const me = state.members[state.userId];
-    if (!me) return;
+  function renderProfile(day) {
+    const me=state.members[state.userId]; if(!me) return;
+    document.getElementById('profile-avatar').textContent=me.avatar||'💪';
+    document.getElementById('profile-name').textContent=me.name;
+    const sorted=Object.keys(state.members).sort((a,b)=>getTotalPoints(b)-getTotalPoints(a));
+    const rank=sorted.indexOf(state.userId)+1;
+    document.getElementById('profile-rank-str').textContent=`Rank #${rank} of ${sorted.length}`;
+    const myPts=getTotalPoints(state.userId);
+    document.getElementById('stat-total-pts').textContent=myPts;
+    document.getElementById('stat-days-done').textContent=getPerfectDays(state.userId);
+    document.getElementById('stat-streak').textContent=getStreak(state.userId);
+    document.getElementById('stat-pct').textContent=Math.round((myPts/(day*4))*100)+'%';
+    document.getElementById('prof-campaign-name').textContent=state.campaignData?.name||'—';
+    document.getElementById('prof-code').textContent=state.campaignData?.code||'—';
+    document.getElementById('prof-start').textContent=state.campaignData?.startDate
+      ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
+    document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
 
-    document.getElementById('profile-avatar').textContent = me.avatar || '💪';
-    document.getElementById('profile-name').textContent   = me.name;
+    // Badges
+    const earned=getEarnedBadges(state.userId);
+    const bg=document.getElementById('badges-grid');
+    bg.innerHTML='';
+    BADGE_DEFS.forEach(b=>{
+      const div=document.createElement('div');
+      div.className='badge-card'+(earned.has(b.id)?' earned':'');
+      div.title=b.desc;
+      div.innerHTML=`<div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div>`;
+      bg.appendChild(div);
+    });
 
-    const scores = Object.entries(state.members).map(([id, m]) => ({
-      id, pts: getTotalPoints(id)
-    })).sort((a,b) => b.pts - a.pts);
-
-    const rank = scores.findIndex(s => s.id === state.userId) + 1;
-    const total = scores.length;
-    document.getElementById('profile-rank-str').textContent = `Rank #${rank} of ${total}`;
-
-    const myPts       = getTotalPoints(state.userId);
-    const perfectDays = getPerfectDays(state.userId);
-    const streak      = getStreak(state.userId);
-    const pct         = Math.round((myPts / (currentDay * 4)) * 100);
-
-    document.getElementById('stat-total-pts').textContent = myPts;
-    document.getElementById('stat-days-done').textContent = perfectDays;
-    document.getElementById('stat-streak').textContent    = streak;
-    document.getElementById('stat-pct').textContent       = pct + '%';
-
-    document.getElementById('prof-campaign-name').textContent = state.campaignData?.name || '—';
-    document.getElementById('prof-code').textContent          = state.campaignData?.code || '—';
-    document.getElementById('prof-start').textContent         = state.campaignData?.startDate
-      ? new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
-      : '—';
-    document.getElementById('prof-members').textContent = `${total} member${total!==1?'s':''}`;
-
-    // Per-challenge progress
-    const cpList = document.getElementById('challenge-progress-list');
-    cpList.innerHTML = '';
-    CHALLENGES.forEach(ch => {
-      let done = 0, possible = 0;
-      for (let d = 1; d <= currentDay; d++) {
-        const isRest = ch.schedule[d-1] === null;
-        if (!isRest) { possible++; if (state.members[state.userId]?.completions?.[`d${d}_${ch.id}`]) done++; }
-        else { done++; possible++; } // rest days always count
+    // Challenge progress
+    const cpList=document.getElementById('challenge-progress-list');
+    cpList.innerHTML='';
+    CHALLENGES.forEach(ch=>{
+      let done=0,possible=0;
+      for(let d=1;d<=day;d++){
+        const isRest=ch.schedule[d-1]===null;
+        if(!isRest){possible++;if(me.completions?.[`d${d}_${ch.id}`])done++;}
+        else{done++;possible++;}
       }
-      const pct = possible ? Math.round((done/possible)*100) : 0;
-      const row = document.createElement('div');
-      row.className = 'setting-row';
-      row.innerHTML = `
+      const pct=possible?Math.round((done/possible)*100):0;
+      const row=document.createElement('div');
+      row.className='setting-row';
+      row.innerHTML=`
+        <span style="display:flex;align-items:center;gap:8px">${ch.emoji} <span>${ch.name}</span></span>
         <span style="display:flex;align-items:center;gap:8px">
-          <span>${ch.emoji}</span>
-          <span>${ch.name}</span>
-        </span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <div style="width:60px;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden">
+          <div style="width:55px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden">
             <div style="width:${pct}%;height:100%;background:${ch.color};border-radius:3px"></div>
           </div>
           <span class="setting-val">${done}/${possible}</span>
@@ -872,197 +910,168 @@
     });
   }
 
-  // ════════════════════════════════════════════════════
-  // TAB NAVIGATION
-  // ════════════════════════════════════════════════════
-  function switchTab(tabId) {
-    document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`)?.classList.add('active');
-    document.querySelector(`.nav-btn[data-tab="${tabId}"]`)?.classList.add('active');
+  function renderFeedback() {
+    const feed=document.getElementById('feed-messages');
+    if(state.messages.length===0){
+      feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">💬</div>No messages yet — be the first to shout out your crew!</div>';
+      return;
+    }
+    feed.innerHTML='';
+    state.messages.forEach(msg=>{
+      const isMe=msg.userId===state.userId;
+      const time=msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}) : '';
+      const div=document.createElement('div');
+      div.className='feed-msg'+(isMe?' mine':'');
+      div.innerHTML=`
+        <div class="feed-avatar">${msg.avatar||'💪'}</div>
+        <div class="feed-bubble">
+          <div class="feed-sender">${isMe?'You':msg.name}</div>
+          <div class="feed-text">${escHtml(msg.text)}</div>
+          ${time?`<div class="feed-time">${time}</div>`:''}
+        </div>`;
+      feed.appendChild(div);
+    });
+    feed.scrollTop=feed.scrollHeight;
   }
 
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
+  function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // ════════════════════════════════════════════════════
-  // WELCOME SCREEN LOGIC
-  // ════════════════════════════════════════════════════
-  document.getElementById('btn-show-create').addEventListener('click', () => {
-    showScreen('screen-create');
-    const today = new Date().toISOString().slice(0,10);
-    document.getElementById('create-start-date').value = today;
-  });
+  // ─── Tab nav ──────────────────────────────────────────
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById(`tab-${tabId}`)?.classList.add('active');
+    document.querySelector(`.nav-btn[data-tab="${tabId}"]`)?.classList.add('active');
+    if(tabId==='feedback') setTimeout(()=>{ const f=document.getElementById('feed-messages'); f.scrollTop=f.scrollHeight; },50);
+  }
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 
-  document.getElementById('btn-back-to-join').addEventListener('click', () => showScreen('screen-welcome'));
+  // ─── Welcome screen ───────────────────────────────────
+  document.getElementById('btn-show-create').addEventListener('click',()=>{ showScreen('screen-create'); document.getElementById('create-start-date').value=new Date().toISOString().slice(0,10); });
+  document.getElementById('btn-back-to-join').addEventListener('click',()=>showScreen('screen-welcome'));
 
-  document.getElementById('btn-join').addEventListener('click', async () => {
-    const name = document.getElementById('join-name').value.trim();
-    const code = document.getElementById('join-code').value.trim().toUpperCase();
-    const err  = document.getElementById('join-error');
-
-    if (!name) { err.textContent = 'Please enter your name'; return; }
-    if (!code || code.length < 4) { err.textContent = 'Please enter a valid campaign code'; return; }
-
-    err.textContent = '';
-    document.getElementById('btn-join').disabled = true;
-    document.getElementById('btn-join').textContent = 'Joining...';
-
+  document.getElementById('btn-join').addEventListener('click',async()=>{
+    const name=document.getElementById('join-name').value.trim();
+    const code=document.getElementById('join-code').value.trim();
+    const err=document.getElementById('join-error');
+    if(!name){err.textContent='Enter your name';return;}
+    if(!code||code.length<4){err.textContent='Enter a valid campaign code';return;}
+    err.textContent='';
+    document.getElementById('btn-join').textContent='Checking...';
     try {
-      // Dynamically import getDocs/query/where for code lookup
-      const { getDocs, query: q2, collection: col2, where: w2 } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-      const snap = await getDocs(q2(col2(db, 'campaigns'), w2('code', '==', code)));
+      // Validate first then show avatar picker
+      const snap=await getDocs(query(collection(db,'campaigns'),where('code','==',code.toUpperCase())));
+      if(snap.empty) throw new Error('Campaign code not found.');
+      state.pendingAvatar={ type:'join', name, code, campaignData:snap.docs[0].data(), campaignId:snap.docs[0].id };
+      showAvatarPicker(null);
+    } catch(e){ err.textContent=e.message; document.getElementById('btn-join').textContent='Join Campaign'; }
+  });
 
-      if (snap.empty) throw new Error('Campaign code not found. Check the code and try again.');
+  document.getElementById('btn-create-go').addEventListener('click',async()=>{
+    const cName=document.getElementById('create-campaign-name').value.trim();
+    const yourName=document.getElementById('create-your-name').value.trim();
+    const startDate=document.getElementById('create-start-date').value;
+    const err=document.getElementById('create-error');
+    if(!cName){err.textContent='Enter a campaign name';return;}
+    if(!yourName){err.textContent='Enter your name';return;}
+    if(!startDate){err.textContent='Choose a start date';return;}
+    err.textContent='';
+    state.pendingAvatar={ type:'create', cName, yourName, startDate };
+    showAvatarPicker(null);
+  });
 
-      const campaignDoc = snap.docs[0];
-      const campaignId  = campaignDoc.id;
-      const userId      = genId(8);
-      const avatar      = genAvatar();
-
-      await setDoc(doc(db, 'campaigns', campaignId, 'members', userId), {
-        name: name, avatar: avatar, joinedAt: serverTimestamp(), completions: {}
-      });
-
-      state.userId     = userId;
-      state.campaignId = campaignId;
-      state.campaignData = campaignDoc.data();
-      saveLocal();
-      startApp();
+  document.getElementById('btn-avatar-confirm').addEventListener('click',async()=>{
+    const pending=state.pendingAvatar;
+    document.getElementById('btn-avatar-confirm').textContent='Setting up...';
+    try {
+      if(pending.type==='create'){
+        const {campaignId,userId,code}=await createCampaign(pending.cName,pending.yourName,pending.startDate);
+        state.userId=userId; state.campaignId=campaignId;
+        state.campaignData={name:pending.cName,startDate:pending.startDate,code};
+        saveLocal(); startApp(); toast(`🎉 Campaign created! Code: ${code}`,4000);
+      } else {
+        const userId=genId(8);
+        await setDoc(doc(db,'campaigns',pending.campaignId,'members',userId),{ name:pending.name, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
+        state.userId=userId; state.campaignId=pending.campaignId;
+        state.campaignData=pending.campaignData;
+        saveLocal(); startApp(); toast(`Welcome to the crew, ${pending.name}! 💪`,3000);
+      }
     } catch(e) {
-      err.textContent = e.message || 'Something went wrong. Try again.';
-      document.getElementById('btn-join').disabled = false;
-      document.getElementById('btn-join').textContent = 'Join Campaign';
+      toast('Error: '+e.message,3000);
+      document.getElementById('btn-avatar-confirm').textContent='Let\'s Go! 💪';
     }
   });
 
-  document.getElementById('btn-create-go').addEventListener('click', async () => {
-    const campaignName = document.getElementById('create-campaign-name').value.trim();
-    const yourName     = document.getElementById('create-your-name').value.trim();
-    const startDate    = document.getElementById('create-start-date').value;
-    const err          = document.getElementById('create-error');
+  // Profile avatar change
+  document.getElementById('profile-avatar').addEventListener('click',()=>{
+    const current=state.members[state.userId]?.avatar||AVATARS[0];
+    showAvatarPicker(current);
+    state.pendingAvatar={ type:'change' };
+    document.getElementById('btn-avatar-confirm').textContent='Update Avatar';
+  });
 
-    if (!campaignName) { err.textContent = 'Enter a campaign name'; return; }
-    if (!yourName)     { err.textContent = 'Enter your name'; return; }
-    if (!startDate)    { err.textContent = 'Choose a start date'; return; }
-
-    err.textContent = '';
-    document.getElementById('btn-create-go').disabled = true;
-    document.getElementById('btn-create-go').textContent = 'Creating...';
-
-    try {
-      const { campaignId, userId, code } = await createCampaign(campaignName, yourName, startDate);
-      state.userId     = userId;
-      state.campaignId = campaignId;
-      state.campaignData = { name: campaignName, startDate, code };
-      saveLocal();
-      startApp();
-      toast(`🎉 Campaign created! Code: ${code}`);
-    } catch(e) {
-      err.textContent = e.message || 'Something went wrong. Try again.';
-      document.getElementById('btn-create-go').disabled = false;
-      document.getElementById('btn-create-go').textContent = 'Create & Start';
+  // Handle avatar confirm for change case
+  const origConfirm=document.getElementById('btn-avatar-confirm');
+  origConfirm.addEventListener('click',async()=>{
+    if(state.pendingAvatar?.type==='change'){
+      await updateAvatar(selectedAvatar);
+      showScreen('screen-app');
+      state.pendingAvatar=null;
+      origConfirm.textContent='Let\'s Go! 💪';
     }
   });
 
-  // Leave campaign
-  document.getElementById('btn-leave').addEventListener('click', () => {
-    if (!confirm('Leave this campaign? Your progress will be lost.')) return;
-    state.unsubscribers.forEach(u => u());
-    state.userId = null; state.campaignId = null; state.campaignData = null; state.members = {};
+  // Copy code
+  document.getElementById('copy-code-row').addEventListener('click',()=>{
+    const code=state.campaignData?.code;
+    if(code){ navigator.clipboard?.writeText(code); toast('Code copied: '+code); }
+  });
+
+  // Feedback send
+  document.getElementById('feed-send-btn').addEventListener('click',async()=>{
+    const input=document.getElementById('feed-input');
+    const text=input.value.trim();
+    if(!text) return;
+    input.value='';
+    input.style.height='auto';
+    await sendMessage(text);
+  });
+  document.getElementById('feed-input').addEventListener('keydown',(e)=>{
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); document.getElementById('feed-send-btn').click(); }
+  });
+
+  // Leave
+  document.getElementById('btn-leave').addEventListener('click',()=>{
+    if(!confirm('Leave this campaign? Your progress will be lost.')) return;
+    state.unsubscribers.forEach(u=>u());
+    state.userId=null; state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
     localStorage.removeItem('cc_user');
     showScreen('screen-welcome');
   });
 
-  // ════════════════════════════════════════════════════
-  // APP STARTUP
-  // ════════════════════════════════════════════════════
+  // ─── App startup ──────────────────────────────────────
   async function startApp() {
     showScreen('screen-loading');
-    document.getElementById('loading-msg').textContent = 'Loading your campaign...';
-
     try {
-      // Load campaign data
-      if (!state.campaignData) {
-        const snap = await getDoc(doc(db, 'campaigns', state.campaignId));
-        if (!snap.exists()) throw new Error('Campaign not found');
-        state.campaignData = snap.data();
+      if(!state.campaignData){
+        const snap=await getDoc(doc(db,'campaigns',state.campaignId));
+        if(!snap.exists()) throw new Error('Campaign not found');
+        state.campaignData=snap.data();
       }
-
-      // Subscribe to members for live updates
-      subscribeToMembers();
-
+      subscribeAll();
       showScreen('screen-app');
     } catch(e) {
-      console.error(e);
-      document.getElementById('loading-msg').textContent = 'Error: ' + e.message;
-      setTimeout(() => showScreen('screen-welcome'), 3000);
+      document.getElementById('loading-msg').textContent='Error: '+e.message;
+      setTimeout(()=>showScreen('screen-welcome'),3000);
     }
   }
 
   async function init() {
-    const saved = loadLocal();
-    if (saved?.userId && saved?.campaignId) {
-      state.userId     = saved.userId;
-      state.campaignId = saved.campaignId;
-      await startApp();
-    } else {
-      showScreen('screen-welcome');
-    }
+    const saved=loadLocal();
+    if(saved?.userId&&saved?.campaignId){ state.userId=saved.userId; state.campaignId=saved.campaignId; await startApp(); }
+    else showScreen('screen-welcome');
   }
 
-  // ════════════════════════════════════════════════════
-  // CONFETTI (on perfect day)
-  // ════════════════════════════════════════════════════
-  function launchConfetti() {
-    const canvas = document.getElementById('confetti-canvas');
-    const ctx    = canvas.getContext('2d');
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const pieces = Array.from({length: 80}, () => ({
-      x: Math.random() * canvas.width,
-      y: -10,
-      r: Math.random() * 6 + 3,
-      c: `hsl(${Math.random()*360},70%,60%)`,
-      vx: (Math.random()-0.5)*4,
-      vy: Math.random()*3+2,
-      angle: Math.random()*360,
-      va: (Math.random()-0.5)*6,
-    }));
-    let frame = 0;
-    function draw() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      pieces.forEach(p => {
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle*Math.PI/180);
-        ctx.fillStyle = p.c; ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
-        ctx.restore();
-        p.x += p.vx; p.y += p.vy; p.angle += p.va; p.vy *= 1.01;
-      });
-      frame++;
-      if (frame < 120) requestAnimationFrame(draw);
-      else ctx.clearRect(0,0,canvas.width,canvas.height);
-    }
-    draw();
-  }
-
-  // Watch for perfect day completion
-  let wasPerfect = false;
-  function checkPerfectDay() {
-    if (!state.campaignData) return;
-    const day   = getDayNumber(state.campaignData.startDate);
-    const pts   = getDayPoints(state.userId, day);
-    const isPerfect = pts >= 4;
-    if (isPerfect && !wasPerfect) { launchConfetti(); toast('🎉 Perfect day!', 3000); }
-    wasPerfect = isPerfect;
-  }
-
-  // Patch renderAll to include perfect check
-  const _origRenderAll = renderAll;
-
-  // ════════════════════════════════════════════════════
-  // KICK OFF
-  // ════════════════════════════════════════════════════
   init();
 </script>
 </body>
