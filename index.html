@@ -365,6 +365,143 @@
     .clan-trophy-icon { font-size: 52px; margin-bottom: 8px; animation: bounce 0.6s ease; }
     .clan-trophy-label { font-size: 11px; font-weight: 700; color: #4B9FFF; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
     .clan-trophy-name { font-size: 18px; font-weight: 900; }
+
+    /* ── Warrior Screen ── */
+    #screen-warrior {
+      background: #0D1117;
+      display: flex; flex-direction: column; overflow: hidden; z-index: 10;
+    }
+    .warrior-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: calc(var(--sat) + 14px) 16px 12px;
+      background: rgba(13,17,23,0.97); border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .warrior-back-btn {
+      width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .warrior-back-btn:active { background: var(--surface-2); }
+    .warrior-header-title { font-size: 19px; font-weight: 900; flex: 1; }
+    .warrior-save-btn {
+      padding: 9px 18px; border-radius: 999px;
+      background: linear-gradient(135deg,#58A6FF,#1F6FEB);
+      color: #fff; font-size: 13px; font-weight: 800; border: none; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+    }
+    .warrior-save-btn:active { transform: scale(0.95); }
+    .warrior-body {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column;
+    }
+    .warrior-body::-webkit-scrollbar { display: none; }
+    .warrior-canvas-wrap {
+      display: flex; justify-content: center; align-items: center;
+      padding: 16px 16px 10px; background: #0a0d12; flex-shrink: 0;
+    }
+    #warrior-canvas {
+      border-radius: 16px; display: block;
+      box-shadow: 0 0 40px rgba(88,166,255,0.15), 0 8px 32px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .warrior-clan-banner {
+      text-align: center; padding: 6px 16px 10px;
+      font-size: 12px; color: var(--text-2); font-weight: 600;
+      background: #0a0d12; flex-shrink: 0;
+    }
+    .warrior-cat-tabs {
+      display: flex; gap: 0; padding: 0 16px 0; flex-shrink: 0;
+      border-bottom: 1px solid var(--border); background: var(--bg);
+    }
+    .warrior-cat-btn {
+      flex: 1; padding: 12px 4px 10px; background: none; border: none;
+      color: var(--text-2); font-size: 11px; font-weight: 700;
+      cursor: pointer; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; transition: color 0.15s; text-transform: uppercase;
+      letter-spacing: 0.04em; border-bottom: 2px solid transparent;
+      position: relative; top: 1px;
+    }
+    .warrior-cat-btn .cat-emoji { font-size: 18px; }
+    .warrior-cat-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .warrior-options {
+      padding: 14px 16px 24px; flex: 1;
+    }
+    .warrior-opt-section { margin-bottom: 18px; }
+    .warrior-opt-label {
+      font-size: 10px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .warrior-opt-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .warrior-opt-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 8px 6px 7px; border-radius: 12px;
+      background: var(--surface); border: 2px solid var(--border);
+      cursor: pointer; transition: all 0.15s; min-width: 56px; flex: 1;
+      max-width: 80px;
+    }
+    .warrior-opt-btn:active { transform: scale(0.93); }
+    .warrior-opt-btn.selected {
+      border-color: var(--primary); background: rgba(88,166,255,0.12);
+    }
+    .warrior-opt-btn .opt-swatch {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .warrior-opt-btn .opt-label {
+      font-size: 9px; font-weight: 700; color: var(--text-2);
+      text-transform: uppercase; text-align: center; letter-spacing: 0.03em;
+      line-height: 1.2;
+    }
+    .warrior-opt-btn.selected .opt-label { color: var(--primary); }
+    .warrior-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+    }
+    .warrior-toggle-label { font-size: 14px; font-weight: 600; }
+    .warrior-toggle {
+      width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer;
+      position: relative; background: var(--surface-2); transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .warrior-toggle::after {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; top: 3px; left: 3px;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .warrior-toggle.on { background: var(--primary); }
+    .warrior-toggle.on::after { transform: translateX(20px); }
+
+    /* Warrior thumbnail on profile/leaderboard */
+    .warrior-thumb {
+      width: 100px; height: 134px; border-radius: 12px; overflow: hidden;
+      border: 2px solid var(--border); flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .warrior-thumb canvas { display: block; }
+    .lb-warrior-icon {
+      width: 32px; height: 32px; border-radius: 8px; overflow: hidden;
+      flex-shrink: 0; border: 1px solid var(--border);
+    }
+    .warrior-profile-wrap {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px; margin-bottom: 8px;
+    }
+    .warrior-profile-info { flex: 1; min-width: 0; }
+    .warrior-profile-title { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+    .warrior-profile-sub { font-size: 12px; color: var(--text-2); margin-bottom: 10px; }
+    .btn-warrior-edit {
+      padding: 9px 16px; border-radius: 999px;
+      background: rgba(88,166,255,0.12); color: var(--primary);
+      border: 1px solid rgba(88,166,255,0.25); font-size: 13px;
+      font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-warrior-edit:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -562,6 +699,8 @@
           <div class="stat-card"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">Streak 🔥</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completion</div></div>
         </div>
+        <div class="section-header">⚔️ My Warrior</div>
+        <div id="profile-warrior-section"></div>
         <div class="section-header">🏰 My Clan</div>
         <div id="profile-clan-section"></div>
         <div class="section-header">🏅 Badges</div>
@@ -664,6 +803,31 @@
       Feedback
     </button>
   </nav>
+</div>
+
+<!-- Warrior Creator Screen -->
+<div id="screen-warrior" class="screen hidden">
+  <div class="warrior-header">
+    <button class="warrior-back-btn" id="warrior-back-btn">←</button>
+    <div class="warrior-header-title">⚔️ Warrior Creator</div>
+    <button class="warrior-save-btn" id="warrior-save-btn">Save ✓</button>
+  </div>
+  <div class="warrior-body">
+    <div class="warrior-canvas-wrap">
+      <canvas id="warrior-canvas" width="260" height="340"></canvas>
+    </div>
+    <div class="warrior-clan-banner" id="warrior-clan-banner">No clan — tartan uses default colours</div>
+
+    <!-- Category tabs -->
+    <div class="warrior-cat-tabs">
+      <button class="warrior-cat-btn active" data-cat="face"><span class="cat-emoji">😊</span>Face</button>
+      <button class="warrior-cat-btn" data-cat="hair"><span class="cat-emoji">💇</span>Hair</button>
+      <button class="warrior-cat-btn" data-cat="weapon"><span class="cat-emoji">⚔️</span>Weapon</button>
+      <button class="warrior-cat-btn" data-cat="extras"><span class="cat-emoji">🎨</span>Extras</button>
+    </div>
+
+    <div class="warrior-options" id="warrior-options"></div>
+  </div>
 </div>
 
 <!-- Clan trophy popup -->
@@ -802,7 +966,7 @@
   }
 
   function showScreen(id) {
-    ['screen-loading','screen-welcome','screen-create','screen-avatar','screen-clan','screen-app'].forEach(s=>
+    ['screen-loading','screen-welcome','screen-create','screen-avatar','screen-clan','screen-app','screen-warrior'].forEach(s=>
       document.getElementById(s).classList.toggle('hidden',s!==id));
   }
 
@@ -1343,6 +1507,9 @@
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
     document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
 
+    // Warrior section
+    renderWarriorProfile();
+
     // Clan section
     const clanSec=document.getElementById('profile-clan-section');
     const myClanId=me.clanId||null;
@@ -1845,6 +2012,997 @@
       b.addEventListener('click', () => { setTimeout(initFeedbackTab, 50); });
     }
   });
+
+  // ═══════════════════════════════════════════════════════
+  // ─── Highland Warrior Avatar Creator ─────────────────
+  // ═══════════════════════════════════════════════════════
+
+  const WC = {
+    cfg: {
+      skin:'medium', faceShape:'oval', eyeStyle:'standard',
+      eyeColor:'brown', browStyle:'arched', hairStyle:'man-bun',
+      hairColor:'dark-brown', beardStyle:'full', beardColor:'match',
+      weapon:'claymore', warPaint:'cheeks', scar:false
+    },
+
+    SKIN_TONES: [
+      { id:'fair',   hex:'#F5D5C8', label:'Fair' },
+      { id:'light',  hex:'#ECC5A0', label:'Light' },
+      { id:'medium', hex:'#D4A574', label:'Medium' },
+      { id:'tan',    hex:'#C08050', label:'Tan' },
+      { id:'dark',   hex:'#8B5A2B', label:'Dark' },
+      { id:'deep',   hex:'#5C3317', label:'Deep' },
+    ],
+    FACE_SHAPES: [
+      { id:'oval',    label:'Oval',    icon:'🥚' },
+      { id:'round',   label:'Round',   icon:'⭕' },
+      { id:'square',  label:'Square',  icon:'⬜' },
+      { id:'angular', label:'Angular', icon:'◇' },
+    ],
+    EYE_STYLES: [
+      { id:'standard',  label:'Standard', icon:'👁️' },
+      { id:'almond',    label:'Almond',   icon:'🌸' },
+      { id:'deep-set',  label:'Deep',     icon:'🔭' },
+    ],
+    EYE_COLORS: [
+      { id:'brown', hex:'#6B3A2A', label:'Brown' },
+      { id:'blue',  hex:'#3B7CC4', label:'Blue' },
+      { id:'green', hex:'#2E7D4F', label:'Green' },
+      { id:'grey',  hex:'#6B7B8D', label:'Grey' },
+    ],
+    BROW_STYLES: [
+      { id:'arched',   label:'Arched',   icon:'⌒' },
+      { id:'straight', label:'Straight', icon:'─' },
+      { id:'thick',    label:'Thick',    icon:'▬' },
+    ],
+    HAIR_STYLES: [
+      { id:'short-crop',    label:'Short',    icon:'✂️' },
+      { id:'medium',        label:'Medium',   icon:'💈' },
+      { id:'man-bun',       label:'Man Bun',  icon:'🎱' },
+      { id:'long-warrior',  label:'Long',     icon:'〰️' },
+      { id:'top-knot',      label:'Top Knot', icon:'🔝' },
+    ],
+    HAIR_COLORS: [
+      { id:'black',      hex:'#1A1A1A', label:'Black' },
+      { id:'dark-brown', hex:'#3B2314', label:'D.Brown' },
+      { id:'brown',      hex:'#6B3A1E', label:'Brown' },
+      { id:'auburn',     hex:'#7B3A00', label:'Auburn' },
+      { id:'blonde',     hex:'#D4A853', label:'Blonde' },
+      { id:'red',        hex:'#C44D1A', label:'Red' },
+      { id:'grey',       hex:'#8C8C8C', label:'Grey' },
+    ],
+    BEARD_STYLES: [
+      { id:'none',    label:'None',    icon:'🚫' },
+      { id:'stubble', label:'Stubble', icon:'🌾' },
+      { id:'short',   label:'Short',   icon:'🧔' },
+      { id:'full',    label:'Full',    icon:'🦁' },
+      { id:'viking',  label:'Viking',  icon:'🪬' },
+    ],
+    WEAPONS: [
+      { id:'none',       label:'None',   icon:'🤲' },
+      { id:'claymore',   label:'Claymore', icon:'🗡️' },
+      { id:'battle-axe', label:'Axe',    icon:'🪓' },
+      { id:'targe',      label:'Targe',  icon:'🛡️' },
+    ],
+    WAR_PAINTS: [
+      { id:'none',       label:'None',   icon:'😶' },
+      { id:'cheeks',     label:'Cheeks', icon:'✦' },
+      { id:'full-face',  label:'Full',   icon:'🎭' },
+    ],
+
+    // ── Colour helpers ──────────────────────────────────
+    _darken(hex, pct) {
+      try {
+        const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        const f=1-pct;
+        return `rgb(${Math.round(r*f)},${Math.round(g*f)},${Math.round(b*f)})`;
+      } catch(e) { return hex; }
+    },
+    _lighten(hex, pct) {
+      try {
+        const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        return `rgb(${Math.round(r+(255-r)*pct)},${Math.round(g+(255-g)*pct)},${Math.round(b+(255-b)*pct)})`;
+      } catch(e) { return hex; }
+    },
+    _hexRgb(hex) {
+      try {
+        return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+      } catch(e) { return [0,0,0]; }
+    },
+    _rgbStr(hex) { const [r,g,b]=this._hexRgb(hex); return `${r},${g},${b}`; },
+
+    // ── Get clan colours ────────────────────────────────
+    _getClan() {
+      const clanId = state.members[state.userId]?.clanId;
+      if (!clanId || !state.clans[clanId]) return { c1:'#8B0000', c2:'#1A5E2A', c3:'#0D2B52', name:'No Clan' };
+      const clan = state.clans[clanId];
+      const t = getTartan(clan.tartanId);
+      return { c1: t.c1, c2: t.c2, c3: t.c3, name: clan.name };
+    },
+
+    // ── Master draw function ────────────────────────────
+    draw(canvas, cfg) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const c = cfg || this.cfg;
+      ctx.clearRect(0, 0, W, H);
+
+      const skinHex  = (this.SKIN_TONES.find(s=>s.id===c.skin)||this.SKIN_TONES[2]).hex;
+      const hairHex  = (this.HAIR_COLORS.find(h=>h.id===c.hairColor)||this.HAIR_COLORS[1]).hex;
+      const beardHex = c.beardColor==='match' ? hairHex : (this.HAIR_COLORS.find(h=>h.id===c.beardColor)||{ hex:hairHex }).hex;
+      const eyeHex   = (this.EYE_COLORS.find(e=>e.id===c.eyeColor)||this.EYE_COLORS[0]).hex;
+      const clan     = this._getClan();
+
+      // Head geometry
+      const cx = W * 0.5, cy = H * 0.47;
+      const fw = { oval:55, round:60, square:58, angular:52 }[c.faceShape] || 55;
+      const fh = { oval:70, round:62, square:64, angular:68 }[c.faceShape] || 70;
+
+      this._drawBg(ctx, W, H, clan);
+      this._drawWeapon(ctx, W, H, c.weapon, clan);
+      this._drawBackHair(ctx, cx, cy, fw, fh, c.hairStyle, hairHex);
+      this._drawShoulders(ctx, W, H, clan);
+      this._drawNeck(ctx, cx, cy, fh, skinHex);
+      this._drawFace(ctx, cx, cy, fw, fh, c.faceShape, skinHex);
+      this._drawEars(ctx, cx, cy, fw, fh, skinHex);
+      this._drawEyebrows(ctx, cx, cy, fw, fh, c.browStyle, beardHex);
+      this._drawEyes(ctx, cx, cy, fw, c.eyeStyle, eyeHex, skinHex);
+      this._drawNose(ctx, cx, cy, skinHex);
+      this._drawMouth(ctx, cx, cy, fh, skinHex);
+      this._drawBeard(ctx, cx, cy, fw, fh, c.beardStyle, beardHex, skinHex);
+      this._drawHair(ctx, cx, cy, fw, fh, c.hairStyle, hairHex);
+      this._drawBrooch(ctx, W, H, clan);
+      if (c.warPaint && c.warPaint !== 'none') this._drawWarPaint(ctx, cx, cy, fw, c.warPaint, clan);
+      if (c.scar) this._drawScar(ctx, cx, cy, fw, skinHex);
+    },
+
+    _drawBg(ctx, W, H, clan) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      const [r,g,b] = this._hexRgb(clan.c3||'#0D2B52');
+      grad.addColorStop(0, '#060a0f');
+      grad.addColorStop(0.45, `rgba(${Math.round(r*0.28)},${Math.round(g*0.28)},${Math.round(b*0.28)},1)`);
+      grad.addColorStop(1, '#0D1117');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Vignette
+      const vig = ctx.createRadialGradient(W/2,H/2,W*0.25, W/2,H/2,W*0.85);
+      vig.addColorStop(0,'rgba(0,0,0,0)');
+      vig.addColorStop(1,'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vig; ctx.fillRect(0,0,W,H);
+
+      // Atmospheric glow
+      const [r1,g1,b1] = this._hexRgb(clan.c1||'#8B0000');
+      const glow = ctx.createRadialGradient(W/2, H, 0, W/2, H, H*0.7);
+      glow.addColorStop(0, `rgba(${r1},${g1},${b1},0.18)`);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow; ctx.fillRect(0, H*0.4, W, H*0.6);
+    },
+
+    _drawWeapon(ctx, W, H, weapon, clan) {
+      if (!weapon || weapon==='none') return;
+      ctx.save();
+      if (weapon==='claymore') {
+        ctx.save();
+        ctx.translate(W*0.2, H*0.88);
+        ctx.rotate(-Math.PI*0.17);
+        const bLen = H*0.58;
+        // Blade
+        const bladeG = ctx.createLinearGradient(-5,0, 5,0);
+        bladeG.addColorStop(0,'#A0A0A0'); bladeG.addColorStop(0.5,'#E0E0E0'); bladeG.addColorStop(1,'#909090');
+        ctx.fillStyle = bladeG;
+        ctx.beginPath();
+        ctx.moveTo(-3,0); ctx.lineTo(3,0); ctx.lineTo(1,-bLen); ctx.lineTo(-1,-bLen);
+        ctx.closePath(); ctx.fill();
+        // Blade fuller (groove)
+        ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(0,-bLen+20); ctx.stroke();
+        // Crossguard
+        const cgG = ctx.createLinearGradient(-22,-8, 22,-8);
+        cgG.addColorStop(0,'#6B5234'); cgG.addColorStop(0.5,'#9B7B54'); cgG.addColorStop(1,'#6B5234');
+        ctx.fillStyle = cgG;
+        ctx.beginPath();
+        ctx.moveTo(-22,-5); ctx.bezierCurveTo(-22,-14, 22,-14, 22,-5); ctx.lineTo(22,3); ctx.bezierCurveTo(22,5, -22,5, -22,3); ctx.closePath();
+        ctx.fill();
+        // Grip
+        for (let i=0; i<7; i++) {
+          ctx.fillStyle = i%2===0 ? '#4A3020' : '#6B4A30';
+          ctx.fillRect(-5, 5+i*7, 10, 7);
+        }
+        // Pommel
+        const pomG = ctx.createRadialGradient(-2,-2,2, 0,57,10);
+        pomG.addColorStop(0, this._lighten(clan.c1,0.3)); pomG.addColorStop(1, clan.c1);
+        ctx.fillStyle = pomG;
+        ctx.beginPath(); ctx.arc(0,57,10,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(0,57,10,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+
+      } else if (weapon==='battle-axe') {
+        ctx.save();
+        ctx.translate(W*0.19, H*0.88);
+        ctx.rotate(-Math.PI*0.13);
+        const hLen = H*0.55;
+        // Handle
+        const hG = ctx.createLinearGradient(-4,0, 4,0);
+        hG.addColorStop(0,'#3A2010'); hG.addColorStop(0.5,'#6B4020'); hG.addColorStop(1,'#3A2010');
+        ctx.fillStyle = hG;
+        ctx.fillRect(-4,0,8,-hLen);
+        // Handle wrapping
+        ctx.strokeStyle='#2A1A0A'; ctx.lineWidth=2;
+        for (let y=0; y>-hLen; y-=14) {
+          ctx.beginPath(); ctx.moveTo(-4,y); ctx.lineTo(4,y); ctx.stroke();
+        }
+        // Axe head
+        const axeG = ctx.createLinearGradient(-50,-hLen*0.45, 10,-hLen*0.3);
+        axeG.addColorStop(0,'#C8C8C8'); axeG.addColorStop(0.5,'#E8E8E8'); axeG.addColorStop(1,'#A0A0A0');
+        ctx.fillStyle = axeG;
+        ctx.beginPath();
+        ctx.moveTo(0,-hLen*0.38);
+        ctx.bezierCurveTo(-35,-hLen*0.52, -55,-hLen*0.42, -52,-hLen*0.25);
+        ctx.bezierCurveTo(-48,-hLen*0.12, -20,-hLen*0.2, 0,-hLen*0.28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=1; ctx.stroke();
+        // Beard of axe
+        ctx.beginPath();
+        ctx.moveTo(0,-hLen*0.28);
+        ctx.bezierCurveTo(-20,-hLen*0.2, -28,-hLen*0.15, -20,-hLen*0.05);
+        ctx.lineTo(0,-hLen*0.08);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+      } else if (weapon==='targe') {
+        ctx.save();
+        ctx.translate(W*0.18, H*0.66);
+        const r = 46;
+        // Shadow
+        ctx.fillStyle='rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.ellipse(3,4,r+2,r+2,0,0,Math.PI*2); ctx.fill();
+        // Shield body
+        const sg = ctx.createRadialGradient(-r*0.3,-r*0.3,5, 0,0,r);
+        sg.addColorStop(0, this._lighten(clan.c1,0.25));
+        sg.addColorStop(0.6, clan.c1);
+        sg.addColorStop(1, this._darken(clan.c1,0.4));
+        ctx.fillStyle=sg;
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+        // Tartan cross
+        ctx.strokeStyle=clan.c2; ctx.lineWidth=6;
+        ctx.beginPath(); ctx.moveTo(-r,0); ctx.lineTo(r,0); ctx.moveTo(0,-r); ctx.lineTo(0,r); ctx.stroke();
+        ctx.strokeStyle=clan.c3; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-r,0); ctx.lineTo(r,0); ctx.moveTo(0,-r); ctx.lineTo(0,r); ctx.stroke();
+        ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(-r,0); ctx.lineTo(r,0); ctx.moveTo(0,-r); ctx.lineTo(0,r); ctx.stroke();
+        // Diagonal thin lines
+        ctx.strokeStyle=clan.c2; ctx.lineWidth=1.5; ctx.globalAlpha=0.4;
+        ctx.beginPath(); ctx.moveTo(-r,-r); ctx.lineTo(r,r); ctx.moveTo(r,-r); ctx.lineTo(-r,r); ctx.stroke();
+        ctx.globalAlpha=1;
+        // Boss
+        const bg2 = ctx.createRadialGradient(-4,-4,2, 0,0,13);
+        bg2.addColorStop(0,'#F0D060'); bg2.addColorStop(1,'#8B6820');
+        ctx.fillStyle=bg2;
+        ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.fill();
+        // Rim
+        ctx.strokeStyle='#7A5E2A'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+        ctx.strokeStyle='rgba(255,220,100,0.2)'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    },
+
+    _drawBackHair(ctx, cx, cy, fw, fh, style, hair) {
+      if (style==='short-crop' || style==='top-knot') return;
+      ctx.save();
+      const dark = this._darken(hair, 0.15);
+      ctx.fillStyle = dark;
+      if (style==='long-warrior') {
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-8, cy-fh*0.25);
+        ctx.bezierCurveTo(cx-fw-28, cy+30, cx-fw-35, cy+90, cx-38, cy+fh+75);
+        ctx.lineTo(cx+38, cy+fh+75);
+        ctx.bezierCurveTo(cx+fw+35, cy+90, cx+fw+28, cy+30, cx+fw+8, cy-fh*0.25);
+        ctx.bezierCurveTo(cx+fw+5, cy-fh*0.65, cx, cy-fh-12, cx-fw-5, cy-fh*0.65);
+        ctx.closePath(); ctx.fill();
+      } else if (style==='medium') {
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-4, cy-fh*0.15);
+        ctx.bezierCurveTo(cx-fw-18, cy+20, cx-fw-22, cy+65, cx-28, cy+fh+42);
+        ctx.lineTo(cx+28, cy+fh+42);
+        ctx.bezierCurveTo(cx+fw+22, cy+65, cx+fw+18, cy+20, cx+fw+4, cy-fh*0.15);
+        ctx.bezierCurveTo(cx+fw, cy-fh*0.6, cx, cy-fh-8, cx-fw, cy-fh*0.6);
+        ctx.closePath(); ctx.fill();
+      } else if (style==='man-bun') {
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-3, cy-fh*0.1);
+        ctx.bezierCurveTo(cx-fw-12, cy+15, cx-fw-12, cy+45, cx-18, cy+fh+15);
+        ctx.lineTo(cx+18, cy+fh+15);
+        ctx.bezierCurveTo(cx+fw+12, cy+45, cx+fw+12, cy+15, cx+fw+3, cy-fh*0.1);
+        ctx.bezierCurveTo(cx+fw, cy-fh*0.65, cx, cy-fh-6, cx-fw, cy-fh*0.65);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    },
+
+    _drawShoulders(ctx, W, H, clan) {
+      const sy = H*0.82;
+      // Dark cloak base
+      ctx.fillStyle = this._darken(clan.c1, 0.6);
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      ctx.lineTo(0, sy+8);
+      ctx.bezierCurveTo(W*0.12, sy-18, W*0.3, sy-36, W*0.44, sy-8);
+      ctx.lineTo(W*0.5, sy-12);
+      ctx.lineTo(W*0.56, sy-8);
+      ctx.bezierCurveTo(W*0.7, sy-36, W*0.88, sy-18, W, sy+8);
+      ctx.lineTo(W, H);
+      ctx.closePath(); ctx.fill();
+
+      // Tartan pattern
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      ctx.lineTo(0, sy+8);
+      ctx.bezierCurveTo(W*0.12, sy-18, W*0.3, sy-36, W*0.44, sy-8);
+      ctx.lineTo(W*0.5, sy-12);
+      ctx.lineTo(W*0.56, sy-8);
+      ctx.bezierCurveTo(W*0.7, sy-36, W*0.88, sy-18, W, sy+8);
+      ctx.lineTo(W, H);
+      ctx.closePath(); ctx.clip();
+
+      const stripe = 16;
+      ctx.globalAlpha = 0.75;
+      // Horizontal bands c2
+      for (let y=sy-50; y<H; y+=stripe*2) {
+        ctx.fillStyle=clan.c2; ctx.fillRect(0,y,W,stripe*0.65);
+      }
+      // Vertical bands c3
+      for (let x=0; x<W; x+=stripe*2) {
+        ctx.fillStyle=clan.c3; ctx.globalAlpha=0.38; ctx.fillRect(x,sy-50,stripe*0.65,H);
+      }
+      // Thin accent c1
+      ctx.globalAlpha=0.45;
+      for (let y=sy-50; y<H; y+=stripe*2) {
+        ctx.fillStyle=clan.c1; ctx.fillRect(0,y+stripe*0.75,W,stripe*0.22);
+      }
+      for (let x=0; x<W; x+=stripe*2) {
+        ctx.fillStyle=clan.c1; ctx.globalAlpha=0.3; ctx.fillRect(x+stripe*0.75,sy-50,stripe*0.22,H);
+      }
+      ctx.globalAlpha=1;
+      ctx.restore();
+
+      // Shoulder top-edge highlight
+      ctx.strokeStyle=this._lighten(clan.c2,0.2); ctx.lineWidth=1.5; ctx.globalAlpha=0.4;
+      ctx.beginPath();
+      ctx.moveTo(0,sy+8);
+      ctx.bezierCurveTo(W*0.12,sy-18, W*0.3,sy-36, W*0.44,sy-8);
+      ctx.lineTo(W*0.5,sy-12); ctx.lineTo(W*0.56,sy-8);
+      ctx.bezierCurveTo(W*0.7,sy-36, W*0.88,sy-18, W,sy+8);
+      ctx.stroke(); ctx.globalAlpha=1;
+
+      // Under-shirt/tunic at collar
+      ctx.fillStyle='#151820';
+      ctx.beginPath();
+      ctx.moveTo(W*0.38, sy-16);
+      ctx.lineTo(W*0.5, sy-20);
+      ctx.lineTo(W*0.62, sy-16);
+      ctx.bezierCurveTo(W*0.65, H*0.72, W*0.62, H*0.67, W*0.6, H*0.65);
+      ctx.bezierCurveTo(W*0.55, H*0.69, W*0.5, H*0.7, W*0.45, H*0.69);
+      ctx.bezierCurveTo(W*0.38, H*0.67, W*0.35, H*0.72, W*0.38, sy-16);
+      ctx.closePath(); ctx.fill();
+    },
+
+    _drawNeck(ctx, cx, cy, fh, skin) {
+      const ny = cy+fh*0.72;
+      const nw = 24;
+      const nkG = ctx.createLinearGradient(cx-nw,0, cx+nw,0);
+      nkG.addColorStop(0, this._darken(skin,0.12));
+      nkG.addColorStop(0.35, skin);
+      nkG.addColorStop(0.65, this._lighten(skin,0.05));
+      nkG.addColorStop(1, this._darken(skin,0.14));
+      ctx.fillStyle=nkG;
+      ctx.fillRect(cx-nw/2, ny, nw, 42);
+      // Shadow under chin
+      ctx.fillStyle=this._darken(skin,0.18);
+      ctx.fillRect(cx-nw/2-2, ny-3, nw+4, 8);
+    },
+
+    _drawFace(ctx, cx, cy, fw, fh, shape, skin) {
+      // Shadow offset
+      ctx.fillStyle=this._darken(skin,0.18);
+      ctx.beginPath();
+      if (shape==='square'||shape==='angular') {
+        ctx.moveTo(cx+2, cy-fh+2);
+        ctx.bezierCurveTo(cx+fw*0.95+2,cy-fh*0.92+2, cx+fw+2,cy-fh*0.22+2, cx+fw+2,cy+2);
+        ctx.bezierCurveTo(cx+fw+2,cy+fh*0.52+2, shape==='angular'?cx+fw*0.62+2:cx+fw*0.88+2,cy+fh*0.92+2, cx+2,cy+fh+2);
+        ctx.bezierCurveTo(shape==='angular'?cx-fw*0.62+2:cx-fw*0.88+2,cy+fh*0.92+2, cx-fw+2,cy+fh*0.52+2, cx-fw+2,cy+2);
+        ctx.bezierCurveTo(cx-fw+2,cy-fh*0.22+2, cx-fw*0.95+2,cy-fh*0.92+2, cx+2,cy-fh+2);
+      } else {
+        ctx.ellipse(cx+2,cy+3,fw,fh,0,0,Math.PI*2);
+      }
+      ctx.fill();
+
+      // Face base
+      const fg = ctx.createRadialGradient(cx-fw*0.3,cy-fh*0.25,fw*0.1, cx,cy,fw*1.3);
+      fg.addColorStop(0, this._lighten(skin,0.14));
+      fg.addColorStop(0.55, skin);
+      fg.addColorStop(1, this._darken(skin,0.14));
+      ctx.fillStyle=fg;
+      ctx.beginPath();
+      if (shape==='square') {
+        ctx.moveTo(cx,cy-fh);
+        ctx.bezierCurveTo(cx+fw*0.92,cy-fh*0.92, cx+fw,cy-fh*0.22, cx+fw,cy);
+        ctx.bezierCurveTo(cx+fw,cy+fh*0.52, cx+fw*0.88,cy+fh*0.92, cx,cy+fh);
+        ctx.bezierCurveTo(cx-fw*0.88,cy+fh*0.92, cx-fw,cy+fh*0.52, cx-fw,cy);
+        ctx.bezierCurveTo(cx-fw,cy-fh*0.22, cx-fw*0.92,cy-fh*0.92, cx,cy-fh);
+      } else if (shape==='angular') {
+        ctx.moveTo(cx,cy-fh);
+        ctx.bezierCurveTo(cx+fw*0.95,cy-fh*0.88, cx+fw,cy-fh*0.18, cx+fw,cy);
+        ctx.bezierCurveTo(cx+fw,cy+fh*0.42, cx+fw*0.6,cy+fh*0.96, cx,cy+fh);
+        ctx.bezierCurveTo(cx-fw*0.6,cy+fh*0.96, cx-fw,cy+fh*0.42, cx-fw,cy);
+        ctx.bezierCurveTo(cx-fw,cy-fh*0.18, cx-fw*0.95,cy-fh*0.88, cx,cy-fh);
+      } else {
+        ctx.ellipse(cx,cy,fw,fh,0,0,Math.PI*2);
+      }
+      ctx.fill();
+
+      // Cheek warmth
+      ctx.globalAlpha=0.07;
+      ctx.fillStyle='#FF8060';
+      ctx.beginPath(); ctx.ellipse(cx-fw*0.52,cy+8,17,11,-0.2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+fw*0.52,cy+8,17,11,0.2,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+
+      // Forehead ambient shadow
+      ctx.globalAlpha=0.06; ctx.fillStyle='#000';
+      ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.55,fw*0.75,fh*0.22,0,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    },
+
+    _drawEars(ctx, cx, cy, fw, fh, skin) {
+      const earY = cy-fh*0.05;
+      const drawEar = (ex, flip) => {
+        const eg = ctx.createRadialGradient(ex+(flip*4),earY,3, ex,earY,13);
+        eg.addColorStop(0,this._lighten(skin,0.06)); eg.addColorStop(1,this._darken(skin,0.1));
+        ctx.fillStyle=eg;
+        ctx.beginPath(); ctx.ellipse(ex,earY,9,15,flip*0.15,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=this._darken(skin,0.14);
+        ctx.beginPath(); ctx.ellipse(ex,earY,4.5,8,flip*0.1,0,Math.PI*2); ctx.fill();
+      };
+      drawEar(cx-fw-3,-1);
+      drawEar(cx+fw+3,1);
+    },
+
+    _drawEyebrows(ctx, cx, cy, fw, fh, style, hair) {
+      const bc = this._darken(hair, 0.25);
+      const browY2 = cy-32;
+      const off = 22;
+      ctx.strokeStyle=bc; ctx.lineCap='round'; ctx.lineJoin='round';
+      const lw = style==='thick' ? 5.5 : style==='straight' ? 3.5 : 3;
+      ctx.lineWidth=lw;
+      if (style==='arched') {
+        ctx.beginPath();
+        ctx.moveTo(cx-off-16,browY2+5);
+        ctx.bezierCurveTo(cx-off-6,browY2-4, cx-off+8,browY2-5, cx-off+16,browY2+2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx+off-16,browY2+2);
+        ctx.bezierCurveTo(cx+off-8,browY2-5, cx+off+6,browY2-4, cx+off+16,browY2+5);
+        ctx.stroke();
+      } else if (style==='thick') {
+        ctx.lineWidth=6;
+        ctx.beginPath();
+        ctx.moveTo(cx-off-16,browY2+3); ctx.bezierCurveTo(cx-off-4,browY2-2, cx-off+8,browY2-1, cx-off+16,browY2+3); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx+off-16,browY2+3); ctx.bezierCurveTo(cx+off-8,browY2-1, cx+off+4,browY2-2, cx+off+16,browY2+3); ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(cx-off-16,browY2); ctx.lineTo(cx-off+16,browY2); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx+off-16,browY2); ctx.lineTo(cx+off+16,browY2); ctx.stroke();
+      }
+    },
+
+    _drawEyes(ctx, cx, cy, fw, style, eyeHex, skin) {
+      const ey = cy-16;
+      const off = 22;
+      const drawEye = (ex) => {
+        // Socket
+        ctx.fillStyle=this._darken(skin,0.16);
+        ctx.beginPath(); ctx.ellipse(ex,ey,18,12,0,0,Math.PI*2); ctx.fill();
+        // White
+        ctx.fillStyle='#EEEBE4';
+        ctx.beginPath();
+        if (style==='almond') {
+          ctx.moveTo(ex-16,ey);
+          ctx.bezierCurveTo(ex-8,ey-10, ex+8,ey-10, ex+16,ey);
+          ctx.bezierCurveTo(ex+8,ey+7, ex-8,ey+7, ex-16,ey);
+        } else if (style==='deep-set') {
+          ctx.ellipse(ex,ey,14,9,0,0,Math.PI*2);
+        } else {
+          ctx.ellipse(ex,ey,15,10,0,0,Math.PI*2);
+        }
+        ctx.fill();
+        // Iris
+        ctx.fillStyle=eyeHex;
+        ctx.beginPath(); ctx.arc(ex,ey,6.5,0,Math.PI*2); ctx.fill();
+        // Iris lines
+        ctx.strokeStyle=this._darken(eyeHex,0.35); ctx.lineWidth=0.5; ctx.globalAlpha=0.45;
+        for (let i=0;i<6;i++){const a=(i/6)*Math.PI*2; ctx.beginPath(); ctx.moveTo(ex+Math.cos(a)*3,ey+Math.sin(a)*3); ctx.lineTo(ex+Math.cos(a)*6.5,ey+Math.sin(a)*6.5); ctx.stroke();}
+        ctx.globalAlpha=1;
+        // Pupil
+        ctx.fillStyle='#080808';
+        ctx.beginPath(); ctx.arc(ex,ey,3.8,0,Math.PI*2); ctx.fill();
+        // Catchlights
+        ctx.fillStyle='rgba(255,255,255,0.9)';
+        ctx.beginPath(); ctx.arc(ex-1.8,ey-2,1.8,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(ex+2.5,ey-0.8,0.9,0,Math.PI*2); ctx.fill();
+        // Upper lid
+        ctx.strokeStyle=this._darken(skin,0.38); ctx.lineWidth=1.5; ctx.lineCap='round';
+        ctx.beginPath();
+        if (style==='almond') { ctx.moveTo(ex-16,ey); ctx.bezierCurveTo(ex-8,ey-10, ex+8,ey-10, ex+16,ey); }
+        else { ctx.moveTo(ex-15,ey+2); ctx.bezierCurveTo(ex-8,ey-9, ex+8,ey-9, ex+15,ey+2); }
+        ctx.stroke();
+        // Lower lid
+        ctx.strokeStyle=this._darken(skin,0.12); ctx.lineWidth=0.8;
+        ctx.beginPath(); ctx.moveTo(ex-13,ey+4); ctx.bezierCurveTo(ex-4,ey+9, ex+4,ey+9, ex+13,ey+4); ctx.stroke();
+      };
+      drawEye(cx-off);
+      drawEye(cx+off);
+    },
+
+    _drawNose(ctx, cx, cy, skin) {
+      const ny=cy+6;
+      ctx.strokeStyle=this._darken(skin,0.22); ctx.lineWidth=1.2; ctx.lineCap='round';
+      ctx.globalAlpha=0.5;
+      ctx.beginPath(); ctx.moveTo(cx-4,cy-8); ctx.bezierCurveTo(cx-5,ny-2, cx-7,ny+2, cx-8,ny+5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+4,cy-8); ctx.bezierCurveTo(cx+5,ny-2, cx+7,ny+2, cx+8,ny+5); ctx.stroke();
+      ctx.globalAlpha=0.45;
+      ctx.beginPath(); ctx.arc(cx-9,ny+4,4,Math.PI*0.7,Math.PI*1.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+9,ny+4,4,Math.PI*1.1,Math.PI*2.3); ctx.stroke();
+      ctx.globalAlpha=0.06; ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.ellipse(cx,ny+3,5,3.5,0,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    },
+
+    _drawMouth(ctx, cx, cy, fh, skin) {
+      const my = cy+fh*0.4;
+      // Upper lip
+      ctx.fillStyle=this._darken(skin,0.28);
+      ctx.beginPath();
+      ctx.moveTo(cx-16,my+2);
+      ctx.bezierCurveTo(cx-9,my-2, cx-4,my, cx,my);
+      ctx.bezierCurveTo(cx+4,my, cx+9,my-2, cx+16,my+2);
+      ctx.bezierCurveTo(cx+11,my+8, cx+6,my+7, cx,my+8);
+      ctx.bezierCurveTo(cx-6,my+7, cx-11,my+8, cx-16,my+2);
+      ctx.closePath(); ctx.fill();
+      // Lower lip
+      ctx.fillStyle=this._darken(skin,0.17);
+      ctx.beginPath();
+      ctx.moveTo(cx-16,my+2);
+      ctx.bezierCurveTo(cx-11,my+16, cx+11,my+16, cx+16,my+2);
+      ctx.bezierCurveTo(cx+11,my+8, cx+6,my+7, cx,my+8);
+      ctx.bezierCurveTo(cx-6,my+7, cx-11,my+8, cx-16,my+2);
+      ctx.closePath(); ctx.fill();
+      // Lip line
+      ctx.strokeStyle=this._darken(skin,0.32); ctx.lineWidth=0.9; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(cx-15,my+3); ctx.bezierCurveTo(cx-7,my+9, cx+7,my+9, cx+15,my+3); ctx.stroke();
+      // Lower lip highlight
+      ctx.globalAlpha=0.1; ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.ellipse(cx,my+11,8,3,0,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    },
+
+    _drawMoustache(ctx, cx, cy, fh, beard) {
+      const my=cy+fh*0.36;
+      ctx.fillStyle=beard;
+      ctx.beginPath();
+      ctx.moveTo(cx-2,my+3);
+      ctx.bezierCurveTo(cx-11,my, cx-22,my+2, cx-24,my+8);
+      ctx.bezierCurveTo(cx-18,my+12, cx-9,my+10, cx-2,my+7);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx+2,my+3);
+      ctx.bezierCurveTo(cx+11,my, cx+22,my+2, cx+24,my+8);
+      ctx.bezierCurveTo(cx+18,my+12, cx+9,my+10, cx+2,my+7);
+      ctx.closePath(); ctx.fill();
+    },
+
+    _drawBraid(ctx, bx, by, beard) {
+      ctx.lineWidth=7; ctx.lineCap='round';
+      for (let i=0;i<6;i++){
+        const y1=by+i*12, y2=y1+8;
+        const x1=bx+(i%2===0?-3:3), x2=bx+(i%2===0?3:-3);
+        ctx.strokeStyle=i%2===0 ? beard : this._lighten(beard,0.18);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(x1+2,y1+3, x2-2,y2-3, x2,y2); ctx.stroke();
+      }
+      [by+14, by+38, by+62].forEach(by2=>{
+        const gg=ctx.createRadialGradient(bx-2,by2-2,1,bx,by2,7);
+        gg.addColorStop(0,'#F5D860'); gg.addColorStop(1,'#B08020');
+        ctx.fillStyle=gg;
+        ctx.beginPath(); ctx.arc(bx,by2,7,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.3)';
+        ctx.beginPath(); ctx.arc(bx-1.5,by2-1.5,2.5,0,Math.PI*2); ctx.fill();
+      });
+    },
+
+    _drawBeard(ctx, cx, cy, fw, fh, style, beard, skin) {
+      if (style==='none') return;
+      const jy=cy+fh*0.68;
+      const my=cy+fh*0.4;
+
+      if (style==='stubble') {
+        ctx.fillStyle=this._lighten(beard,0.05); ctx.globalAlpha=0.3;
+        for (let i=0;i<180;i++){
+          const r2=Math.random(),a=Math.random()*Math.PI;
+          const bx2=cx+(Math.cos(a)*r2*fw*0.9)*(Math.random()<0.5?1:-1);
+          const by=my+10+Math.random()*(fh*0.6-10);
+          if (by>my+8 && by<jy+14){ctx.beginPath(); ctx.arc(bx2,by,0.7,0,Math.PI*2); ctx.fill();}
+        }
+        ctx.globalAlpha=0.25;
+        for(let i=0;i<50;i++){const bx2=cx-14+Math.random()*28; const by=cy+fh*0.37-Math.random()*7; ctx.beginPath();ctx.arc(bx2,by,0.7,0,Math.PI*2);ctx.fill();}
+        ctx.globalAlpha=1;
+      } else if (style==='short') {
+        ctx.fillStyle=beard; ctx.globalAlpha=0.78;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw*0.72,my+6);
+        ctx.bezierCurveTo(cx-fw*0.82,my+22, cx-fw*0.78,jy+3, cx-fw*0.28,jy+8);
+        ctx.bezierCurveTo(cx-fw*0.08,jy+13, cx+fw*0.08,jy+13, cx+fw*0.28,jy+8);
+        ctx.bezierCurveTo(cx+fw*0.78,jy+3, cx+fw*0.82,my+22, cx+fw*0.72,my+6);
+        ctx.bezierCurveTo(cx+fw*0.5,my+3, cx+10,my+8, cx,my+8);
+        ctx.bezierCurveTo(cx-10,my+8, cx-fw*0.5,my+3, cx-fw*0.72,my+6);
+        ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+        this._drawMoustache(ctx,cx,cy,fh,beard);
+      } else if (style==='full') {
+        ctx.fillStyle=beard;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw*0.82,my+2);
+        ctx.bezierCurveTo(cx-fw-6,my+26, cx-fw-3,jy+18, cx-fw*0.2,jy+29);
+        ctx.bezierCurveTo(cx-fw*0.04,jy+36, cx+fw*0.04,jy+36, cx+fw*0.2,jy+29);
+        ctx.bezierCurveTo(cx+fw+3,jy+18, cx+fw+6,my+26, cx+fw*0.82,my+2);
+        ctx.bezierCurveTo(cx+fw*0.55,my+6, cx+9,my+7, cx,my+6);
+        ctx.bezierCurveTo(cx-9,my+7, cx-fw*0.55,my+6, cx-fw*0.82,my+2);
+        ctx.closePath(); ctx.fill();
+        // Texture
+        ctx.strokeStyle=this._darken(beard,0.3); ctx.lineWidth=0.75; ctx.globalAlpha=0.35;
+        for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(cx+i*9,my+12);ctx.bezierCurveTo(cx+i*11,jy,cx+i*9,jy+18,cx+i*7,jy+28);ctx.stroke();}
+        ctx.globalAlpha=1;
+        this._drawMoustache(ctx,cx,cy,fh,beard);
+      } else if (style==='viking') {
+        ctx.fillStyle=beard;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw*0.82,my+2);
+        ctx.bezierCurveTo(cx-fw-8,my+24, cx-fw-5,jy+12, cx-fw*0.28,jy+24);
+        ctx.bezierCurveTo(cx-14,jy+32, cx+14,jy+32, cx+fw*0.28,jy+24);
+        ctx.bezierCurveTo(cx+fw+5,jy+12, cx+fw+8,my+24, cx+fw*0.82,my+2);
+        ctx.bezierCurveTo(cx+fw*0.55,my+5, cx+9,my+6, cx,my+6);
+        ctx.bezierCurveTo(cx-9,my+6, cx-fw*0.55,my+5, cx-fw*0.82,my+2);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle=this._darken(beard,0.28); ctx.lineWidth=0.8; ctx.globalAlpha=0.32;
+        for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(cx+i*9,my+10);ctx.bezierCurveTo(cx+i*10,jy+5,cx+i*8,jy+17,cx+i*6,jy+28);ctx.stroke();}
+        ctx.globalAlpha=1;
+        this._drawBraid(ctx, cx-18, jy+28, beard);
+        this._drawBraid(ctx, cx+18, jy+28, beard);
+        this._drawMoustache(ctx,cx,cy,fh,beard);
+      }
+    },
+
+    _drawHair(ctx, cx, cy, fw, fh, style, hair) {
+      const hd=this._darken(hair,0.16), hl=this._lighten(hair,0.12);
+      ctx.save();
+      // Clip to head + a bit above
+      ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.08,fw+22,fh+30,0,0,Math.PI*2); ctx.clip();
+
+      if (style==='short-crop') {
+        const g=ctx.createLinearGradient(cx-fw,cy-fh, cx+fw,cy-fh*0.5);
+        g.addColorStop(0,hd); g.addColorStop(0.5,hair); g.addColorStop(1,hd);
+        ctx.fillStyle=g;
+        ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.65,fw*0.96,fh*0.48,0,0,Math.PI*2); ctx.fill();
+        ctx.globalAlpha=0.15; ctx.fillStyle='#fff';
+        ctx.beginPath(); ctx.ellipse(cx-8,cy-fh*0.85,fw*0.38,fh*0.16,-0.3,0,Math.PI*2); ctx.fill();
+        ctx.globalAlpha=1;
+      } else if (style==='medium') {
+        const g=ctx.createLinearGradient(cx-fw-8,0, cx+fw+8,0);
+        g.addColorStop(0,hd); g.addColorStop(0.3,hair); g.addColorStop(0.7,hair); g.addColorStop(1,hd);
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-7,cy+fh*0.12);
+        ctx.bezierCurveTo(cx-fw-10,cy-fh*0.38, cx-fw*0.8,cy-fh*1.1, cx,cy-fh*1.06);
+        ctx.bezierCurveTo(cx+fw*0.8,cy-fh*1.1, cx+fw+10,cy-fh*0.38, cx+fw+7,cy+fh*0.12);
+        ctx.bezierCurveTo(cx+fw+5,cy+fh*0.52, cx+fw*0.4,cy+fh*0.08, cx+fw*0.38,cy-fh*0.28);
+        ctx.bezierCurveTo(cx+fw*0.1,cy-fh*0.88, cx-fw*0.1,cy-fh*0.88, cx-fw*0.38,cy-fh*0.28);
+        ctx.bezierCurveTo(cx-fw*0.4,cy+fh*0.08, cx-fw-5,cy+fh*0.52, cx-fw-7,cy+fh*0.12);
+        ctx.closePath(); ctx.fill();
+      } else if (style==='man-bun') {
+        const g=ctx.createLinearGradient(cx-fw,0, cx+fw,0);
+        g.addColorStop(0,hd); g.addColorStop(0.5,hair); g.addColorStop(1,hd);
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-4,cy+fh*0.05);
+        ctx.bezierCurveTo(cx-fw-7,cy-fh*0.28, cx-fw*0.68,cy-fh*0.9, cx-14,cy-fh*0.95);
+        ctx.lineTo(cx+14,cy-fh*0.95);
+        ctx.bezierCurveTo(cx+fw*0.68,cy-fh*0.9, cx+fw+7,cy-fh*0.28, cx+fw+4,cy+fh*0.05);
+        ctx.bezierCurveTo(cx+fw+3,cy+fh*0.32, cx+fw*0.4,cy+fh*0.5, cx+11,cy-fh*0.68);
+        ctx.lineTo(cx-11,cy-fh*0.68);
+        ctx.bezierCurveTo(cx-fw*0.4,cy+fh*0.5, cx-fw-3,cy+fh*0.32, cx-fw-4,cy+fh*0.05);
+        ctx.closePath(); ctx.fill();
+        ctx.restore(); ctx.save();
+        // Bun
+        const bg=ctx.createRadialGradient(cx-4,cy-fh*1.14,4, cx,cy-fh*1.1,21);
+        bg.addColorStop(0,hl); bg.addColorStop(0.6,hair); bg.addColorStop(1,hd);
+        ctx.fillStyle=bg;
+        ctx.beginPath(); ctx.arc(cx,cy-fh*1.08,21,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=hd; ctx.lineWidth=0.9; ctx.globalAlpha=0.28;
+        for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(cx,cy-fh*1.08); ctx.lineTo(cx+Math.cos(a)*19,cy-fh*1.08+Math.sin(a)*19); ctx.stroke();}
+        ctx.globalAlpha=1;
+        ctx.strokeStyle='#1A1A1A'; ctx.lineWidth=3.5;
+        ctx.beginPath(); ctx.arc(cx,cy-fh*1.08,9,0,Math.PI*2); ctx.stroke();
+      } else if (style==='long-warrior') {
+        const g=ctx.createLinearGradient(cx-fw-12,0, cx+fw+12,0);
+        g.addColorStop(0,hd); g.addColorStop(0.2,hair); g.addColorStop(0.5,hl); g.addColorStop(0.8,hair); g.addColorStop(1,hd);
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.moveTo(cx-fw-10,cy+fh*0.12);
+        ctx.bezierCurveTo(cx-fw-16,cy-fh*0.38, cx-fw*0.8,cy-fh*1.14, cx,cy-fh*1.1);
+        ctx.bezierCurveTo(cx+fw*0.8,cy-fh*1.14, cx+fw+16,cy-fh*0.38, cx+fw+10,cy+fh*0.12);
+        ctx.bezierCurveTo(cx+fw+9,cy+fh*0.2, cx+fw*0.48,cy+fh*0.12, cx+fw*0.38,cy-fh*0.28);
+        ctx.bezierCurveTo(cx+fw*0.1,cy-fh*0.88, cx-fw*0.1,cy-fh*0.88, cx-fw*0.38,cy-fh*0.28);
+        ctx.bezierCurveTo(cx-fw*0.48,cy+fh*0.12, cx-fw-9,cy+fh*0.2, cx-fw-10,cy+fh*0.12);
+        ctx.closePath(); ctx.fill();
+      } else if (style==='top-knot') {
+        // Shaved sides (stubble)
+        ctx.fillStyle=hd; ctx.globalAlpha=0.25;
+        ctx.beginPath(); ctx.ellipse(cx-fw-1,cy,9,fh*0.58,0,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx+fw+1,cy,9,fh*0.58,0,0,Math.PI*2); ctx.fill();
+        ctx.globalAlpha=1;
+        ctx.restore(); ctx.save();
+        const tg=ctx.createLinearGradient(cx-17,cy-fh,cx+17,cy-fh);
+        tg.addColorStop(0,hd); tg.addColorStop(0.5,hair); tg.addColorStop(1,hd);
+        ctx.fillStyle=tg;
+        ctx.beginPath();
+        ctx.moveTo(cx-17,cy-fh*0.38);
+        ctx.bezierCurveTo(cx-19,cy-fh*0.78, cx-15,cy-fh*1.04, cx,cy-fh*1.1);
+        ctx.bezierCurveTo(cx+15,cy-fh*1.04, cx+19,cy-fh*0.78, cx+17,cy-fh*0.38);
+        ctx.bezierCurveTo(cx+9,cy-fh*0.33, cx-9,cy-fh*0.33, cx-17,cy-fh*0.38);
+        ctx.closePath(); ctx.fill();
+        // Knot
+        const kg=ctx.createRadialGradient(cx-3,cy-fh*1.21,3, cx,cy-fh*1.17,15);
+        kg.addColorStop(0,hl); kg.addColorStop(1,hd);
+        ctx.fillStyle=kg;
+        ctx.beginPath(); ctx.arc(cx,cy-fh*1.14,15,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#1A1A1A'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(cx,cy-fh*1.14,7,0,Math.PI*2); ctx.stroke();
+      }
+      ctx.restore();
+    },
+
+    _drawBrooch(ctx, W, H, clan) {
+      const bx=W*0.52+2, by=H*0.74;
+      const r=11;
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.beginPath(); ctx.arc(bx+1,by+2,r+3,0,Math.PI*2); ctx.fill();
+      const rg=ctx.createLinearGradient(bx-r,by-r, bx+r,by+r);
+      rg.addColorStop(0,'#E8C860'); rg.addColorStop(0.5,'#C8A030'); rg.addColorStop(1,'#906018');
+      ctx.fillStyle=rg;
+      ctx.beginPath(); ctx.arc(bx,by,r+2,0,Math.PI*2); ctx.fill();
+      // Celtic notch details
+      ctx.strokeStyle=this._darken('#C8A030',0.3); ctx.lineWidth=1;
+      for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2; ctx.beginPath(); ctx.moveTo(bx+Math.cos(a)*(r-1),by+Math.sin(a)*(r-1)); ctx.lineTo(bx+Math.cos(a)*(r+2),by+Math.sin(a)*(r+2)); ctx.stroke();}
+      // Gem
+      const gg=ctx.createRadialGradient(bx-2,by-2,1, bx,by,r-1);
+      gg.addColorStop(0,this._lighten(clan.c1,0.4)); gg.addColorStop(1,clan.c1);
+      ctx.fillStyle=gg;
+      ctx.beginPath(); ctx.arc(bx,by,r-1,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.25)';
+      ctx.beginPath(); ctx.arc(bx-2.5,by-2.5,3.5,0,Math.PI*2); ctx.fill();
+      // Pin
+      ctx.strokeStyle='#A08020'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(bx-r-4,by); ctx.lineTo(bx+r+7,by-2); ctx.stroke();
+      ctx.fillStyle='#C8A030';
+      ctx.beginPath(); ctx.arc(bx+r+7,by-2,2,0,Math.PI*2); ctx.fill();
+    },
+
+    _drawWarPaint(ctx, cx, cy, fw, style, clan) {
+      ctx.save(); ctx.globalAlpha=0.72;
+      if (style==='cheeks') {
+        ctx.strokeStyle=clan.c1; ctx.lineWidth=4; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(cx-fw*0.68,cy-4); ctx.lineTo(cx-fw*0.28,cy+14); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+fw*0.28,cy-4); ctx.lineTo(cx+fw*0.68,cy+14); ctx.stroke();
+      } else if (style==='full-face') {
+        ctx.strokeStyle=clan.c1; ctx.lineWidth=5; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(cx-fw*0.58,cy-24); ctx.bezierCurveTo(cx-fw*0.53,cy+4, cx-fw*0.48,cy+14, cx-fw*0.53,cy+28); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+fw*0.58,cy-24); ctx.bezierCurveTo(cx+fw*0.53,cy+4, cx+fw*0.48,cy+14, cx+fw*0.53,cy+28); ctx.stroke();
+        ctx.strokeStyle=clan.c2; ctx.lineWidth=4;
+        ctx.beginPath(); ctx.moveTo(cx,cy-fw*0.85); ctx.lineTo(cx,cy-fw*0.38); ctx.stroke();
+        ctx.strokeStyle=clan.c1; ctx.lineWidth=3; ctx.globalAlpha=0.5;
+        ctx.beginPath(); ctx.moveTo(cx-fw*0.42,cy-10); ctx.lineTo(cx-fw*0.18,cy-2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+fw*0.18,cy-2); ctx.lineTo(cx+fw*0.42,cy-10); ctx.stroke();
+      }
+      ctx.restore();
+    },
+
+    _drawScar(ctx, cx, cy, fw, skin) {
+      ctx.save();
+      ctx.strokeStyle=this._darken(skin,0.45); ctx.lineWidth=2; ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(cx+fw*0.33,cy-14);
+      ctx.bezierCurveTo(cx+fw*0.28,cy+2, cx+fw*0.42,cy+12, cx+fw*0.46,cy+26);
+      ctx.stroke();
+      ctx.strokeStyle=this._lighten(skin,0.18); ctx.lineWidth=1; ctx.globalAlpha=0.5;
+      ctx.beginPath();
+      ctx.moveTo(cx+fw*0.31,cy-14);
+      ctx.bezierCurveTo(cx+fw*0.26,cy+2, cx+fw*0.4,cy+12, cx+fw*0.44,cy+26);
+      ctx.stroke();
+      ctx.restore();
+    },
+
+    // ── Thumbnail rendering ─────────────────────────────
+    renderThumb(canvas, cfg, size) {
+      const s = size || 100;
+      canvas.width = s; canvas.height = Math.round(s*1.34);
+      this.draw(canvas, cfg);
+    },
+
+    // ── Options UI rendering ─────────────────────────────
+    _currentCat: 'face',
+    _renderOptions() {
+      const wrap = document.getElementById('warrior-options');
+      if (!wrap) return;
+      wrap.innerHTML='';
+      const cat=this._currentCat;
+      const c=this.cfg;
+      const mk=(items, prop, swatchFn) => {
+        const row=document.createElement('div'); row.className='warrior-opt-row';
+        items.forEach(item=>{
+          const btn=document.createElement('button');
+          btn.className='warrior-opt-btn'+(c[prop]===item.id?' selected':'');
+          const sw=document.createElement('div'); sw.className='opt-swatch';
+          if (swatchFn) swatchFn(sw,item);
+          else sw.textContent=item.icon||'?';
+          const lb=document.createElement('div'); lb.className='opt-label'; lb.textContent=item.label;
+          btn.appendChild(sw); btn.appendChild(lb);
+          btn.addEventListener('click',()=>{
+            c[prop]=item.id;
+            row.querySelectorAll('.warrior-opt-btn').forEach(b=>b.classList.remove('selected'));
+            btn.classList.add('selected');
+            WC.draw(document.getElementById('warrior-canvas'),c);
+          });
+          row.appendChild(btn);
+        });
+        return row;
+      };
+      const sec=(label,row)=>{
+        const s=document.createElement('div'); s.className='warrior-opt-section';
+        const l=document.createElement('div'); l.className='warrior-opt-label'; l.textContent=label;
+        s.appendChild(l); s.appendChild(row); wrap.appendChild(s);
+      };
+      const colorSwatch=(sw,item)=>{ sw.style.background=item.hex; sw.style.borderRadius='50%'; sw.style.border='2px solid rgba(255,255,255,0.15)'; };
+      const toggle=(label, prop)=>{
+        const row=document.createElement('div'); row.className='warrior-toggle-row';
+        const l=document.createElement('div'); l.className='warrior-toggle-label'; l.textContent=label;
+        const t=document.createElement('button'); t.className='warrior-toggle'+(c[prop]?' on':'');
+        row.appendChild(l); row.appendChild(t);
+        t.addEventListener('click',()=>{c[prop]=!c[prop]; t.classList.toggle('on',c[prop]); WC.draw(document.getElementById('warrior-canvas'),c);});
+        wrap.appendChild(row);
+      };
+
+      if (cat==='face') {
+        sec('Skin Tone', mk(this.SKIN_TONES,'skin',colorSwatch));
+        sec('Face Shape', mk(this.FACE_SHAPES,'faceShape'));
+        sec('Eye Style', mk(this.EYE_STYLES,'eyeStyle'));
+        sec('Eye Colour', mk(this.EYE_COLORS,'eyeColor',colorSwatch));
+        sec('Eyebrows', mk(this.BROW_STYLES,'browStyle'));
+      } else if (cat==='hair') {
+        sec('Hair Style', mk(this.HAIR_STYLES,'hairStyle'));
+        sec('Hair Colour', mk(this.HAIR_COLORS,'hairColor',colorSwatch));
+        sec('Beard Style', mk(this.BEARD_STYLES,'beardStyle'));
+        sec('Beard Colour', mk([{id:'match',hex:'#888',label:'Match'},...this.HAIR_COLORS],'beardColor', (sw,item)=>{ sw.style.background=item.id==='match'?'linear-gradient(135deg,#888,#555)':item.hex; sw.style.borderRadius='50%'; sw.style.border='2px solid rgba(255,255,255,0.15)'; }));
+      } else if (cat==='weapon') {
+        sec('Weapon', mk(this.WEAPONS,'weapon'));
+        const note=document.createElement('div');
+        note.style.cssText='font-size:12px;color:var(--text-2);margin-top:12px;line-height:1.5;padding:10px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border)';
+        note.textContent='Your weapon appears to the left of your warrior portrait. Targe (shield) is shown on the arm.';
+        wrap.appendChild(note);
+      } else if (cat==='extras') {
+        sec('War Paint', mk(this.WAR_PAINTS,'warPaint'));
+        const clanNote=document.createElement('div');
+        clanNote.style.cssText='font-size:11px;color:var(--text-2);margin-bottom:14px;font-style:italic';
+        clanNote.textContent='War paint uses your clan\'s tartan colours automatically.';
+        wrap.appendChild(clanNote);
+        toggle('⚔️ Battle Scar','scar');
+        const note2=document.createElement('div');
+        note2.style.cssText='font-size:12px;color:var(--text-2);margin-top:12px;line-height:1.5;padding:10px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border)';
+        note2.textContent='Your Celtic brooch is always shown in your clan\'s primary colour. Join a clan to unlock full tartan colours.';
+        wrap.appendChild(note2);
+      }
+    },
+
+    // ── Init warrior screen ─────────────────────────────
+    init() {
+      // Load saved config
+      const member=state.members[state.userId];
+      if (member?.warriorConfig) {
+        try { Object.assign(this.cfg, JSON.parse(JSON.stringify(member.warriorConfig))); } catch(e){}
+      }
+
+      // Update clan banner
+      const clan=this._getClan();
+      const banner=document.getElementById('warrior-clan-banner');
+      if (banner) banner.textContent=clan.name!=='No Clan' ? `⚔️ Using ${clan.name} tartan colours` : '⚔️ No clan — join one for full tartan colours';
+
+      // Draw initial
+      const canvas=document.getElementById('warrior-canvas');
+      if (canvas) this.draw(canvas, this.cfg);
+
+      // Category tabs
+      document.querySelectorAll('.warrior-cat-btn').forEach(b=>{
+        b.addEventListener('click',()=>{
+          document.querySelectorAll('.warrior-cat-btn').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+          WC._currentCat=b.dataset.cat;
+          WC._renderOptions();
+        });
+      });
+      this._currentCat='face';
+      this._renderOptions();
+
+      // Back button
+      document.getElementById('warrior-back-btn')?.addEventListener('click',()=>{
+        showScreen('screen-app');
+        switchTab('profile');
+        renderProfile();
+      });
+
+      // Save button
+      document.getElementById('warrior-save-btn')?.addEventListener('click', async()=>{
+        try {
+          await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{
+            warriorConfig: JSON.parse(JSON.stringify(this.cfg))
+          });
+          // Also update local state
+          if (!state.members[state.userId]) state.members[state.userId]={};
+          state.members[state.userId].warriorConfig=JSON.parse(JSON.stringify(this.cfg));
+          toast('⚔️ Warrior saved!');
+          showScreen('screen-app');
+          switchTab('profile');
+          renderProfile();
+        } catch(e) { toast('Error saving: '+e.message); }
+      });
+    },
+  };
+  window.WC=WC;
+
+  // ─── Render warrior thumbnail on profile ─────────────
+  function renderWarriorProfile() {
+    const sec=document.getElementById('profile-warrior-section');
+    if (!sec) return;
+    const member=state.members[state.userId];
+    const cfg=member?.warriorConfig||null;
+    const wrap=document.createElement('div'); wrap.className='warrior-profile-wrap';
+    // Thumb canvas
+    const thumbEl=document.createElement('div'); thumbEl.className='warrior-thumb';
+    const thumbCanvas=document.createElement('canvas');
+    WC.renderThumb(thumbCanvas, cfg, 100);
+    if (!cfg) {
+      // Draw placeholder
+      const ctx=thumbCanvas.getContext('2d');
+      ctx.fillStyle='#1C2128'; ctx.fillRect(0,0,100,134);
+      ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.font='48px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('⚔️',50,67);
+    }
+    thumbEl.appendChild(thumbCanvas);
+    const info=document.createElement('div'); info.className='warrior-profile-info';
+    info.innerHTML=`<div class="warrior-profile-title">${cfg?'Your Warrior':'Create Your Warrior'}</div><div class="warrior-profile-sub">${cfg?'Looking fierce! Edit anytime.':'Customise your Highland warrior avatar with face, hair, weapons & more.'}</div>`;
+    const editBtn=document.createElement('button'); editBtn.className='btn-warrior-edit';
+    editBtn.textContent=cfg?'⚔️ Edit Warrior':'⚔️ Create Warrior';
+    editBtn.addEventListener('click',()=>{ WC.init(); showScreen('screen-warrior'); });
+    info.appendChild(editBtn);
+    wrap.appendChild(thumbEl); wrap.appendChild(info);
+    sec.innerHTML=''; sec.appendChild(wrap);
+  }
 
   // ─── App startup ──────────────────────────────────────
   async function startApp() {
