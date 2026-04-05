@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#0D1117">
   <title>CardioCrew — 30-Day Challenge</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.jpg">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -440,8 +440,14 @@
     <div id="tab-today" class="tab-page active">
       <div class="today-header">
         <div class="today-label">Campaign Day</div>
-        <div class="today-day" id="today-day-num">Day 1</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="btn-day-prev" style="background:none;border:none;color:var(--text-2);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1" title="Previous day">‹</button>
+          <div class="today-day" id="today-day-num">Day 1</div>
+          <button id="btn-day-next" style="background:none;border:none;color:var(--text-2);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1" title="Next day">›</button>
+        </div>
         <div class="today-date" id="today-date-str"></div>
+        <div id="today-catchup-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:#FFCA28;background:rgba(255,202,40,0.12);border:1px solid rgba(255,202,40,0.3);border-radius:999px;padding:3px 10px;display:inline-block">⏪ Catch-up — max 4 pts</div>
+        <div id="today-locked-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 10px;display:inline-block">🔒 Locked</div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
       <div class="progress-label"><span id="progress-text">Day 1 of 30</span><span id="progress-pct">0%</span></div>
@@ -451,6 +457,7 @@
           <div class="score-dots" id="score-dots">
             <div class="score-dot" id="dot-0"></div><div class="score-dot" id="dot-1"></div>
             <div class="score-dot" id="dot-2"></div><div class="score-dot" id="dot-3"></div>
+            <div class="score-dot" id="dot-bonus" style="background:var(--gold);opacity:0;transition:opacity 0.4s,box-shadow 0.4s;font-size:8px;display:flex;align-items:center;justify-content:center">⭐</div>
           </div>
         </div>
         <div class="daily-score-pts" id="daily-pts">0 <span>/ 4 pts</span></div>
@@ -644,6 +651,7 @@
 
   // ─── State ────────────────────────────────────────────
   let state = { userId:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
+  let viewDay = null; // null = use current campaign day
 
   // ─── Utilities ────────────────────────────────────────
   const genId   = (n=8) => Math.random().toString(36).slice(2,2+n).toUpperCase();
@@ -717,10 +725,24 @@
 
   function getDayPoints(userId, day) { return Object.values(getCompletionsForDay(userId,day)).filter(Boolean).length; }
 
-  function getTotalPoints(userId) {
-    const cur=getDayNumber(state.campaignData.startDate);
-    let t=0; for(let d=1;d<=cur;d++) t+=getDayPoints(userId,d); return t;
+  // 5-pt bonus only for the CURRENT campaign day (not catch-up)
+  function getDayScore(userId, day, currentDay) {
+    const pts = getDayPoints(userId, day);
+    if (day === currentDay && pts >= 4) return 5;
+    return pts; // 0–4 for any other day
   }
+
+  function getTotalPoints(userId) {
+    const cur = getDayNumber(state.campaignData.startDate);
+    let t = 0;
+    for (let d = 1; d <= cur; d++) t += getDayScore(userId, d, cur);
+    return t;
+  }
+
+  // How many days back can you edit (catch-up window = 3 days)
+  const CATCHUP_DAYS = 3;
+  function isEditableDay(day, currentDay) { return day <= currentDay && day >= Math.max(1, currentDay - CATCHUP_DAYS); }
+  function isLockedDay(day, currentDay)   { return day < Math.max(1, currentDay - CATCHUP_DAYS); }
 
   function getStreak(userId) {
     const cur=getDayNumber(state.campaignData.startDate);
@@ -835,6 +857,8 @@
   }
 
   async function toggleCompletion(day, challengeId) {
+    const currentDay = getDayNumber(state.campaignData.startDate);
+    if (!isEditableDay(day, currentDay)) { toast('🔒 This day is locked', 2000); return; }
     const key=`d${day}_${challengeId}`;
     const m=state.members[state.userId]; if(!m) return;
     const current=m.completions?.[key]||false;
@@ -972,47 +996,81 @@
     renderProfile(day);
   }
 
-  function renderToday(day) {
+  function renderToday(currentDay) {
+    const day = viewDay !== null ? viewDay : currentDay;
+    const isCurrent  = day === currentDay;
+    const isCatchup  = !isCurrent && isEditableDay(day, currentDay);
+    const isLocked   = isLockedDay(day, currentDay) || day > currentDay;
+
     document.getElementById('today-day-num').textContent = `Day ${day}`;
-    document.getElementById('today-date-str').textContent = new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
-    const pct=Math.round((day/30)*100);
-    document.getElementById('progress-bar').style.width=pct+'%';
-    document.getElementById('progress-text').textContent=`Day ${day} of 30`;
-    document.getElementById('progress-pct').textContent=pct+'%';
 
-    const comps=getCompletionsForDay(state.userId,day);
-    const pts=Object.values(comps).filter(Boolean).length;
-    document.getElementById('daily-pts').innerHTML=`${pts} <span>/ 4 pts</span>`;
-    for(let i=0;i<4;i++) document.getElementById(`dot-${i}`).classList.toggle('done',i<pts);
+    // Date label: for past days, show the actual date
+    const start = new Date(state.campaignData.startDate + 'T00:00:00');
+    const dayDate = new Date(start); dayDate.setDate(dayDate.getDate() + day - 1);
+    const dateStr = isCurrent ? new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : dayDate.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    document.getElementById('today-date-str').textContent = dateStr;
 
-    const isPerfect=pts>=4;
-    const banner=document.getElementById('completed-banner');
-    banner.classList.toggle('hidden',!isPerfect);
-    banner.classList.toggle('show',isPerfect);
-    if(isPerfect && !wasPerfect){ launchConfetti(); toast('🔥 Perfect Day!',3000); }
-    wasPerfect=isPerfect;
+    // Status badges
+    const catchupBadge = document.getElementById('today-catchup-badge');
+    const lockedBadge  = document.getElementById('today-locked-badge');
+    catchupBadge.style.display = isCatchup ? 'inline-block' : 'none';
+    lockedBadge.style.display  = isLocked  ? 'inline-block' : 'none';
 
-    const list=document.getElementById('challenges-list');
-    list.innerHTML='';
-    CHALLENGES.forEach(ch=>{
-      const isRest=ch.schedule[day-1]===null, isDone=comps[ch.id];
-      const target=isRest?null:formatTarget(ch,day-1);
-      const card=document.createElement('div');
-      card.className=`challenge-card${isDone?' completed':''}${isRest?' rest-day':''}`;
-      card.style.setProperty('--card-color',ch.color);
-      card.innerHTML=`
+    // Progress bar always shows current day position
+    const pct = Math.round((currentDay/30)*100);
+    document.getElementById('progress-bar').style.width = pct+'%';
+    document.getElementById('progress-text').textContent = `Day ${currentDay} of 30`;
+    document.getElementById('progress-pct').textContent  = pct+'%';
+
+    // Prev/next button visibility
+    const prevBtn = document.getElementById('btn-day-prev');
+    const nextBtn = document.getElementById('btn-day-next');
+    prevBtn.style.opacity = (day > Math.max(1, currentDay - CATCHUP_DAYS) && day > 1) ? '1' : '0.2';
+    prevBtn.style.pointerEvents = (day > Math.max(1, currentDay - CATCHUP_DAYS) && day > 1) ? 'auto' : 'none';
+    nextBtn.style.opacity = (day < currentDay) ? '1' : '0.2';
+    nextBtn.style.pointerEvents = (day < currentDay) ? 'auto' : 'none';
+
+    const comps = getCompletionsForDay(state.userId, day);
+    const pts   = Object.values(comps).filter(Boolean).length;
+    const maxPts = isCurrent ? 5 : 4;
+    const score  = isCurrent && pts >= 4 ? 5 : pts;
+    document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
+    for (let i = 0; i < 4; i++) document.getElementById(`dot-${i}`).classList.toggle('done', i < pts);
+    // 5th dot (bonus star) — only visible on current day when all 4 done
+    const bonusDot = document.getElementById('dot-bonus');
+    bonusDot.style.opacity = (isCurrent && pts >= 4) ? '1' : '0';
+    bonusDot.style.boxShadow = (isCurrent && pts >= 4) ? '0 0 8px rgba(255,215,0,0.7)' : 'none';
+
+    const isPerfect = pts >= 4;
+    const banner = document.getElementById('completed-banner');
+    banner.classList.toggle('hidden', !isPerfect);
+    banner.classList.toggle('show', isPerfect);
+    if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
+    wasPerfect = isCurrent && isPerfect;
+
+    const list = document.getElementById('challenges-list');
+    list.innerHTML = '';
+    CHALLENGES.forEach(ch => {
+      const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
+      const target = isRest ? null : formatTarget(ch, day-1);
+      const card = document.createElement('div');
+      card.className = `challenge-card${isDone?' completed':''}${isRest?' rest-day':''}${isLocked?' rest-day':''}`;
+      card.style.setProperty('--card-color', ch.color);
+      card.innerHTML = `
         <div class="card-icon">${ch.emoji}</div>
         <div class="card-body">
           <div class="card-name">${ch.name}</div>
-          ${isRest?`<div class="card-rest">REST DAY 😴</div>`:`<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
+          ${isRest ? `<div class="card-rest">REST DAY 😴</div>` :
+            isLocked ? `<div class="card-rest">🔒 LOCKED</div>` :
+            `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
         </div>
         <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
-      if(!isRest) card.addEventListener('click',()=>toggleCompletion(day,ch.id));
+      if (!isRest && !isLocked) card.addEventListener('click', () => toggleCompletion(day, ch.id));
       list.appendChild(card);
     });
 
-    const rem=30-day;
-    document.getElementById('today-info').textContent = rem>0?`${rem} days remaining`:'🎉 Challenge complete!';
+    const rem = 30 - currentDay;
+    document.getElementById('today-info').textContent = rem > 0 ? `${rem} days remaining` : '🎉 Challenge complete!';
   }
 
   let lbView = 'individual'; // 'individual' | 'clans'
@@ -1054,7 +1112,9 @@
       list.appendChild(row);
     });
 
-    document.getElementById('lb-footer').textContent=`Max possible: ${day*4} pts`;
+    // Max = 5 for today + 4 for all prior days
+    const maxPossible = day > 0 ? (day-1)*4 + 5 : 0;
+    document.getElementById('lb-footer').textContent=`Max possible: ${maxPossible} pts (today's perfect = 5)`;
   }
 
   function renderClanLeaderboard(day) {
@@ -1128,7 +1188,7 @@
       const date=new Date(start); date.setDate(date.getDate()+d-1);
       const isFuture=d>day;
       const comps=isFuture?{}:getCompletionsForDay(state.userId,d);
-      const pts=isFuture?'':getDayPoints(state.userId,d);
+      const pts=isFuture?'':getDayScore(state.userId,d,day);
       const row=document.createElement('div');
       row.className=`hist-row${isFuture?' future':''} fade-in`;
       row.innerHTML=`
@@ -1273,7 +1333,8 @@
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(`tab-${tabId}`)?.classList.add('active');
     document.querySelector(`.nav-btn[data-tab="${tabId}"]`)?.classList.add('active');
-    if(tabId==='feedback') setTimeout(()=>{ const f=document.getElementById('feed-messages'); f.scrollTop=f.scrollHeight; },50);
+    if (tabId === 'today') { viewDay = null; if (state.campaignData) renderToday(getDayNumber(state.campaignData.startDate)); }
+    if (tabId === 'feedback') setTimeout(()=>{ const f=document.getElementById('feed-messages'); f.scrollTop=f.scrollHeight; },50);
   }
   document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 
@@ -1382,6 +1443,19 @@
     state.userId=null; state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
     localStorage.removeItem('cc_user');
     showScreen('screen-welcome');
+  });
+
+  // ─── Day navigation ───────────────────────────────────
+  document.getElementById('btn-day-prev').addEventListener('click', () => {
+    const cur = getDayNumber(state.campaignData?.startDate || new Date().toISOString().slice(0,10));
+    const current = viewDay !== null ? viewDay : cur;
+    const minDay = Math.max(1, cur - CATCHUP_DAYS);
+    if (current > minDay) { viewDay = current - 1; renderToday(cur); }
+  });
+  document.getElementById('btn-day-next').addEventListener('click', () => {
+    const cur = getDayNumber(state.campaignData?.startDate || new Date().toISOString().slice(0,10));
+    const current = viewDay !== null ? viewDay : cur;
+    if (current < cur) { viewDay = current + 1; if (viewDay === cur) viewDay = null; renderToday(cur); }
   });
 
   // ─── Leaderboard toggle ──────────────────────────────
