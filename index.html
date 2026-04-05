@@ -257,6 +257,72 @@
     #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
     .fade-in { animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Clan Screen ── */
+    #screen-clan {
+      background: linear-gradient(160deg, #0D1117 0%, #1A1F2E 50%, #0D1117 100%);
+      align-items: center; overflow-y: auto;
+    }
+    .clan-wrap { width: 100%; max-width: 400px; padding: calc(var(--sat)+20px) 20px 40px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+    .clan-screen-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+    .clan-screen-sub { font-size: 13px; color: var(--text-2); margin-bottom: 20px; text-align: center; }
+    .clan-mode-toggle { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 20px; width: 100%; }
+    .clan-mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-2); transition: all 0.2s; }
+    .clan-mode-btn.active { background: var(--primary); color: #fff; }
+    .clan-form-section { width: 100%; display: none; }
+    .clan-form-section.active { display: block; }
+    .clan-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+    .tartan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .tartan-opt { border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid var(--border); transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px 6px; background: var(--surface); }
+    .tartan-opt.selected { border-color: var(--primary); background: rgba(88,166,255,0.1); }
+    .tartan-swatch { width: 40px; height: 28px; border-radius: 6px; }
+    .tartan-name { font-size: 10px; font-weight: 700; color: var(--text-2); text-align: center; }
+    .tartan-opt.selected .tartan-name { color: var(--primary); }
+    .crest-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
+    .crest-opt { font-size: 26px; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .crest-opt.selected { border-color: var(--primary); background: rgba(88,166,255,0.15); transform: scale(1.12); }
+
+    /* ── Leaderboard toggle ── */
+    .lb-view-toggle { display: flex; margin: 0 16px 12px; background: var(--surface); border-radius: 10px; padding: 4px; gap: 4px; }
+    .lb-view-btn { flex: 1; padding: 9px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-2); transition: all 0.2s; }
+    .lb-view-btn.active { background: var(--primary); color: #fff; }
+
+    /* ── Clan leaderboard cards ── */
+    .clan-lb-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+    .clan-lb-card.mine-clan { border-color: var(--primary); }
+    .clan-lb-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--clan-accent, var(--primary)); }
+    .clan-crest-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; background: var(--surface-2); }
+    .clan-info { flex: 1; min-width: 0; }
+    .clan-name { font-size: 15px; font-weight: 800; }
+    .clan-meta { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+    .clan-color-dots { display: flex; gap: 4px; margin-top: 5px; }
+    .clan-color-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .clan-trophies-row { display: flex; gap: 4px; margin-top: 5px; }
+    .clan-trophy-pip { font-size: 14px; }
+    .clan-score { text-align: right; flex-shrink: 0; }
+    .clan-pts { font-size: 22px; font-weight: 900; color: var(--primary); line-height: 1; }
+    .clan-pts-label { font-size: 10px; color: var(--text-2); }
+
+    /* ── Profile clan card ── */
+    .profile-clan-card { border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; border: 1px solid var(--border); }
+    .profile-clan-header { height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
+    .profile-clan-body { background: var(--surface); padding: 12px 14px; }
+    .profile-clan-name-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .profile-clan-crest { font-size: 28px; }
+    .profile-clan-name { font-size: 16px; font-weight: 800; }
+    .profile-clan-stats { display: flex; gap: 16px; }
+    .profile-clan-stat { text-align: center; }
+    .profile-clan-stat-val { font-size: 18px; font-weight: 900; color: var(--primary); }
+    .profile-clan-stat-lbl { font-size: 10px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-clan-action { width: 100%; padding: 11px; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 700; cursor: pointer; background: rgba(88,166,255,0.12); color: var(--primary); border: 1px solid rgba(88,166,255,0.25); margin-top: 4px; }
+
+    /* ── Clan trophy popup ── */
+    #clan-trophy-popup { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1002; pointer-events: none; }
+    .clan-trophy-inner { background: linear-gradient(135deg,#1a1a2e,#16213e); border: 2px solid #4B9FFF; border-radius: var(--radius); padding: 24px 28px; text-align: center; transform: scale(0); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+    #clan-trophy-popup.show .clan-trophy-inner { transform: scale(1); }
+    .clan-trophy-icon { font-size: 52px; margin-bottom: 8px; animation: bounce 0.6s ease; }
+    .clan-trophy-label { font-size: 11px; font-weight: 700; color: #4B9FFF; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .clan-trophy-name { font-size: 18px; font-weight: 900; }
   </style>
 </head>
 <body>
@@ -328,6 +394,44 @@
   </div>
 </div>
 
+<!-- Clan Setup -->
+<div id="screen-clan" class="screen hidden">
+  <div class="clan-wrap">
+    <div style="font-size:48px;margin-bottom:8px">🏰</div>
+    <div class="clan-screen-title">Join Your Clan</div>
+    <div class="clan-screen-sub">Compete together as a house — or go solo</div>
+    <div class="clan-mode-toggle" style="width:100%">
+      <button class="clan-mode-btn active" data-clan-mode="create">⚔️ Create Clan</button>
+      <button class="clan-mode-btn" data-clan-mode="join">🛡️ Join Clan</button>
+    </div>
+
+    <!-- Create Clan -->
+    <div id="clan-create-form" class="clan-form-section active" style="width:100%">
+      <div class="input-group">
+        <label class="input-group"><label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Name</label>
+        <input class="input" id="clan-name-input" placeholder="e.g. Clan McNichol" maxlength="24" autocomplete="off"></label>
+      </div>
+      <label class="clan-label">Choose Your Crest</label>
+      <div class="crest-grid" id="crest-grid"></div>
+      <label class="clan-label">Tartan Colours</label>
+      <div class="tartan-grid" id="tartan-grid"></div>
+      <button class="btn btn-primary" id="btn-clan-create" style="width:100%">Found the Clan 🏰</button>
+    </div>
+
+    <!-- Join Clan -->
+    <div id="clan-join-form" class="clan-form-section" style="width:100%">
+      <div class="input-group">
+        <label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Code</label>
+        <input class="input" id="clan-join-code-input" placeholder="e.g. MCN001" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:20px">
+      </div>
+      <button class="btn btn-primary" id="btn-clan-join-go" style="width:100%">Join the Clan ⚔️</button>
+    </div>
+
+    <div class="error-msg" id="clan-error" style="width:100%"></div>
+    <button class="btn btn-secondary" id="btn-clan-skip" style="width:100%;margin-top:6px">Skip for now →</button>
+  </div>
+</div>
+
 <!-- Main App -->
 <div id="screen-app" class="screen hidden">
   <div class="app-content">
@@ -365,6 +469,10 @@
         <div class="lb-title">🏆 Leaderboard</div>
         <div class="lb-subtitle" id="lb-subtitle">Loading...</div>
       </div>
+      <div class="lb-view-toggle">
+        <button class="lb-view-btn active" data-view="individual">👤 Individual</button>
+        <button class="lb-view-btn" data-view="clans">🏰 Clans</button>
+      </div>
       <div class="lb-list" id="lb-list"></div>
       <div style="padding:16px;text-align:center;color:var(--text-2);font-size:11px" id="lb-footer"></div>
     </div>
@@ -397,6 +505,8 @@
           <div class="stat-card"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">Streak 🔥</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completion</div></div>
         </div>
+        <div class="section-header">🏰 My Clan</div>
+        <div id="profile-clan-section"></div>
         <div class="section-header">🏅 Badges</div>
         <div class="badges-grid" id="badges-grid"></div>
         <div class="section-header">Campaign Info</div>
@@ -454,6 +564,13 @@
   </nav>
 </div>
 
+<!-- Clan trophy popup -->
+<div id="clan-trophy-popup"><div class="clan-trophy-inner">
+  <div class="clan-trophy-icon" id="clan-trophy-icon">🏰</div>
+  <div class="clan-trophy-label">Clan Trophy Unlocked!</div>
+  <div class="clan-trophy-name" id="clan-trophy-name">—</div>
+</div></div>
+
 <!-- Badge popup -->
 <div id="badge-popup"><div class="badge-popup-inner">
   <div class="badge-popup-icon" id="badge-popup-icon">🏅</div>
@@ -506,8 +623,27 @@
     { id:'champion',      icon:'🏆', name:'30-Day Champ',  desc:'Complete the full challenge' },
   ];
 
+  const TARTAN_THEMES = [
+    { id:'highland', name:'Highland', c1:'#3D1A5E', c2:'#1A5E2A', c3:'#D4AF37', emoji:'🏔️' },
+    { id:'seafarer', name:'Seafarer', c1:'#0D2B52', c2:'#0A5E6E', c3:'#8FAFC0', emoji:'🌊' },
+    { id:'warrior',  name:'Warrior',  c1:'#6B0000', c2:'#1A1A1A', c3:'#8B6914', emoji:'⚔️' },
+    { id:'forest',   name:'Forest',   c1:'#1A4A1A', c2:'#4A2A0A', c3:'#8A7030', emoji:'🌲' },
+    { id:'royal',    name:'Royal',    c1:'#1A1A7E', c2:'#A08000', c3:'#C8C8C8', emoji:'👑' },
+    { id:'shadow',   name:'Shadow',   c1:'#0A0A1E', c2:'#5C0000', c3:'#506070', emoji:'🌑' },
+    { id:'blaze',    name:'Blaze',    c1:'#8B2200', c2:'#CC8800', c3:'#1A0A05', emoji:'🔥' },
+    { id:'frost',    name:'Frost',    c1:'#4A7AAA', c2:'#8AAED4', c3:'#D8E8F0', emoji:'❄️' },
+  ];
+  const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
+  const CLAN_TROPHY_DEFS = [
+    { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
+    { id:'clan_mustered', icon:'⚔️', name:'Mustered',       desc:'Clan reaches 3+ members' },
+    { id:'clan_dominant', icon:'👑', name:'Dominant Clan',  desc:'Reach #1 on clan leaderboard' },
+    { id:'clan_united',   icon:'🛡️', name:'United Front',   desc:'Clan members all hit a perfect day' },
+    { id:'clan_victors',  icon:'🏆', name:'Clan Victors',   desc:'Win the full campaign as a clan' },
+  ];
+
   // ─── State ────────────────────────────────────────────
-  let state = { userId:null, campaignId:null, campaignData:null, members:{}, messages:[], pendingAvatar:null, unsubscribers:[] };
+  let state = { userId:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
 
   // ─── Utilities ────────────────────────────────────────
   const genId   = (n=8) => Math.random().toString(36).slice(2,2+n).toUpperCase();
@@ -537,7 +673,7 @@
   }
 
   function showScreen(id) {
-    ['screen-loading','screen-welcome','screen-create','screen-avatar','screen-app'].forEach(s=>
+    ['screen-loading','screen-welcome','screen-create','screen-avatar','screen-clan','screen-app'].forEach(s=>
       document.getElementById(s).classList.toggle('hidden',s!==id));
   }
 
@@ -720,6 +856,85 @@
     });
   }
 
+  // ─── Tartan helpers ───────────────────────────────────
+  function getTartan(id) { return TARTAN_THEMES.find(t=>t.id===id)||TARTAN_THEMES[0]; }
+  function tartanSwatchStyle(id) {
+    const t=getTartan(id);
+    return `background:linear-gradient(135deg,${t.c1} 33%,${t.c2} 33% 66%,${t.c3} 66%)`;
+  }
+  function tartanHeaderStyle(id) {
+    const t=getTartan(id);
+    return `background:linear-gradient(90deg,${t.c1},${t.c2} 50%,${t.c3})`;
+  }
+
+  // ─── Clan Firestore operations ───────────────────────
+  async function createClan(name, crest, tartanId) {
+    const clanId=genId(8), code=genCode();
+    await setDoc(doc(db,'campaigns',state.campaignId,'clans',clanId),{
+      name, crest, tartanId, code, createdBy:state.userId, createdAt:serverTimestamp()
+    });
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ clanId });
+    return { clanId, code };
+  }
+
+  async function joinClanByCode(code) {
+    const snap=await getDocs(query(collection(db,'campaigns',state.campaignId,'clans'),where('code','==',code.toUpperCase())));
+    if(snap.empty) throw new Error('Clan code not found in this campaign.');
+    const clanId=snap.docs[0].id;
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ clanId });
+    return clanId;
+  }
+
+  async function leaveClan() {
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ clanId: null });
+  }
+
+  // ─── Clan trophy calculation ──────────────────────────
+  function getClanTrophies(clanId) {
+    const earned=new Set();
+    const clanMembers=Object.entries(state.members).filter(([,m])=>m.clanId===clanId).map(([id])=>id);
+    if(!clanMembers.length) return earned;
+    const clan=state.clans[clanId]; if(!clan) return earned;
+    if(clan.createdBy) earned.add('clan_founded');
+    if(clanMembers.length>=3) earned.add('clan_mustered');
+
+    // Dominant: check if this clan has highest total pts
+    const clanTotals={};
+    Object.values(state.clans).forEach(c=>{
+      const id=Object.keys(state.clans).find(k=>state.clans[k]===c);
+      if(id){ const pts=Object.entries(state.members).filter(([,m])=>m.clanId===id).reduce((s,[uid])=>s+getTotalPoints(uid),0); clanTotals[id]=pts; }
+    });
+    const maxPts=Math.max(...Object.values(clanTotals),0);
+    const myPts=(Object.entries(state.members).filter(([,m])=>m.clanId===clanId).reduce((s,[uid])=>s+getTotalPoints(uid),0));
+    if(myPts>=maxPts&&myPts>0) earned.add('clan_dominant');
+
+    // United: any day where ALL clan members got a perfect day
+    const cur=getDayNumber(state.campaignData.startDate);
+    for(let d=1;d<=cur;d++){
+      if(clanMembers.every(uid=>getDayPoints(uid,d)>=4)){ earned.add('clan_united'); break; }
+    }
+    if(cur>=30&&myPts>=clanMembers.length*30*4*0.7) earned.add('clan_victors');
+    return earned;
+  }
+
+  let lastClanTrophySet={};
+  function checkClanTrophies() {
+    const me=state.members[state.userId]; if(!me?.clanId) return;
+    const clanId=me.clanId;
+    const now=getClanTrophies(clanId);
+    const prev=lastClanTrophySet[clanId]||new Set();
+    now.forEach(id=>{ if(!prev.has(id)){ const def=CLAN_TROPHY_DEFS.find(t=>t.id===id); if(def) showClanTrophyPopup(def); } });
+    lastClanTrophySet[clanId]=now;
+  }
+
+  function showClanTrophyPopup(def) {
+    document.getElementById('clan-trophy-icon').textContent=def.icon;
+    document.getElementById('clan-trophy-name').textContent=def.name;
+    const popup=document.getElementById('clan-trophy-popup');
+    popup.classList.add('show');
+    setTimeout(()=>popup.classList.remove('show'),3000);
+  }
+
   function subscribeAll() {
     state.unsubscribers.forEach(u=>u());
     state.unsubscribers=[];
@@ -729,6 +944,14 @@
       snap.forEach(d=>{ state.members[d.id]=d.data(); });
       renderAll();
       checkBadges(state.userId);
+      checkClanTrophies();
+    }));
+
+    // Clans
+    state.unsubscribers.push(onSnapshot(collection(db,'campaigns',state.campaignId,'clans'),(snap)=>{
+      state.clans={};
+      snap.forEach(d=>{ state.clans[d.id]=d.data(); });
+      renderAll();
     }));
 
     // Messages (last 50)
@@ -792,7 +1015,10 @@
     document.getElementById('today-info').textContent = rem>0?`${rem} days remaining`:'🎉 Challenge complete!';
   }
 
+  let lbView = 'individual'; // 'individual' | 'clans'
+
   function renderLeaderboard(day) {
+    if(lbView==='clans') { renderClanLeaderboard(day); return; }
     const scores=Object.keys(state.members).map(id=>({
       id, name:state.members[id].name, avatar:state.members[id].avatar||'💪',
       pts:getTotalPoints(id), streak:getStreak(id)
@@ -829,6 +1055,69 @@
     });
 
     document.getElementById('lb-footer').textContent=`Max possible: ${day*4} pts`;
+  }
+
+  function renderClanLeaderboard(day) {
+    document.getElementById('lb-subtitle').textContent=`Day ${day} of 30 · Clan standings`;
+    const list=document.getElementById('lb-list');
+    list.innerHTML='';
+
+    if(!Object.keys(state.clans).length){
+      list.innerHTML='<div style="text-align:center;padding:32px 16px;color:var(--text-2);font-size:14px"><div style="font-size:36px;margin-bottom:8px">🏰</div>No clans yet — create or join one in your Profile!</div>';
+      document.getElementById('lb-footer').textContent='';
+      return;
+    }
+
+    const myClanId=state.members[state.userId]?.clanId||null;
+    const clanData=Object.entries(state.clans).map(([clanId,clan])=>{
+      const members=Object.entries(state.members).filter(([,m])=>m.clanId===clanId).map(([id])=>id);
+      const totalPts=members.reduce((s,uid)=>s+getTotalPoints(uid),0);
+      return { clanId, clan, members, totalPts };
+    }).sort((a,b)=>b.totalPts-a.totalPts||a.clan.name.localeCompare(b.clan.name));
+
+    const maxPts=clanData[0]?.totalPts||1;
+    const rank1Id=clanData[0]?.clanId;
+
+    clanData.forEach(({clanId,clan,members,totalPts},i)=>{
+      const t=getTartan(clan.tartanId);
+      const pct=Math.round((totalPts/Math.max(1,maxPts))*100);
+      const isMe=clanId===myClanId;
+      const rank=i+1;
+      const trophies=getClanTrophies(clanId);
+      const trophyHtml=[...trophies].map(id=>{
+        const def=CLAN_TROPHY_DEFS.find(t=>t.id===id);
+        return def?`<span class="clan-trophy-pip" title="${def.name}">${def.icon}</span>`:'';
+      }).join('');
+      const card=document.createElement('div');
+      card.className=`clan-lb-card${isMe?' mine-clan':''} fade-in`;
+      card.style.cssText=`--clan-accent:${t.c1}`;
+      card.innerHTML=`
+        <div class="lb-rank ${rank<=3?'lb-rank-'+rank:''}" style="width:28px;text-align:center;font-size:18px;font-weight:900">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank}</div>
+        <div class="clan-crest-circle" style="background:color-mix(in srgb,${t.c1} 30%,var(--surface-2))">${clan.crest||'🏰'}</div>
+        <div class="clan-info">
+          <div class="clan-name">${clan.name}${isMe?' <span style="font-size:10px;color:var(--text-2)">(you)</span>':''}</div>
+          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} pts total</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div class="clan-color-dots">
+              <div class="clan-color-dot" style="background:${t.c1}"></div>
+              <div class="clan-color-dot" style="background:${t.c2}"></div>
+              <div class="clan-color-dot" style="background:${t.c3}"></div>
+            </div>
+            <div class="clan-trophies-row">${trophyHtml}</div>
+          </div>
+          <div style="margin-top:6px;height:3px;background:var(--bg);border-radius:2px">
+            <div style="width:${pct}%;height:100%;border-radius:2px;background:linear-gradient(90deg,${t.c1},${t.c2})"></div>
+          </div>
+        </div>
+        <div class="clan-score">
+          <div class="clan-pts">${totalPts}</div>
+          <div class="clan-pts-label">pts</div>
+        </div>`;
+      list.appendChild(card);
+    });
+
+    const unaffiliated=Object.keys(state.members).filter(uid=>!state.members[uid]?.clanId).length;
+    document.getElementById('lb-footer').textContent=unaffiliated>0?`${unaffiliated} solo warrior${unaffiliated!==1?'s':''} not in a clan`:'All members are in a clan';
   }
 
   function renderHistory(day) {
@@ -872,6 +1161,48 @@
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
     document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
+
+    // Clan section
+    const clanSec=document.getElementById('profile-clan-section');
+    const myClanId=me.clanId||null;
+    if(myClanId&&state.clans[myClanId]){
+      const clan=state.clans[myClanId];
+      const t=getTartan(clan.tartanId);
+      const clanMembers=Object.entries(state.members).filter(([,m])=>m.clanId===myClanId);
+      const clanPts=clanMembers.reduce((s,[uid])=>s+getTotalPoints(uid),0);
+      const myContrib=getTotalPoints(state.userId);
+      const trophies=getClanTrophies(myClanId);
+      const trophyHtml=[...trophies].map(id=>{
+        const def=CLAN_TROPHY_DEFS.find(t=>t.id===id);
+        return def?`<span title="${def.name}" style="font-size:18px">${def.icon}</span>`:'';
+      }).join('');
+      clanSec.innerHTML=`
+        <div class="profile-clan-card">
+          <div class="profile-clan-header" style="${tartanHeaderStyle(clan.tartanId)}">
+            <span style="font-size:20px">${clan.crest||'🏰'}</span>
+            <span style="font-size:13px;font-weight:800;color:#fff">${clan.name}</span>
+            ${trophies.size?`<span style="margin-left:auto;display:flex;gap:4px">${trophyHtml}</span>`:''}
+          </div>
+          <div class="profile-clan-body">
+            <div class="profile-clan-stats">
+              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanMembers.length}</div><div class="profile-clan-stat-lbl">Members</div></div>
+              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanPts}</div><div class="profile-clan-stat-lbl">Clan Pts</div></div>
+              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${myContrib}</div><div class="profile-clan-stat-lbl">My Contrib</div></div>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text-2)">Share code: <span style="font-weight:800;color:var(--primary);font-family:monospace;letter-spacing:.1em;cursor:pointer" onclick="navigator.clipboard?.writeText('${clan.code||''}');app_toast('Clan code copied: ${clan.code||''}')">${clan.code||'—'}</span></div>
+          </div>
+        </div>
+        <button class="btn-clan-action" id="btn-leave-clan">Leave Clan</button>`;
+      document.getElementById('btn-leave-clan')?.addEventListener('click',async()=>{
+        if(!confirm('Leave your clan? Your individual progress stays.')) return;
+        await leaveClan(); toast('You left the clan');
+      });
+    } else {
+      clanSec.innerHTML=`<button class="btn-clan-action" id="btn-join-create-clan">🏰 Join or Create a Clan</button>`;
+      document.getElementById('btn-join-create-clan')?.addEventListener('click',()=>{
+        initClanScreen(); showScreen('screen-clan');
+      });
+    }
 
     // Badges
     const earned=getEarnedBadges(state.userId);
@@ -988,13 +1319,17 @@
         const {campaignId,userId,code}=await createCampaign(pending.cName,pending.yourName,pending.startDate);
         state.userId=userId; state.campaignId=campaignId;
         state.campaignData={name:pending.cName,startDate:pending.startDate,code};
-        saveLocal(); startApp(); toast(`🎉 Campaign created! Code: ${code}`,4000);
+        saveLocal();
+        initClanScreen(); showScreen('screen-clan');
+        toast(`🎉 Campaign created! Code: ${code}`,4000);
       } else {
         const userId=genId(8);
         await setDoc(doc(db,'campaigns',pending.campaignId,'members',userId),{ name:pending.name, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
         state.userId=userId; state.campaignId=pending.campaignId;
         state.campaignData=pending.campaignData;
-        saveLocal(); startApp(); toast(`Welcome to the crew, ${pending.name}! 💪`,3000);
+        saveLocal();
+        initClanScreen(); showScreen('screen-clan');
+        toast(`Welcome to the crew, ${pending.name}! 💪`,3000);
       }
     } catch(e) {
       toast('Error: '+e.message,3000);
@@ -1048,6 +1383,93 @@
     localStorage.removeItem('cc_user');
     showScreen('screen-welcome');
   });
+
+  // ─── Leaderboard toggle ──────────────────────────────
+  document.querySelectorAll('.lb-view-btn').forEach(b=>b.addEventListener('click',()=>{
+    lbView=b.dataset.view;
+    document.querySelectorAll('.lb-view-btn').forEach(x=>x.classList.toggle('active',x===b));
+    renderLeaderboard(getDayNumber(state.campaignData?.startDate||new Date().toISOString().slice(0,10)));
+  }));
+
+  // ─── Clan screen ──────────────────────────────────────
+  let selectedCrest = CLAN_CRESTS[0];
+  let selectedTartan = TARTAN_THEMES[0].id;
+
+  function initClanScreen() {
+    selectedCrest=CLAN_CRESTS[0]; selectedTartan=TARTAN_THEMES[0].id;
+    document.getElementById('clan-name-input').value='';
+    document.getElementById('clan-join-code-input').value='';
+    document.getElementById('clan-error').textContent='';
+    document.getElementById('clan-btn-activate')?.click;
+    // Set create mode active
+    document.querySelectorAll('.clan-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.clanMode==='create'));
+    document.getElementById('clan-create-form').classList.add('active');
+    document.getElementById('clan-join-form').classList.remove('active');
+    // Render crest grid
+    const cg=document.getElementById('crest-grid'); cg.innerHTML='';
+    CLAN_CRESTS.forEach(c=>{
+      const btn=document.createElement('button');
+      btn.className='crest-opt'+(c===selectedCrest?' selected':'');
+      btn.textContent=c;
+      btn.addEventListener('click',()=>{
+        selectedCrest=c;
+        document.querySelectorAll('.crest-opt').forEach(x=>x.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      cg.appendChild(btn);
+    });
+    // Render tartan grid
+    const tg=document.getElementById('tartan-grid'); tg.innerHTML='';
+    TARTAN_THEMES.forEach(t=>{
+      const btn=document.createElement('div');
+      btn.className='tartan-opt'+(t.id===selectedTartan?' selected':'');
+      btn.innerHTML=`<div class="tartan-swatch" style="${tartanSwatchStyle(t.id)}"></div><div class="tartan-name">${t.emoji} ${t.name}</div>`;
+      btn.addEventListener('click',()=>{
+        selectedTartan=t.id;
+        document.querySelectorAll('.tartan-opt').forEach(x=>x.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      tg.appendChild(btn);
+    });
+  }
+
+  document.querySelectorAll('.clan-mode-btn').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.clan-mode-btn').forEach(x=>x.classList.toggle('active',x===b));
+    document.getElementById('clan-create-form').classList.toggle('active',b.dataset.clanMode==='create');
+    document.getElementById('clan-join-form').classList.toggle('active',b.dataset.clanMode==='join');
+    document.getElementById('clan-error').textContent='';
+  }));
+
+  document.getElementById('btn-clan-create').addEventListener('click',async()=>{
+    const name=document.getElementById('clan-name-input').value.trim();
+    const err=document.getElementById('clan-error');
+    if(!name){err.textContent='Enter a clan name';return;}
+    err.textContent='';
+    document.getElementById('btn-clan-create').textContent='Founding...';
+    try {
+      const {code}=await createClan(name,selectedCrest,selectedTartan);
+      toast(`Clan "${name}" founded! Code: ${code}`,4000);
+      startApp();
+    } catch(e) { err.textContent=e.message; document.getElementById('btn-clan-create').textContent='Found the Clan 🏰'; }
+  });
+
+  document.getElementById('btn-clan-join-go').addEventListener('click',async()=>{
+    const code=document.getElementById('clan-join-code-input').value.trim();
+    const err=document.getElementById('clan-error');
+    if(!code){err.textContent='Enter a clan code';return;}
+    err.textContent='';
+    document.getElementById('btn-clan-join-go').textContent='Joining...';
+    try {
+      await joinClanByCode(code);
+      toast('You joined the clan! ⚔️',3000);
+      startApp();
+    } catch(e) { err.textContent=e.message; document.getElementById('btn-clan-join-go').textContent='Join the Clan ⚔️'; }
+  });
+
+  document.getElementById('btn-clan-skip').addEventListener('click',()=>startApp());
+
+  // expose toast for inline onclick handlers
+  window.app_toast = toast;
 
   // ─── App startup ──────────────────────────────────────
   async function startApp() {
