@@ -2953,7 +2953,8 @@
       document.getElementById('warrior-back-btn')?.addEventListener('click',()=>{
         showScreen('screen-app');
         switchTab('profile');
-        renderProfile();
+        const d = getDayNumber(state.campaignData?.startDate)||1;
+        renderProfile(d);
       });
 
       // Save button
@@ -2968,7 +2969,8 @@
           toast('⚔️ Warrior saved!');
           showScreen('screen-app');
           switchTab('profile');
-          renderProfile();
+          const d = getDayNumber(state.campaignData?.startDate)||1;
+          renderProfile(d);
         } catch(e) { toast('Error saving: '+e.message); }
       });
     },
