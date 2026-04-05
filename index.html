@@ -172,11 +172,11 @@
     .lb-rank-1 { color: var(--gold); }
     .lb-rank-2 { color: #C0C0C0; }
     .lb-rank-3 { color: #CD7F32; }
-    .lb-avatar { width:36px; height:48px; border-radius:8px; overflow:hidden; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-    .lb-avatar canvas { display:block; border-radius:6px; }
+    .lb-avatar { width:56px; height:75px; border-radius:6px; overflow:hidden; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,162,39,0.6); }
+    .lb-avatar canvas { display:block; border-radius:5px; }
     .feed-avatar canvas { display:block; border-radius:5px; }
-    .goat .lb-avatar { box-shadow: 0 0 10px 3px rgba(255,215,0,0.5); border: 1px solid #FFD700; border-radius:8px; }
-    .lb-row.goat .lb-avatar { border: 2px solid var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.4); }
+    .goat .lb-avatar { box-shadow: 0 0 10px 3px rgba(255,215,0,0.5); border: 2px solid #FFD700; border-radius:6px; }
+    .lb-row.goat .lb-avatar { border: 2px solid var(--gold); box-shadow: 0 0 14px rgba(255,215,0,0.5); }
     .lb-info { flex: 1; min-width: 0; }
     .lb-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
     .goat-badge { font-size: 10px; background: linear-gradient(135deg,#FFD700,#FFA500); color: #000; font-weight: 900; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.05em; }
@@ -224,7 +224,7 @@
       border: 1px solid rgba(201,162,39,0.35);
       box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,162,39,0.15);
     }
-    .profile-avatar { width: 64px; height: 86px; border-radius: 12px; overflow: hidden; border: 2px solid #C9A227; flex-shrink: 0; cursor: pointer; position: relative; box-shadow: 0 0 0 1px #8B6914, 0 4px 12px rgba(201,162,39,0.3); background: #0D1117; display: flex; align-items:center; justify-content:center; }
+    .profile-avatar { width: 72px; height: 96px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(201,162,39,0.8); flex-shrink: 0; cursor: pointer; position: relative; box-shadow: 0 0 0 1px #8B6914, 0 4px 16px rgba(201,162,39,0.35); background: #0D1117; display: flex; align-items:center; justify-content:center; }
 
     .profile-info { flex: 1; }
     .profile-name { font-size: 20px; font-weight: 800; color: #F5E6B3; }
@@ -250,7 +250,7 @@
     .feed-messages::-webkit-scrollbar { display: none; }
     .feed-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.3s ease; }
     .feed-msg.mine { flex-direction: row-reverse; }
-    .feed-avatar { width:28px; height:38px; border-radius:7px; overflow:hidden; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .feed-avatar { width:44px; height:58px; border-radius:6px; overflow:hidden; background:var(--surface-2); flex-shrink:0; display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,162,39,0.6); }
     .feed-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 13px; max-width: 78%; }
     .feed-msg.mine .feed-bubble { background: rgba(88,166,255,0.12); border-color: rgba(88,166,255,0.25); border-bottom-right-radius: 4px; }
     .feed-msg:not(.mine) .feed-bubble { border-bottom-left-radius: 4px; }
@@ -410,11 +410,20 @@
       transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
     }
     .warrior-save-btn:active { transform: scale(0.95); }
+    /* ── Warrior creator: sticky preview / scrollable options ── */
     .warrior-body {
+      flex: 1; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .warrior-preview {
+      flex-shrink: 0; background: #0a0d12;
+      display: flex; flex-direction: column;
+    }
+    .warrior-scroll {
       flex: 1; overflow-y: auto; overflow-x: hidden;
       display: flex; flex-direction: column;
     }
-    .warrior-body::-webkit-scrollbar { display: none; }
+    .warrior-scroll::-webkit-scrollbar { display: none; }
     .warrior-canvas-wrap {
       display: flex; justify-content: center; align-items: center;
       padding: 16px 16px 10px; background: #0a0d12; flex-shrink: 0;
@@ -430,8 +439,9 @@
       background: #0a0d12; flex-shrink: 0;
     }
     .warrior-cat-tabs {
-      display: flex; gap: 0; padding: 0 16px 0; flex-shrink: 0;
+      display: flex; gap: 0; padding: 0 16px 0;
       border-bottom: 1px solid var(--border); background: var(--bg);
+      position: sticky; top: 0; z-index: 5; flex-shrink: 0;
     }
     .warrior-cat-btn {
       flex: 1; padding: 12px 4px 10px; background: none; border: none;
@@ -475,6 +485,23 @@
       line-height: 1.2;
     }
     .warrior-opt-btn.selected .opt-label { color: var(--primary); }
+    /* ── Wager / Prize Pool ── */
+    .wager-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .wager-btn.active { border-color: var(--gold); background: rgba(201,162,39,0.12); color: var(--gold); }
+    .prize-pool-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a1400,#2a1f00); border: 1px solid var(--gold); border-radius: var(--radius); padding: 12px 16px; text-align: center; }
+    .prize-pool-banner.show { display: block; }
+    .prize-pool-amount { font-size: 20px; font-weight: 900; color: var(--gold); }
+    .prize-pool-sub { font-size: 11px; color: rgba(201,162,39,0.7); margin-top: 2px; }
+    .winner-banner { margin: 0 16px 14px; background: linear-gradient(135deg,#1a1200,#342600); border: 2px solid var(--gold); border-radius: var(--radius); padding: 18px 16px; text-align: center; }
+    .winner-banner h2 { font-size: 22px; font-weight: 900; color: var(--gold); margin: 0 0 4px; }
+    .winner-banner p { font-size: 13px; color: rgba(245,230,179,0.85); margin: 0; }
+    .warrior-opt-btn.locked { opacity: 0.48; cursor: not-allowed; position: relative; }
+    .warrior-opt-btn.locked .opt-swatch::after {
+      content: '🔒'; position: absolute; top: 2px; right: 2px;
+      font-size: 11px; line-height: 1;
+    }
+    .warrior-opt-btn.locked .opt-swatch { position: relative; }
+    .warrior-opt-btn.locked .opt-label { color: var(--text-2); }
     .warrior-toggle-row {
       display: flex; align-items: center; justify-content: space-between;
       background: var(--surface); border: 1px solid var(--border);
@@ -590,6 +617,14 @@
         <label>Campaign Start Date</label>
         <input class="input" id="create-start-date" type="date">
       </div>
+      <div class="input-group">
+        <label>💰 Sweeten the pot? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-2)">(optional — settled in person)</span></label>
+        <div style="display:flex;gap:8px" id="wager-selector">
+          <button type="button" class="wager-btn active" data-wager="0">None</button>
+          <button type="button" class="wager-btn" data-wager="5">$5/person</button>
+          <button type="button" class="wager-btn" data-wager="10">$10/person</button>
+        </div>
+      </div>
       <button class="btn btn-primary" id="btn-create-go">Create &amp; Start</button>
       <button class="btn btn-secondary" id="btn-back-to-join">← Back</button>
       <div class="error-msg" id="create-error"></div>
@@ -693,6 +728,11 @@
         <button class="lb-view-btn active" data-view="individual">👤 Individual</button>
         <button class="lb-view-btn" data-view="clans">🏰 Clans</button>
       </div>
+      <div class="prize-pool-banner" id="prize-pool-banner">
+        <div class="prize-pool-amount" id="prize-pool-amount"></div>
+        <div class="prize-pool-sub" id="prize-pool-sub"></div>
+      </div>
+      <div id="winner-banner-wrap"></div>
       <div class="lb-list" id="lb-list"></div>
       <div style="padding:16px;text-align:center;color:var(--text-2);font-size:11px" id="lb-footer"></div>
     </div>
@@ -839,20 +879,25 @@
     <button class="warrior-save-btn" id="warrior-save-btn">Save ✓</button>
   </div>
   <div class="warrior-body">
-    <div class="warrior-canvas-wrap">
-      <canvas id="warrior-canvas" width="260" height="340"></canvas>
-    </div>
-    <div class="warrior-clan-banner" id="warrior-clan-banner">No clan — tartan uses default colours</div>
-
-    <!-- Category tabs -->
-    <div class="warrior-cat-tabs">
-      <button class="warrior-cat-btn active" data-cat="face"><span class="cat-emoji">😊</span>Face</button>
-      <button class="warrior-cat-btn" data-cat="hair"><span class="cat-emoji">💇</span>Hair</button>
-      <button class="warrior-cat-btn" data-cat="weapon"><span class="cat-emoji">⚔️</span>Weapon</button>
-      <button class="warrior-cat-btn" data-cat="extras"><span class="cat-emoji">🎨</span>Extras</button>
+    <!-- Fixed preview area — does not scroll -->
+    <div class="warrior-preview">
+      <div class="warrior-canvas-wrap">
+        <canvas id="warrior-canvas" width="260" height="340"></canvas>
+      </div>
+      <div class="warrior-clan-banner" id="warrior-clan-banner">No clan — tartan uses default colours</div>
     </div>
 
-    <div class="warrior-options" id="warrior-options"></div>
+    <!-- Scrollable options area -->
+    <div class="warrior-scroll">
+      <!-- Category tabs — sticky within scroll area -->
+      <div class="warrior-cat-tabs">
+        <button class="warrior-cat-btn active" data-cat="face"><span class="cat-emoji">😊</span>Face</button>
+        <button class="warrior-cat-btn" data-cat="hair"><span class="cat-emoji">💇</span>Hair</button>
+        <button class="warrior-cat-btn" data-cat="weapon"><span class="cat-emoji">⚔️</span>Weapon</button>
+        <button class="warrior-cat-btn" data-cat="extras"><span class="cat-emoji">🎨</span>Extras</button>
+      </div>
+      <div class="warrior-options" id="warrior-options"></div>
+    </div>
   </div>
 </div>
 
@@ -1132,10 +1177,11 @@
   }
 
   // ─── Firebase operations ──────────────────────────────
-  async function createCampaign(cName, yourName, startDate) {
+  async function createCampaign(cName, yourName, startDate, wagerAmount) {
     const campaignId=genId(6), userId=genId(8), code=genCode();
-    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, code, createdBy:userId, createdAt:serverTimestamp() });
-    await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
+    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, code, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
+    // Creator auto-opts in to their own wager
+    await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn: (wagerAmount||0)>0 });
     return { campaignId, userId, code };
   }
 
@@ -1377,6 +1423,37 @@
     const maxPts=scores[0]?.pts||1;
     document.getElementById('lb-subtitle').textContent=`Day ${day} of 30 · ${scores.length} crew member${scores.length!==1?'s':''}`;
 
+    // ── Prize pool banner ──
+    const wager=state.campaignData?.wagerAmount||0;
+    const poolBanner=document.getElementById('prize-pool-banner');
+    const winnerWrap=document.getElementById('winner-banner-wrap');
+    winnerWrap.innerHTML='';
+    if(wager>0){
+      const optInCount=Object.values(state.members).filter(m=>m.wagerOptIn===true).length;
+      const pool=optInCount*wager;
+      document.getElementById('prize-pool-amount').textContent=`💰 Prize Pool: $${pool}`;
+      document.getElementById('prize-pool-sub').textContent=`${optInCount} warrior${optInCount!==1?'s':''} × $${wager} each — winner takes all!`;
+      poolBanner.classList.add('show');
+      // Day 30+ winner announcement
+      if(day>=30&&scores.length>0){
+        const winner=scores[0];
+        winnerWrap.innerHTML=`<div class="winner-banner">
+          <h2>🏆 ${winner.name} wins the $${pool} pot! 🐐</h2>
+          <p>Crowned G.O.A.T. with ${winner.pts} points — sort it out in person! 🤝</p>
+        </div>`;
+      }
+    }else{
+      poolBanner.classList.remove('show');
+      // Day 30 no-wager celebration
+      if(day>=30&&scores.length>0){
+        const winner=scores[0];
+        winnerWrap.innerHTML=`<div class="winner-banner">
+          <h2>🐐 ${winner.name} is the G.O.A.T.!</h2>
+          <p>30 days done — ${winner.pts} points, undisputed champion 🏆</p>
+        </div>`;
+      }
+    }
+
     const list=document.getElementById('lb-list');
     list.innerHTML='';
     scores.forEach((m,i)=>{
@@ -1405,7 +1482,7 @@
       // Render warrior canvas into the avatar slot
       const avatarSlot=row.querySelector('.lb-avatar');
       try {
-        const wc=makeWarriorCanvas(m.id,36,48,isGoat);
+        const wc=makeWarriorCanvas(m.id,56,75,isGoat);
         avatarSlot.appendChild(wc);
       } catch(e) {
         avatarSlot.textContent='⚔️';
@@ -1512,7 +1589,7 @@
       profileAvatarEl.innerHTML='';
       try{
         const myPts2=getTotalPoints(state.userId);
-        const wc=makeWarriorCanvas(state.userId,64,86,false);
+        const wc=makeWarriorCanvas(state.userId,72,96,false);
         wc.style.borderRadius='10px';
         profileAvatarEl.appendChild(wc);
       }catch(e){ profileAvatarEl.textContent='⚔️'; }
@@ -1531,6 +1608,28 @@
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
     document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
+    // Wager badge — only show if this member opted in
+    const profWager=state.campaignData?.wagerAmount||0;
+    const myOptIn=state.members[state.userId]?.wagerOptIn===true;
+    let wagerBadgeEl=document.getElementById('profile-wager-badge');
+    if(!wagerBadgeEl){
+      wagerBadgeEl=document.createElement('div');
+      wagerBadgeEl.id='profile-wager-badge';
+      wagerBadgeEl.style.cssText='margin:0 16px 12px;padding:10px 14px;background:linear-gradient(135deg,#1a1400,#2a1f00);border:1px solid var(--gold);border-radius:var(--radius);font-size:13px;font-weight:700;color:var(--gold);text-align:center';
+      document.getElementById('profile-warrior-section').before(wagerBadgeEl);
+    }
+    if(profWager>0&&myOptIn){
+      const optInCount=Object.values(state.members).filter(m=>m.wagerOptIn===true).length;
+      const pool=optInCount*profWager;
+      wagerBadgeEl.style.display='block';
+      wagerBadgeEl.textContent=`💰 Wagered $${profWager} — Prize pool: $${pool} (${optInCount} warrior${optInCount!==1?'s':''} in)`;
+    }else if(profWager>0&&!myOptIn){
+      wagerBadgeEl.style.display='block';
+      wagerBadgeEl.style.opacity='0.55';
+      wagerBadgeEl.textContent=`💰 Campaign wager: $${profWager}/person (you opted out)`;
+    }else{
+      wagerBadgeEl.style.display='none';
+    }
 
     // Warrior section
     renderWarriorProfile();
@@ -1641,7 +1740,7 @@
       const feedSlot=div.querySelector('.feed-avatar');
       if(feedSlot){
         try{
-          const wc=makeWarriorCanvas(msg.userId,28,37,false);
+          const wc=makeWarriorCanvas(msg.userId,44,58,false);
           feedSlot.appendChild(wc);
         }catch(e){feedSlot.textContent='⚔️';}
       }
@@ -1681,13 +1780,28 @@
       // Store pending join data then go straight to warrior creator
       state.pendingJoin={ name, code, campaignData:snap.docs[0].data(), campaignId:snap.docs[0].id };
       const userId=genId(8);
-      await setDoc(doc(db,'campaigns',snap.docs[0].id,'members',userId),{ name, avatar:'⚔️', joinedAt:serverTimestamp(), completions:{} });
+      const wager=snap.docs[0].data().wagerAmount||0;
+      // Opt-in prompt for wager campaigns
+      let wagerOptIn=false;
+      if(wager>0){
+        wagerOptIn=confirm(`💰 This campaign has a $${wager}/person wager!\n\nDo you want to opt in to the prize pool?\n\nOK = Yes, I'm in!\nCancel = No thanks, just train`);
+      }
+      await setDoc(doc(db,'campaigns',snap.docs[0].id,'members',userId),{ name, avatar:'⚔️', joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
       state.userId=userId; state.campaignId=snap.docs[0].id;
       state.campaignData=snap.docs[0].data();
       saveLocal();
       initClanScreen(); showScreen('screen-clan');
-      toast(`Welcome to the crew, ${name}! ⚔️`,3000);
+      toast(wagerOptIn?`Welcome to the crew, ${name}! 💰 You're in for $${wager}!`:wager>0?`Welcome to the crew, ${name}! (Wager skipped) ⚔️`:`Welcome to the crew, ${name}! ⚔️`,3500);
     } catch(e){ err.textContent=e.message; document.getElementById('btn-join').textContent='Join Campaign'; }
+  });
+
+  // Wager selector toggle
+  let selectedWager=0;
+  document.getElementById('wager-selector').addEventListener('click',e=>{
+    const btn=e.target.closest('.wager-btn');
+    if(!btn)return;
+    selectedWager=parseInt(btn.dataset.wager)||0;
+    document.querySelectorAll('#wager-selector .wager-btn').forEach(b=>b.classList.toggle('active',b===btn));
   });
 
   document.getElementById('btn-create-go').addEventListener('click',async()=>{
@@ -1700,12 +1814,13 @@
     if(!startDate){err.textContent='Choose a start date';return;}
     err.textContent='';
     try {
-      const {campaignId,userId,code}=await createCampaign(cName,yourName,startDate);
+      const {campaignId,userId,code}=await createCampaign(cName,yourName,startDate,selectedWager);
       state.userId=userId; state.campaignId=campaignId;
-      state.campaignData={name:cName,startDate,code};
+      state.campaignData={name:cName,startDate,code,wagerAmount:selectedWager};
       saveLocal();
       initClanScreen(); showScreen('screen-clan');
-      toast(`🎉 Campaign created! Code: ${code}`,4000);
+      const wagerMsg=selectedWager>0?` 💰 Wager: $${selectedWager}/person`:'';
+      toast(`🎉 Campaign created! Code: ${code}${wagerMsg}`,4500);
     } catch(e2) { err.textContent=e2.message; }
   });
 
@@ -2037,7 +2152,15 @@
     const pts = state.campaignData ? getTotalPoints(userId) : 0;
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    WC.draw(canvas, cfg, pts, isGoat || false);
+    if(isGoat) {
+      // Draw full-size (260×340) so the crown renders, then scale to thumbnail
+      const full = document.createElement('canvas');
+      full.width = 260; full.height = 340;
+      WC.draw(full, cfg, pts, true);
+      canvas.getContext('2d').drawImage(full, 0, 0, w, h);
+    } else {
+      WC.draw(canvas, cfg, pts, false);
+    }
     return canvas;
   }
 
@@ -2074,7 +2197,7 @@
     MALE_HAIR_STYLES:[
       {id:'short-crop',label:'Short',icon:'✂️'},{id:'medium',label:'Medium',icon:'💈'},
       {id:'man-bun',label:'Man Bun',icon:'🎱'},{id:'long-warrior',label:'Long',icon:'〰️'},
-      {id:'top-knot',label:'Top Knot',icon:'🔝'},
+      {id:'top-knot',label:'Top Knot',icon:'🔝'},{id:'mohawk',label:'Mohawk',icon:'🦩'},
     ],
     FEMALE_HAIR_STYLES:[
       {id:'f-short',label:'Short',icon:'✂️'},{id:'f-long',label:'Long',icon:'〰️'},
@@ -2098,12 +2221,33 @@
     ],
     WAR_PAINTS:[
       {id:'none',label:'None',icon:'😶'},{id:'cheeks',label:'Cheeks',icon:'✦'},
+      {id:'braveheart',label:'Braveheart 🔵',icon:'🔵'},
       {id:'full-face',label:'Full',icon:'🎭'},
     ],
     FEMALE_EXTRAS:[
       {id:'none',label:'None',icon:'😶'},{id:'flower-crown',label:'Flowers',icon:'🌸'},
       {id:'torque',label:'Torque',icon:'🏺'},
     ],
+
+    // Points required to unlock each option (0 / absent = free)
+    OPTION_LOCKS:{
+      // Face shapes
+      'square':100,'angular':100,
+      // Eye styles
+      'almond':50,'deep-set':50,
+      // Male hair
+      'medium':25,'man-bun':25,'long-warrior':25,'top-knot':100,'mohawk':50,
+      // Female hair
+      'f-long':25,'f-braids':50,'f-ponytail':100,'f-bun':100,
+      // Beard
+      'short':25,'full':25,'viking':50,
+      // Weapons
+      'battle-axe':50,'targe':50,'claymore':100,
+      // War paint
+      'cheeks':25,'braveheart':50,'full-face':150,
+      // Female extras
+      'flower-crown':150,'torque':150,
+    },
 
     _darken(hex,pct){try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);const f=1-pct;return `rgb(${Math.round(r*f)},${Math.round(g*f)},${Math.round(b*f)})`;}catch(e){return hex;}},
     _lighten(hex,pct){try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgb(${Math.round(r+(255-r)*pct)},${Math.round(g+(255-g)*pct)},${Math.round(b+(255-b)*pct)})`;}catch(e){return hex;}},
@@ -2152,6 +2296,8 @@
       this._drawNeck(ctx,cx,cy,fh,skinHex,isFemale);
       this._drawFace(ctx,cx,cy,fw,fh,c.faceShape,skinHex);
       this._drawEars(ctx,cx,cy,fw,fh,skinHex);
+      // War paint drawn before face features so eyes/brows/nose render ON TOP of paint
+      if(c.warPaint&&c.warPaint!=='none') this._drawWarPaint(ctx,cx,cy,fw,fh,c.warPaint,clan);
       this._drawEyebrows(ctx,cx,cy,fw,fh,c.browStyle,beardHex,isFemale);
       this._drawEyes(ctx,cx,cy,fw,fh,c.eyeStyle,eyeHex,skinHex,isFemale);
       this._drawNose(ctx,cx,cy,fh,skinHex,isFemale);
@@ -2162,7 +2308,6 @@
       if(isFemale&&c.femaleExtra&&c.femaleExtra!=='none')
         this._drawFemaleExtra(ctx,cx,cy,fw,fh,c.femaleExtra,clan,skinHex,W,H);
       this._drawBrooch(ctx,W,H,clan);
-      if(c.warPaint&&c.warPaint!=='none') this._drawWarPaint(ctx,cx,cy,fw,c.warPaint,clan);
       if(c.scar) this._drawScar(ctx,cx,cy,fw,skinHex);
       if(physLvl>=4) this._drawAura(ctx,W,H,cx,cy,fh,fw,clan);
       if(isGoat) this._drawGoatCrown(ctx,cx,cy,fh,fw,W,H);
@@ -2252,8 +2397,8 @@
     },
 
     _drawBackHair(ctx,cx,cy,fw,fh,style,hair,isFemale){
-      // Don't draw back hair for short or updo styles
-      if(['short-crop','top-knot','f-short','f-bun'].includes(style))return;
+      // Don't draw back hair for short, updo or mohawk styles
+      if(['short-crop','top-knot','f-short','f-bun','mohawk'].includes(style))return;
       ctx.save();
       const dark=this._darken(hair,0.18);
       ctx.fillStyle=dark;
@@ -2292,13 +2437,21 @@
         ctx.bezierCurveTo(cx+fw,cy-fh*0.65,cx,cy-fh-6,cx-fw,cy-fh*0.65);
         ctx.closePath();ctx.fill();
       }else if(style==='f-braids'){
-        // Two braids hanging behind
-        [-fw*0.6,fw*0.6].forEach(ox=>{
-          ctx.fillStyle=dark;
-          ctx.beginPath();ctx.ellipse(cx+ox,cy+fh*0.5,7,fh*0.35,0,0,Math.PI*2);ctx.fill();
-          ctx.fillStyle=this._lighten(hair,0.08);ctx.globalAlpha=0.4;
-          ctx.beginPath();ctx.ellipse(cx+ox,cy+fh*0.5+5,3,fh*0.3,0,0,Math.PI*2);ctx.fill();
+        // Braid columns drawn OUTSIDE face boundary so they hang beside/behind the face
+        // Positioned at fw+8 from center — outside the face ellipse so they stay visible
+        [-1,1].forEach(side=>{
+          const bx=cx+side*(fw+8);
+          const bStartY=cy-fh*0.3; // start at upper temple level
+          for(let i=0;i<7;i++){
+            const by=bStartY+i*20;
+            ctx.fillStyle=i%2===0?dark:this._darken(hair,0.06);ctx.globalAlpha=0.92;
+            ctx.beginPath();ctx.ellipse(bx,by+10,7,11,0,0,Math.PI*2);ctx.fill();
+          }
           ctx.globalAlpha=1;
+          // Gold bead at bottom
+          const gg=ctx.createRadialGradient(bx-1,bStartY+135,1,bx,bStartY+138,7);
+          gg.addColorStop(0,'#FFDD60');gg.addColorStop(1,'#9B7210');
+          ctx.fillStyle=gg;ctx.beginPath();ctx.arc(bx,bStartY+138,7,0,Math.PI*2);ctx.fill();
         });
       }else if(style==='f-ponytail'){
         // Ponytail hanging back
@@ -2476,12 +2629,16 @@
           for(let i=1;i<=2;i++){ctx.beginPath();ctx.moveTo(cx-20,abTop+i*abH);ctx.lineTo(cx+20,abTop+i*abH);ctx.stroke();}
         }
         if(physLvl>=4){
-          // Six-pack clearly visible
-          ctx.globalAlpha=0.55;
-          ctx.strokeStyle=this._darken(skinHex,0.42);ctx.lineWidth=1.6;
-          const abTop=plateTop+38,abH=(plateBot-abTop)/3;
+          // Elite — gold-tinted abs clearly visible on armour + deltoid arcs
+          ctx.globalAlpha=0.74;
+          ctx.strokeStyle='rgba(215,172,62,0.92)';ctx.lineWidth=2;
+          const abTop=plateTop+36,abH=(plateBot-abTop)/3;
           ctx.beginPath();ctx.moveTo(cx,abTop);ctx.lineTo(cx,plateBot);ctx.stroke();
-          for(let i=0;i<=3;i++){ctx.beginPath();ctx.moveTo(cx-24,abTop+i*abH);ctx.lineTo(cx+24,abTop+i*abH);ctx.stroke();}
+          for(let i=0;i<=3;i++){ctx.beginPath();ctx.moveTo(cx-26,abTop+i*abH);ctx.lineTo(cx+26,abTop+i*abH);ctx.stroke();}
+          // Deltoid arcs (gold)
+          ctx.globalAlpha=0.52;ctx.lineWidth=2;
+          ctx.beginPath();ctx.arc(cx-40,sy+15,15,Math.PI*0.5,Math.PI*1.5);ctx.stroke();
+          ctx.beginPath();ctx.arc(cx+40,sy+15,15,Math.PI*-0.5,Math.PI*0.5);ctx.stroke();
         }
       }else{
         if(physLvl>=1){
@@ -2519,12 +2676,25 @@
           ctx.beginPath();ctx.arc(cx+44,plateTop+22,16,Math.PI*-0.5,Math.PI*0.5);ctx.stroke();
         }
         if(physLvl>=4){
-          // Max definition - abs below chest plate
-          ctx.globalAlpha=0.46;
-          ctx.strokeStyle=this._darken(skinHex,0.44);ctx.lineWidth=1.5;
+          // Elite definition — gold-tinted pec lines + deltoid arcs + abs clearly visible
+          ctx.globalAlpha=0.72;
+          ctx.strokeStyle='rgba(215,172,62,0.92)';ctx.lineWidth=2.4;
+          [-1,1].forEach(s=>{
+            ctx.beginPath();
+            ctx.moveTo(cx+s*5,plateTop+8);
+            ctx.bezierCurveTo(cx+s*34,plateTop+22,cx+s*42,plateTop+56,cx+s*32,plateBot-8);
+            ctx.stroke();
+          });
+          // Deltoid arcs (gold)
+          ctx.globalAlpha=0.55;ctx.lineWidth=2.2;
+          ctx.beginPath();ctx.arc(cx-46,plateTop+22,18,Math.PI*0.5,Math.PI*1.5);ctx.stroke();
+          ctx.beginPath();ctx.arc(cx+46,plateTop+22,18,Math.PI*-0.5,Math.PI*0.5);ctx.stroke();
+          // Abs below chest plate
+          ctx.globalAlpha=0.68;
+          ctx.strokeStyle='rgba(215,172,62,0.88)';ctx.lineWidth=1.9;
           const abY=plateBot+2;
-          ctx.beginPath();ctx.moveTo(cx,abY);ctx.lineTo(cx,abY+32);ctx.stroke();
-          for(let i=1;i<=2;i++){ctx.beginPath();ctx.moveTo(cx-18,abY+i*11);ctx.lineTo(cx+18,abY+i*11);ctx.stroke();}
+          ctx.beginPath();ctx.moveTo(cx,abY);ctx.lineTo(cx,abY+36);ctx.stroke();
+          for(let i=1;i<=3;i++){ctx.beginPath();ctx.moveTo(cx-22,abY+i*11);ctx.lineTo(cx+22,abY+i*11);ctx.stroke();}
         }
       }
       ctx.restore();
@@ -2873,9 +3043,10 @@
         ctx.bezierCurveTo(cx-fw-7,cy-fh*0.3,cx-fw*0.68,cy-fh*0.9,cx-14,cy-fh*0.96);
         ctx.lineTo(cx+14,cy-fh*0.96);
         ctx.bezierCurveTo(cx+fw*0.68,cy-fh*0.9,cx+fw+7,cy-fh*0.3,cx+fw+4,cy+fh*0.05);
-        ctx.bezierCurveTo(cx+fw+3,cy+fh*0.32,cx+fw*0.4,cy+fh*0.28,cx+11,cy-fh*0.65);
+        // ── Inner hairline raised above eye level (ey≈cy-fh*0.22) ──
+        ctx.bezierCurveTo(cx+fw+2,cy-fh*0.1,cx+fw*0.45,cy-fh*0.38,cx+11,cy-fh*0.65);
         ctx.lineTo(cx-11,cy-fh*0.65);
-        ctx.bezierCurveTo(cx-fw*0.4,cy+fh*0.28,cx-fw-3,cy+fh*0.32,cx-fw-4,cy+fh*0.05);
+        ctx.bezierCurveTo(cx-fw*0.45,cy-fh*0.38,cx-fw-2,cy-fh*0.1,cx-fw-4,cy+fh*0.05);
         ctx.closePath();ctx.fill();
         ctx.restore();ctx.save();
         const bg=ctx.createRadialGradient(cx-4,cy-fh*1.14,4,cx,cy-fh*1.1,21);
@@ -2911,6 +3082,39 @@
         kg.addColorStop(0,hl);kg.addColorStop(1,hd);ctx.fillStyle=kg;
         ctx.beginPath();ctx.arc(cx,cy-fh*1.14,15,0,Math.PI*2);ctx.fill();
         ctx.strokeStyle='#1A1A1A';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy-fh*1.14,7,0,Math.PI*2);ctx.stroke();
+      }else if(style==='mohawk'){
+        // Shaved sides — prominent shadow showing shaved skin
+        ctx.fillStyle=this._darken(hair,0.35);ctx.globalAlpha=0.42;
+        ctx.beginPath();ctx.ellipse(cx-fw*0.52,cy-fh*0.22,fw*0.42,fh*0.54,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(cx+fw*0.52,cy-fh*0.22,fw*0.42,fh*0.54,0,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;
+        // Remove head clip so spikes can rise above the head
+        ctx.restore();ctx.save();
+        // 3 upright spikes — narrow mohawk ridge
+        const spikeData=[{ox:-13,tipY:cy-fh*1.2},{ox:0,tipY:cy-fh*1.42},{ox:13,tipY:cy-fh*1.2}];
+        const baseY=cy-fh*0.32;
+        spikeData.forEach(({ox,tipY})=>{
+          const sg=ctx.createLinearGradient(cx+ox,baseY,cx+ox,tipY);
+          sg.addColorStop(0,hd);sg.addColorStop(0.25,hair);sg.addColorStop(1,hl);
+          ctx.fillStyle=sg;ctx.globalAlpha=1;
+          ctx.beginPath();
+          ctx.moveTo(cx+ox-9,baseY);
+          ctx.bezierCurveTo(cx+ox-8,baseY-fh*0.24,cx+ox-3,tipY+10,cx+ox,tipY);
+          ctx.bezierCurveTo(cx+ox+3,tipY+10,cx+ox+8,baseY-fh*0.24,cx+ox+9,baseY);
+          ctx.closePath();ctx.fill();
+          // Outline for contrast on dark backgrounds
+          ctx.strokeStyle=hl;ctx.lineWidth=1;ctx.globalAlpha=0.5;
+          ctx.stroke();
+          // Highlight streak
+          ctx.strokeStyle=hl;ctx.lineWidth=1.5;ctx.globalAlpha=0.42;ctx.lineCap='round';
+          ctx.beginPath();ctx.moveTo(cx+ox,baseY-5);ctx.bezierCurveTo(cx+ox,baseY-fh*0.18,cx+ox,tipY+14,cx+ox,tipY+2);ctx.stroke();
+          ctx.globalAlpha=1;
+        });
+        // Base band connecting spikes
+        const bg=ctx.createLinearGradient(cx-22,baseY,cx+22,baseY);
+        bg.addColorStop(0,hd);bg.addColorStop(0.5,hair);bg.addColorStop(1,hd);
+        ctx.fillStyle=bg;ctx.globalAlpha=1;
+        ctx.beginPath();ctx.moveTo(cx-22,baseY);ctx.lineTo(cx+22,baseY);ctx.lineTo(cx+22,baseY+14);ctx.lineTo(cx-22,baseY+14);ctx.closePath();ctx.fill();
       }
       ctx.restore();
     },
@@ -2958,37 +3162,20 @@
         });
         ctx.globalAlpha=1;
       }else if(style==='f-braids'){
-        // Base hair top
+        // Crown cap only — inner hairline stays well above eyes so face is fully visible
+        // Braid columns are drawn in _drawBackHair (behind the face) at outer edge
         const g=ctx.createLinearGradient(cx-fw,0,cx+fw,0);
         g.addColorStop(0,hd);g.addColorStop(0.5,hair);g.addColorStop(1,hd);
         ctx.fillStyle=g;
         ctx.beginPath();
-        ctx.moveTo(cx-fw-5,cy-fh*0.0);
-        ctx.bezierCurveTo(cx-fw-8,cy-fh*0.48,cx-fw*0.6,cy-fh*1.08,cx,cy-fh*1.04);
-        ctx.bezierCurveTo(cx+fw*0.6,cy-fh*1.08,cx+fw+8,cy-fh*0.48,cx+fw+5,cy-fh*0.0);
-        ctx.bezierCurveTo(cx+fw+4,cy+fh*0.2,cx+fw*0.38,cy-fh*0.12,cx+fw*0.32,cy-fh*0.52);
-        ctx.bezierCurveTo(cx+fw*0.05,cy-fh*0.9,cx-fw*0.05,cy-fh*0.9,cx-fw*0.32,cy-fh*0.52);
-        ctx.bezierCurveTo(cx-fw*0.38,cy-fh*0.12,cx-fw-4,cy+fh*0.2,cx-fw-5,cy-fh*0.0);
+        // Outer crown from upper temple to top of head
+        ctx.moveTo(cx-fw+2,cy-fh*0.54);
+        ctx.bezierCurveTo(cx-fw-4,cy-fh*0.72,cx-fw*0.52,cy-fh*1.09,cx,cy-fh*1.04);
+        ctx.bezierCurveTo(cx+fw*0.52,cy-fh*1.09,cx+fw+4,cy-fh*0.72,cx+fw-2,cy-fh*0.54);
+        // Inner hairline stays at forehead level (above brow, above eyes)
+        ctx.bezierCurveTo(cx+fw*0.38,cy-fh*0.54,cx+fw*0.18,cy-fh*0.78,cx,cy-fh*0.82);
+        ctx.bezierCurveTo(cx-fw*0.18,cy-fh*0.78,cx-fw*0.38,cy-fh*0.54,cx-fw+2,cy-fh*0.54);
         ctx.closePath();ctx.fill();
-        ctx.restore();ctx.save();
-        // Two braids hanging forward on each side
-        const braidX=[cx-fw*0.55,cx+fw*0.55];
-        braidX.forEach(bx=>{
-          const bStartY=cy+fh*0.1;
-          ctx.fillStyle=hd;
-          // Braid column
-          for(let i=0;i<5;i++){
-            const by=bStartY+i*18;
-            ctx.fillStyle=i%2===0?hair:hd;ctx.globalAlpha=0.9;
-            ctx.beginPath();ctx.ellipse(bx,by+8,7,10,0,0,Math.PI*2);ctx.fill();
-          }
-          ctx.globalAlpha=1;
-          // Gold bead at bottom
-          const gg=ctx.createRadialGradient(bx-1,bStartY+88,1,bx,bStartY+90,7);
-          gg.addColorStop(0,'#FFDD60');gg.addColorStop(1,'#9B7210');
-          ctx.fillStyle=gg;ctx.beginPath();ctx.arc(bx,bStartY+90,7,0,Math.PI*2);ctx.fill();
-        });
-        ctx.globalAlpha=1;
       }else if(style==='f-ponytail'){
         // Hair swept back, small fringe
         const g=ctx.createLinearGradient(cx-fw,0,cx+fw,0);
@@ -3115,12 +3302,26 @@
       ctx.fillStyle='#C8A030';ctx.beginPath();ctx.arc(bx+r+7,by-2,2,0,Math.PI*2);ctx.fill();
     },
 
-    _drawWarPaint(ctx,cx,cy,fw,style,clan){
+    _drawWarPaint(ctx,cx,cy,fw,fh,style,clan){
       ctx.save();ctx.globalAlpha=0.72;
       if(style==='cheeks'){
         ctx.strokeStyle=clan.c1;ctx.lineWidth=4;ctx.lineCap='round';
         ctx.beginPath();ctx.moveTo(cx-fw*0.68,cy-4);ctx.lineTo(cx-fw*0.28,cy+14);ctx.stroke();
         ctx.beginPath();ctx.moveTo(cx+fw*0.28,cy-4);ctx.lineTo(cx+fw*0.68,cy+14);ctx.stroke();
+      }else if(style==='braveheart'){
+        // Cobalt/woad blue covering upper half of face — eyes drawn ON TOP (paint called before eyes)
+        ctx.restore();ctx.save();
+        ctx.beginPath();ctx.ellipse(cx,cy,fw,fh,0,0,Math.PI*2);ctx.clip();
+        // Main cobalt block: from hairline to just below eye line
+        ctx.globalAlpha=0.86;ctx.fillStyle='#1a4fa0';
+        ctx.fillRect(cx-fw-2,cy-fh-4,fw*2+4,fh*1.04);
+        // Lighter forehead highlight band
+        ctx.fillStyle='#4477dd';ctx.globalAlpha=0.52;
+        ctx.fillRect(cx-fw-2,cy-fh-4,fw*2+4,fh*0.42);
+        ctx.restore();ctx.save();
+        // Thin white stripe down nose bridge
+        ctx.strokeStyle='rgba(255,255,255,0.72)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.globalAlpha=0.7;
+        ctx.beginPath();ctx.moveTo(cx,cy-fh*0.56);ctx.bezierCurveTo(cx,cy-fh*0.38,cx,cy-fh*0.22,cx,cy-fh*0.06);ctx.stroke();
       }else if(style==='full-face'){
         ctx.strokeStyle=clan.c1;ctx.lineWidth=5;ctx.lineCap='round';
         ctx.beginPath();ctx.moveTo(cx-fw*0.58,cy-24);ctx.bezierCurveTo(cx-fw*0.53,cy+4,cx-fw*0.48,cy+14,cx-fw*0.53,cy+28);ctx.stroke();
@@ -3156,16 +3357,23 @@
       const cat=this._currentCat;
       const c=this.cfg;
       const isFemale=c.gender==='female';
+      // Current user's points for lock checks
+      const userPts=state.campaignData?getTotalPoints(state.userId):0;
+      const locks=this.OPTION_LOCKS;
+      const isLocked=(id)=>(locks[id]||0)>userPts;
       const mk=(items,prop,swatchFn)=>{
         const row=document.createElement('div');row.className='warrior-opt-row';
         items.forEach(item=>{
+          const locked=isLocked(item.id);
           const btn=document.createElement('button');
-          btn.className='warrior-opt-btn'+(c[prop]===item.id?' selected':'');
+          btn.className='warrior-opt-btn'+(c[prop]===item.id?' selected':'')+(locked?' locked':'');
           const sw=document.createElement('div');sw.className='opt-swatch';
           if(swatchFn)swatchFn(sw,item);else sw.textContent=item.icon||'?';
-          const lb=document.createElement('div');lb.className='opt-label';lb.textContent=item.label;
+          const lb=document.createElement('div');lb.className='opt-label';
+          lb.textContent=locked?`🔒 ${locks[item.id]}pts`:item.label;
           btn.appendChild(sw);btn.appendChild(lb);
           btn.addEventListener('click',()=>{
+            if(locked){toast(`🔒 Unlock at ${locks[item.id]}pts — keep training!`,2600);return;}
             c[prop]=item.id;
             row.querySelectorAll('.warrior-opt-btn').forEach(b=>b.classList.remove('selected'));
             btn.classList.add('selected');
@@ -3181,12 +3389,17 @@
         s.appendChild(l);s.appendChild(row);wrap.appendChild(s);
       };
       const colorSwatch=(sw,item)=>{sw.style.background=item.hex;sw.style.borderRadius='50%';sw.style.border='2px solid rgba(255,255,255,0.15)';};
-      const toggle=(label,prop)=>{
+      const toggle=(label,prop,reqPts)=>{
         const row=document.createElement('div');row.className='warrior-toggle-row';
-        const l=document.createElement('div');l.className='warrior-toggle-label';l.textContent=label;
+        const l=document.createElement('div');l.className='warrior-toggle-label';
+        l.textContent=reqPts&&userPts<reqPts?`${label} 🔒 ${reqPts}pts`:label;
         const t=document.createElement('button');t.className='warrior-toggle'+(c[prop]?' on':'');
+        if(reqPts&&userPts<reqPts)t.style.opacity='0.45';
         row.appendChild(l);row.appendChild(t);
-        t.addEventListener('click',()=>{c[prop]=!c[prop];t.classList.toggle('on',c[prop]);WC.draw(document.getElementById('warrior-canvas'),c);});
+        t.addEventListener('click',()=>{
+          if(reqPts&&userPts<reqPts){toast(`🔒 Unlock at ${reqPts}pts — keep training!`,2600);return;}
+          c[prop]=!c[prop];t.classList.toggle('on',c[prop]);WC.draw(document.getElementById('warrior-canvas'),c);
+        });
         wrap.appendChild(row);
       };
 
@@ -3233,7 +3446,7 @@
         sec('War Paint',mk(this.WAR_PAINTS,'warPaint'));
         const clanNote=document.createElement('div');clanNote.style.cssText='font-size:11px;color:var(--text-2);margin-bottom:14px;font-style:italic';clanNote.textContent="War paint uses your clan's tartan colours automatically.";wrap.appendChild(clanNote);
         if(isFemale) sec('Female Extras',mk(this.FEMALE_EXTRAS,'femaleExtra'));
-        toggle('⚔️ Battle Scar','scar');
+        toggle('⚔️ Battle Scar','scar',100);
         const note2=document.createElement('div');note2.style.cssText='font-size:12px;color:var(--text-2);margin-top:12px;line-height:1.5;padding:10px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border)';note2.textContent="Your Celtic brooch is always shown in your clan's primary colour. Join a clan to unlock full tartan colours.";wrap.appendChild(note2);
       }
     },
