@@ -303,6 +303,26 @@
     .crest-opt { font-size: 26px; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid var(--border); cursor: pointer; transition: all 0.15s; }
     .crest-opt.selected { border-color: var(--primary); background: rgba(88,166,255,0.15); transform: scale(1.12); }
 
+    /* ── Clan house cards ── */
+    .house-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; width: 100%; }
+    .house-card { border-radius: var(--radius); overflow: hidden; border: 2px solid var(--border); transition: border-color 0.2s; cursor: pointer; background: var(--surface); }
+    .house-card.joined { border-color: var(--gold); }
+    .house-banner { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; position: relative; }
+    .house-crest { font-size: 28px; z-index: 1; }
+    .house-banner-name { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.6); z-index: 1; }
+    .house-banner-sub { font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 600; z-index: 1; }
+    .house-body { padding: 10px 14px 12px; display: flex; align-items: center; gap: 10px; }
+    .house-body-info { flex: 1; min-width: 0; }
+    .house-motto { font-size: 12px; font-style: italic; color: var(--text-2); margin-bottom: 2px; }
+    .house-motto-en { font-size: 11px; color: var(--text-3); }
+    .house-meta { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+    .house-color-dots { display: flex; gap: 4px; flex-shrink: 0; }
+    .house-color-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .btn-join-house { flex-shrink: 0; padding: 8px 14px; border-radius: 999px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; background: rgba(88,166,255,0.15); color: var(--primary); border: 1px solid rgba(88,166,255,0.3); transition: all 0.15s; }
+    .btn-join-house.joined { background: var(--gold); color: #000; border-color: var(--gold); }
+    .clan-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; color: var(--text-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; width: 100%; }
+    .clan-divider::before, .clan-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
     /* ── Leaderboard toggle ── */
     .lb-view-toggle { display: flex; margin: 0 16px 12px; background: var(--surface); border-radius: 10px; padding: 4px; gap: 4px; }
     .lb-view-btn { flex: 1; padding: 9px; border: none; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-2); transition: all 0.2s; }
@@ -418,19 +438,27 @@
 <!-- Clan Setup -->
 <div id="screen-clan" class="screen hidden">
   <div class="clan-wrap">
-    <div style="font-size:48px;margin-bottom:8px">🏰</div>
-    <div class="clan-screen-title">Join Your Clan</div>
-    <div class="clan-screen-sub">Compete together as a house — or go solo</div>
+    <div style="font-size:48px;margin-bottom:6px">🏰</div>
+    <div class="clan-screen-title">Choose Your House</div>
+    <div class="clan-screen-sub">Join a clan to compete together — or go solo</div>
+
+    <!-- Preset houses -->
+    <label class="clan-label" style="width:100%">⚔️ The Three Houses</label>
+    <div class="house-list" id="house-list"></div>
+
+    <div class="clan-divider">or create / join your own</div>
+
+    <!-- Mode toggle -->
     <div class="clan-mode-toggle" style="width:100%">
-      <button class="clan-mode-btn active" data-clan-mode="create">⚔️ Create Clan</button>
-      <button class="clan-mode-btn" data-clan-mode="join">🛡️ Join Clan</button>
+      <button class="clan-mode-btn active" data-clan-mode="create">⚔️ Create</button>
+      <button class="clan-mode-btn" data-clan-mode="join">🛡️ Join by Code</button>
     </div>
 
     <!-- Create Clan -->
     <div id="clan-create-form" class="clan-form-section active" style="width:100%">
-      <div class="input-group">
-        <label class="input-group"><label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Name</label>
-        <input class="input" id="clan-name-input" placeholder="e.g. Clan McNichol" maxlength="24" autocomplete="off"></label>
+      <div class="input-group" style="margin-bottom:12px">
+        <label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Name</label>
+        <input class="input" id="clan-name-input" placeholder="e.g. Clan McNichol" maxlength="24" autocomplete="off">
       </div>
       <label class="clan-label">Choose Your Crest</label>
       <div class="crest-grid" id="crest-grid"></div>
@@ -441,7 +469,7 @@
 
     <!-- Join Clan -->
     <div id="clan-join-form" class="clan-form-section" style="width:100%">
-      <div class="input-group">
+      <div class="input-group" style="margin-bottom:12px">
         <label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Code</label>
         <input class="input" id="clan-join-code-input" placeholder="e.g. MCN001" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:20px">
       </div>
@@ -697,14 +725,40 @@
   ];
 
   const TARTAN_THEMES = [
-    { id:'highland', name:'Highland', c1:'#3D1A5E', c2:'#1A5E2A', c3:'#D4AF37', emoji:'🏔️' },
-    { id:'seafarer', name:'Seafarer', c1:'#0D2B52', c2:'#0A5E6E', c3:'#8FAFC0', emoji:'🌊' },
-    { id:'warrior',  name:'Warrior',  c1:'#6B0000', c2:'#1A1A1A', c3:'#8B6914', emoji:'⚔️' },
-    { id:'forest',   name:'Forest',   c1:'#1A4A1A', c2:'#4A2A0A', c3:'#8A7030', emoji:'🌲' },
-    { id:'royal',    name:'Royal',    c1:'#1A1A7E', c2:'#A08000', c3:'#C8C8C8', emoji:'👑' },
-    { id:'shadow',   name:'Shadow',   c1:'#0A0A1E', c2:'#5C0000', c3:'#506070', emoji:'🌑' },
-    { id:'blaze',    name:'Blaze',    c1:'#8B2200', c2:'#CC8800', c3:'#1A0A05', emoji:'🔥' },
-    { id:'frost',    name:'Frost',    c1:'#4A7AAA', c2:'#8AAED4', c3:'#D8E8F0', emoji:'❄️' },
+    // ── Preset clan house tartans (authentic colours) ──
+    { id:'mcnicol',  name:'MacNicol',  c1:'#8B0000', c2:'#1A5E2A', c3:'#0D2B52', emoji:'🦅', preset:true },
+    { id:'atwood',   name:'Atwood',    c1:'#8B0000', c2:'#808080', c3:'#C8A830', emoji:'🦁', preset:true },
+    { id:'deane',    name:'Deane',     c1:'#1A4A1A', c2:'#0D2B52', c3:'#8B0000', emoji:'🦌', preset:true },
+    // ── Custom tartans ──
+    { id:'highland', name:'Highland',  c1:'#3D1A5E', c2:'#1A5E2A', c3:'#D4AF37', emoji:'🏔️' },
+    { id:'seafarer', name:'Seafarer',  c1:'#0D2B52', c2:'#0A5E6E', c3:'#8FAFC0', emoji:'🌊' },
+    { id:'warrior',  name:'Warrior',   c1:'#6B0000', c2:'#1A1A1A', c3:'#8B6914', emoji:'⚔️' },
+    { id:'forest',   name:'Forest',    c1:'#1A4A1A', c2:'#4A2A0A', c3:'#8A7030', emoji:'🌲' },
+    { id:'royal',    name:'Royal',     c1:'#1A1A7E', c2:'#A08000', c3:'#C8C8C8', emoji:'👑' },
+    { id:'shadow',   name:'Shadow',    c1:'#0A0A1E', c2:'#5C0000', c3:'#506070', emoji:'🌑' },
+    { id:'blaze',    name:'Blaze',     c1:'#8B2200', c2:'#CC8800', c3:'#1A0A05', emoji:'🔥' },
+    { id:'frost',    name:'Frost',     c1:'#4A7AAA', c2:'#8AAED4', c3:'#D8E8F0', emoji:'❄️' },
+  ];
+
+  const PRESET_CLANS = [
+    {
+      id: 'macnicol', tartanId: 'mcnicol', crest: '🦅',
+      name: 'Clan MacNicol', subtitle: 'of Skye',
+      motto: 'Meminisse sed providere', mottoEn: 'Remember, but look ahead',
+      badge: 'Trailing Azalea', origin: 'Isle of Skye, Scotland',
+    },
+    {
+      id: 'atwood', tartanId: 'atwood', crest: '🦁',
+      name: 'Clan Atwood', subtitle: 'of England',
+      motto: 'In arduis fortis', mottoEn: 'Strong in adversity',
+      badge: 'Oak & Acorn', origin: 'England',
+    },
+    {
+      id: 'deane', tartanId: 'deane', crest: '🦌',
+      name: 'Clan Deane', subtitle: 'Davidson sept',
+      motto: 'Sapienter si sincere', mottoEn: 'Wisely, if sincerely',
+      badge: 'Red Whortleberry', origin: 'Scotland',
+    },
   ];
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
@@ -1222,7 +1276,7 @@
         <div class="clan-crest-circle" style="background:color-mix(in srgb,${t.c1} 30%,var(--surface-2))">${clan.crest||'🏰'}</div>
         <div class="clan-info">
           <div class="clan-name">${clan.name}${isMe?' <span style="font-size:10px;color:var(--text-2)">(you)</span>':''}</div>
-          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} pts total</div>
+          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} pts${clan.motto?` · <em style="opacity:0.7">${clan.motto}</em>`:''}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
             <div class="clan-color-dots">
               <div class="clan-color-dot" style="background:${t.c1}"></div>
@@ -1306,7 +1360,10 @@
         <div class="profile-clan-card">
           <div class="profile-clan-header" style="${tartanHeaderStyle(clan.tartanId)}">
             <span style="font-size:20px">${clan.crest||'🏰'}</span>
-            <span style="font-size:13px;font-weight:800;color:#fff">${clan.name}</span>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#fff;line-height:1.2">${clan.name}</div>
+              ${clan.motto?`<div style="font-size:10px;color:rgba(255,255,255,0.8);font-style:italic">"${clan.motto}"</div>`:''}
+            </div>
             ${trophies.size?`<span style="margin-left:auto;display:flex;gap:4px">${trophyHtml}</span>`:''}
           </div>
           <div class="profile-clan-body">
@@ -1535,38 +1592,113 @@
   let selectedCrest = CLAN_CRESTS[0];
   let selectedTartan = TARTAN_THEMES[0].id;
 
+  // ─── Render preset house list ─────────────────────────
+  function renderHouseList() {
+    const list = document.getElementById('house-list'); if (!list) return;
+    const myClanId = state.members[state.userId]?.clanId || null;
+    list.innerHTML = '';
+    PRESET_CLANS.forEach(pc => {
+      const t = getTartan(pc.tartanId);
+      // Find if this preset clan already exists in this campaign
+      const existing = Object.entries(state.clans).find(([,c]) => c.presetId === pc.id);
+      const isJoined = existing && myClanId === existing[0];
+      const card = document.createElement('div');
+      card.className = 'house-card' + (isJoined ? ' joined' : '');
+      card.innerHTML = `
+        <div class="house-banner" style="background:linear-gradient(90deg,${t.c1},${t.c2} 60%,${t.c3})">
+          <span class="house-crest">${pc.crest}</span>
+          <div>
+            <div class="house-banner-name">${pc.name}</div>
+            <div class="house-banner-sub">${pc.subtitle}</div>
+          </div>
+        </div>
+        <div class="house-body">
+          <div class="house-body-info">
+            <div class="house-motto">"${pc.motto}"</div>
+            <div class="house-motto-en">${pc.mottoEn}</div>
+            <div class="house-meta">${pc.badge} · ${pc.origin}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <div class="house-color-dots">
+              <div class="house-color-dot" style="background:${t.c1}"></div>
+              <div class="house-color-dot" style="background:${t.c2}"></div>
+              <div class="house-color-dot" style="background:${t.c3}"></div>
+            </div>
+            <button class="btn-join-house${isJoined?' joined':''}" data-preset="${pc.id}">${isJoined ? '✓ Joined' : 'Join ⚔️'}</button>
+          </div>
+        </div>`;
+      card.querySelector('.btn-join-house').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (isJoined) return;
+        const btn = card.querySelector('.btn-join-house');
+        btn.textContent = 'Joining…'; btn.disabled = true;
+        document.getElementById('clan-error').textContent = '';
+        try {
+          await joinPresetClan(pc);
+          toast(`Welcome to ${pc.name}! ${pc.crest}`, 3000);
+          startApp();
+        } catch(err) {
+          document.getElementById('clan-error').textContent = err.message;
+          btn.textContent = 'Join ⚔️'; btn.disabled = false;
+        }
+      });
+      list.appendChild(card);
+    });
+  }
+
+  async function joinPresetClan(pc) {
+    // Check if clan already exists for this campaign
+    const existing = Object.entries(state.clans).find(([,c]) => c.presetId === pc.id);
+    let clanId;
+    if (existing) {
+      clanId = existing[0];
+    } else {
+      // Create it
+      clanId = genId(8);
+      await setDoc(doc(db,'campaigns',state.campaignId,'clans',clanId), {
+        name: pc.name, crest: pc.crest, tartanId: pc.tartanId,
+        code: genCode(), createdBy: state.userId, createdAt: serverTimestamp(),
+        presetId: pc.id, motto: pc.motto, mottoEn: pc.mottoEn,
+      });
+    }
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), { clanId });
+  }
+
   function initClanScreen() {
-    selectedCrest=CLAN_CRESTS[0]; selectedTartan=TARTAN_THEMES[0].id;
-    document.getElementById('clan-name-input').value='';
-    document.getElementById('clan-join-code-input').value='';
-    document.getElementById('clan-error').textContent='';
-    document.getElementById('clan-btn-activate')?.click;
+    selectedCrest = CLAN_CRESTS[0];
+    // Default tartan = first non-preset one
+    selectedTartan = TARTAN_THEMES.find(t => !t.preset)?.id || TARTAN_THEMES[0].id;
+    document.getElementById('clan-name-input').value = '';
+    document.getElementById('clan-join-code-input').value = '';
+    document.getElementById('clan-error').textContent = '';
     // Set create mode active
     document.querySelectorAll('.clan-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.clanMode==='create'));
     document.getElementById('clan-create-form').classList.add('active');
     document.getElementById('clan-join-form').classList.remove('active');
+    // Render house list
+    renderHouseList();
     // Render crest grid
-    const cg=document.getElementById('crest-grid'); cg.innerHTML='';
-    CLAN_CRESTS.forEach(c=>{
-      const btn=document.createElement('button');
-      btn.className='crest-opt'+(c===selectedCrest?' selected':'');
-      btn.textContent=c;
-      btn.addEventListener('click',()=>{
-        selectedCrest=c;
-        document.querySelectorAll('.crest-opt').forEach(x=>x.classList.remove('selected'));
+    const cg = document.getElementById('crest-grid'); cg.innerHTML = '';
+    CLAN_CRESTS.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'crest-opt' + (c === selectedCrest ? ' selected' : '');
+      btn.textContent = c;
+      btn.addEventListener('click', () => {
+        selectedCrest = c;
+        document.querySelectorAll('.crest-opt').forEach(x => x.classList.remove('selected'));
         btn.classList.add('selected');
       });
       cg.appendChild(btn);
     });
-    // Render tartan grid
-    const tg=document.getElementById('tartan-grid'); tg.innerHTML='';
-    TARTAN_THEMES.forEach(t=>{
-      const btn=document.createElement('div');
-      btn.className='tartan-opt'+(t.id===selectedTartan?' selected':'');
-      btn.innerHTML=`<div class="tartan-swatch" style="${tartanSwatchStyle(t.id)}"></div><div class="tartan-name">${t.emoji} ${t.name}</div>`;
-      btn.addEventListener('click',()=>{
-        selectedTartan=t.id;
-        document.querySelectorAll('.tartan-opt').forEach(x=>x.classList.remove('selected'));
+    // Render tartan grid (custom only — not preset clan tartans)
+    const tg = document.getElementById('tartan-grid'); tg.innerHTML = '';
+    TARTAN_THEMES.filter(t => !t.preset).forEach(t => {
+      const btn = document.createElement('div');
+      btn.className = 'tartan-opt' + (t.id === selectedTartan ? ' selected' : '');
+      btn.innerHTML = `<div class="tartan-swatch" style="${tartanSwatchStyle(t.id)}"></div><div class="tartan-name">${t.emoji} ${t.name}</div>`;
+      btn.addEventListener('click', () => {
+        selectedTartan = t.id;
+        document.querySelectorAll('.tartan-opt').forEach(x => x.classList.remove('selected'));
         btn.classList.add('selected');
       });
       tg.appendChild(btn);
