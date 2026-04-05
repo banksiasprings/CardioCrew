@@ -1501,7 +1501,7 @@
     document.getElementById('stat-total-pts').textContent=myPts;
     document.getElementById('stat-days-done').textContent=getPerfectDays(state.userId);
     document.getElementById('stat-streak').textContent=getStreak(state.userId);
-    document.getElementById('stat-pct').textContent=Math.round((myPts/(day*4))*100)+'%';
+    document.getElementById('stat-pct').textContent=Math.min(100,Math.round((day/30)*100))+'%';
     document.getElementById('prof-campaign-name').textContent=state.campaignData?.name||'—';
     document.getElementById('prof-code').textContent=state.campaignData?.code||'—';
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
