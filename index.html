@@ -1458,7 +1458,7 @@
     list.innerHTML='';
     scores.forEach((m,i)=>{
       const rank=i+1, pct=Math.round((m.pts/Math.max(1,maxPts))*100);
-      const isGoat=rank===1;
+      const isGoat=rank===1; // crown is leaderboard position only — never points-based
       const rankEmoji=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`#${rank}`;
       const row=document.createElement('div');
       row.className=`lb-row${m.id===state.userId?' me':''}${isGoat?' goat':''} fade-in`;
@@ -2146,6 +2146,8 @@
     return 0;
   }
 
+  // isGoat MUST only be true when rank===1 on the leaderboard. Never pass true
+  // from profile, feed, warrior-creator, or any points-based check.
   function makeWarriorCanvas(userId, w, h, isGoat) {
     const member = state.members[userId];
     const cfg = member?.warriorConfig || null;
@@ -3377,7 +3379,7 @@
             c[prop]=item.id;
             row.querySelectorAll('.warrior-opt-btn').forEach(b=>b.classList.remove('selected'));
             btn.classList.add('selected');
-            WC.draw(document.getElementById('warrior-canvas'),c);
+            WC.draw(document.getElementById('warrior-canvas'),c,getTotalPoints(state.userId),false);
           });
           row.appendChild(btn);
         });
@@ -3398,7 +3400,7 @@
         row.appendChild(l);row.appendChild(t);
         t.addEventListener('click',()=>{
           if(reqPts&&userPts<reqPts){toast(`🔒 Unlock at ${reqPts}pts — keep training!`,2600);return;}
-          c[prop]=!c[prop];t.classList.toggle('on',c[prop]);WC.draw(document.getElementById('warrior-canvas'),c);
+          c[prop]=!c[prop];t.classList.toggle('on',c[prop]);WC.draw(document.getElementById('warrior-canvas'),c,getTotalPoints(state.userId),false);
         });
         wrap.appendChild(row);
       };
@@ -3419,7 +3421,7 @@
             if(g.id==='male'&&c.hairStyle.startsWith('f-')) c.hairStyle='man-bun';
             gBtns.querySelectorAll('.warrior-opt-btn').forEach(b=>b.classList.remove('selected'));
             btn.classList.add('selected');
-            WC.draw(document.getElementById('warrior-canvas'),c);
+            WC.draw(document.getElementById('warrior-canvas'),c,getTotalPoints(state.userId),false);
             WC._renderOptions(); // Re-render to show gender-appropriate options
           });
           gBtns.appendChild(btn);
