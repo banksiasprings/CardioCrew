@@ -4290,16 +4290,9 @@
           row.querySelector('[data-delete-clan]').addEventListener('click', async (ev) => {
             const cId = ev.currentTarget.dataset.deleteClan;
             const cCamp = ev.currentTarget.dataset.campId;
-            if (!confirm(`Delete clan "${clan.name}"? Members will be removed from this clan.`)) return;
+            if (!confirm(`Delete clan "${clan.name}"?`)) return;
             ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
             try {
-              // Remove clanId from all members in this clan
-              const membersSnap = await getDocs(
-                query(collection(db, 'campaigns', cCamp, 'members'), where('clanId', '==', cId))
-              );
-              await Promise.all(membersSnap.docs.map(m =>
-                updateDoc(doc(db, 'campaigns', cCamp, 'members', m.id), { clanId: deleteField() })
-              ));
               await deleteDoc(doc(db, 'campaigns', cCamp, 'clans', cId));
               row.remove();
               toast('🗑️ Clan deleted');
@@ -4413,20 +4406,20 @@
         return;
       }
       listEl.innerHTML = items.map(({ id, data, memberCount, dateStr, startDateStr, startDateDisplay }) => {
-        const wager = data.wagerAmount > 0 ? ` \u00b7 \U0001f4b0 $${data.wagerAmount}` : '';
-        const startLabel = startDateDisplay !== '\u2014' ? `\U0001f4c5 Started: ${startDateDisplay} \u00b7 ` : '';
+        const wager = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}` : '';
+        const startLabel = startDateDisplay !== '—' ? `📅 Started: ${startDateDisplay} · ` : '';
         const startDateInputVal = startDateStr || '';
         return `
         <div class="admin-camp-row" data-camp-id="${escHtml(id)}">
           <div class="admin-camp-main">
             <div style="flex:1;min-width:0">
               <div class="admin-camp-name" id="admin-camp-name-${escHtml(id)}">${escHtml(data.name || 'Unnamed')}</div>
-              <div class="admin-camp-meta" id="admin-camp-meta-${escHtml(id)}">${startLabel}\U0001f465 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wager} \u00b7 \U0001f5d3\ufe0f Created ${dateStr}</div>
+              <div class="admin-camp-meta" id="admin-camp-meta-${escHtml(id)}">${startLabel}👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wager} · 🗓️ Created ${dateStr}</div>
             </div>
             <div class="admin-camp-actions">
-              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">\U0001f465</button>
-              <button class="btn-camp-action" data-action="edit" data-camp-id="${escHtml(id)}">\u270f\ufe0f Edit</button>
-              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">\U0001f5d1\ufe0f</button>
+              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">👥</button>
+              <button class="btn-camp-action" data-action="edit" data-camp-id="${escHtml(id)}">✏️ Edit</button>
+              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">🗑️</button>
             </div>
           </div>
           <div id="admin-edit-form-${escHtml(id)}" class="admin-edit-form hidden">
@@ -4446,7 +4439,7 @@
               </div>
             </div>
             <div class="admin-edit-actions">
-              <button class="btn-edit-save" data-action="edit-save" data-camp-id="${escHtml(id)}">\U0001f4be Save Changes</button>
+              <button class="btn-edit-save" data-action="edit-save" data-camp-id="${escHtml(id)}">💾 Save Changes</button>
               <button class="btn-edit-cancel" data-action="edit-cancel" data-camp-id="${escHtml(id)}">Cancel</button>
             </div>
           </div>
@@ -4499,19 +4492,19 @@
             const metaEl = document.getElementById(`admin-camp-meta-${campId}`);
             if (metaEl) {
               const sd = new Date(newDate + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-              const wagerPart = newWager > 0 ? ` \u00b7 \U0001f4b0 $${newWager}` : '';
-              const membersMatch = metaEl.textContent.match(/\U0001f465\s*(\d+\+?\s*members?)/);
-              const membersPart = membersMatch ? membersMatch[0] : '\U0001f465 ? members';
+              const wagerPart = newWager > 0 ? ` · 💰 $${newWager}` : '';
+              const membersMatch = metaEl.textContent.match(/👥\s*(\d+\+?\s*members?)/);
+              const membersPart = membersMatch ? membersMatch[0] : '👥 ? members';
               const createdMatch = metaEl.textContent.match(/Created .+/);
               const createdPart = createdMatch ? createdMatch[0] : '';
-              metaEl.textContent = `\U0001f4c5 Started: ${sd} \u00b7 ${membersPart}${wagerPart}${createdPart ? ' \u00b7 \U0001f5d3\ufe0f ' + createdPart : ''}`;
+              metaEl.textContent = `📅 Started: ${sd} · ${membersPart}${wagerPart}${createdPart ? ' · 🗓️ ' + createdPart : ''}`;
             }
             document.getElementById(`admin-edit-form-${campId}`)?.classList.add('hidden');
-            toast('\u2705 Campaign updated');
+            toast('✅ Campaign updated');
           } catch(err) {
             toast('Error: ' + err.message, 3500);
           }
-          saveBtn.textContent = '\U0001f4be Save Changes'; saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Save Changes'; saveBtn.disabled = false;
 
         } else if (action === 'delete') {
           const rowEl = btn.closest('.admin-camp-row');
