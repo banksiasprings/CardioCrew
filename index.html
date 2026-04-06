@@ -182,6 +182,9 @@
     .lb-info { flex: 1; min-width: 0; }
     .lb-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
     .goat-badge { font-size: 10px; background: linear-gradient(135deg,#FFD700,#FFA500); color: #000; font-weight: 900; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.05em; }
+    .title-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.04em; white-space: nowrap; }
+    .title-badge-chief { background: linear-gradient(135deg,#8B0000,#5A0000); color: #F5E6B3; border: 1px solid rgba(139,0,0,0.6); }
+    .title-badge-lord  { background: linear-gradient(135deg,#C9A227,#8B6914); color: #000; border: 1px solid rgba(201,162,39,0.6); }
     .lb-detail { font-size: 11px; color: var(--text-2); margin-top: 2px; }
     .lb-score { text-align: right; flex-shrink: 0; }
     .lb-pts { font-size: 24px; font-weight: 900; color: var(--primary); line-height: 1; }
@@ -778,6 +781,7 @@
           <div class="profile-avatar" id="profile-avatar" title="Edit warrior"></div>
           <div class="profile-info">
             <div class="profile-name" id="profile-name">—</div>
+            <div id="profile-title-badge" style="margin-top:5px"></div>
           </div>
         </div>
         <div class="profile-stats-grid">
@@ -1110,6 +1114,43 @@
   function getPerfectDays(userId) {
     const cur=getDayNumber(state.campaignData.startDate);
     let c=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>=4) c++; return c;
+  }
+
+  // ─── Clan Title helpers ───────────────────────────────
+  // Returns 'Clan Chief' for Scottish clans (name contains "Clan", "Mac", or "Mc"),
+  // 'Lord' for English houses, or null if no clan.
+  function getClanTitle(clanName) {
+    if (!clanName) return 'Lord';
+    if (/Clan|Mac|Mc/i.test(clanName)) return 'Clan Chief';
+    return 'Lord';
+  }
+
+  // Returns the userId of the top points scorer in the given clan (or null).
+  function getClanTopScorer(clanId) {
+    const members = Object.entries(state.members).filter(([, m]) => m.clanId === clanId);
+    if (!members.length) return null;
+    return members.reduce((best, [uid]) => {
+      const pts = getTotalPoints(uid);
+      return pts > best.pts ? { uid, pts } : best;
+    }, { uid: null, pts: -1 }).uid;
+  }
+
+  // Returns the title string ('Clan Chief' / 'Lord') if userId is the top scorer
+  // in their clan, or null if they have no clan / are not the top scorer.
+  function getClanTitleForUser(userId) {
+    const m = state.members[userId];
+    if (!m?.clanId) return null;
+    const clan = state.clans[m.clanId];
+    if (!clan) return null;
+    if (getClanTopScorer(m.clanId) !== userId) return null;
+    return getClanTitle(clan.name);
+  }
+
+  // Returns the HTML for a title badge, or '' if title is falsy.
+  function titleBadgeHtml(title) {
+    if (!title) return '';
+    const isChief = title === 'Clan Chief';
+    return `<span class="title-badge ${isChief ? 'title-badge-chief' : 'title-badge-lord'}">${isChief ? '⚔️' : '👑'} ${title}</span>`;
   }
 
   // ─── Badge calculation ────────────────────────────────
@@ -1483,6 +1524,7 @@
       const rank=i+1, pct=Math.round((m.pts/Math.max(1,maxPts))*100);
       const isGoat=rank===1; // crown is leaderboard position only — never points-based
       const rankEmoji=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`#${rank}`;
+      const userTitle=getClanTitleForUser(m.id);
       const row=document.createElement('div');
       row.className=`lb-row${m.id===state.userId?' me':''}${isGoat?' goat':''} fade-in`;
       row.innerHTML=`
@@ -1492,6 +1534,7 @@
           <div class="lb-name">
             ${m.name}
             ${isGoat?'<span class="goat-badge">👑 G.O.A.T.</span>':''}
+            ${userTitle?titleBadgeHtml(userTitle):''}
             ${m.id===state.userId?'<span style="font-size:10px;color:var(--text-2)">(you)</span>':''}
           </div>
           <div class="lb-detail">${m.streak>0?`🔥 ${m.streak}-day streak`:`${m.pts} points earned`}</div>
@@ -1619,6 +1662,10 @@
       }catch(e){ profileAvatarEl.textContent='⚔️'; }
     }
     document.getElementById('profile-name').textContent=me.name;
+    // Show title badge in profile header if current user is clan top scorer
+    const myTitle=getClanTitleForUser(state.userId);
+    const ptBadge=document.getElementById('profile-title-badge');
+    if(ptBadge) ptBadge.innerHTML=myTitle?titleBadgeHtml(myTitle):'';
     const myPts=getTotalPoints(state.userId);
     document.getElementById('stat-total-pts').textContent=myPts;
     document.getElementById('stat-days-done').textContent=getPerfectDays(state.userId);
@@ -1628,6 +1675,7 @@
     document.getElementById('prof-code').textContent=state.campaignData?.code||'—';
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
+    const sorted=Object.keys(state.members).map(id=>({id,pts:getTotalPoints(id)})).sort((a,b)=>b.pts-a.pts);
     document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
     // Wager badge — only show if this member opted in
     const profWager=state.campaignData?.wagerAmount||0;
@@ -1670,6 +1718,23 @@
         const def=CLAN_TROPHY_DEFS.find(t=>t.id===id);
         return def?`<span title="${def.name}" style="font-size:18px">${def.icon}</span>`:'';
       }).join('');
+      // Build member list with title badges
+      const clanTopScorerId=getClanTopScorer(myClanId);
+      const clanTitle=getClanTitle(clan.name);
+      const memberListHtml=clanMembers
+        .map(([uid,mbr])=>({uid,mbr,pts:getTotalPoints(uid)}))
+        .sort((a,b)=>b.pts-a.pts)
+        .map(({uid,mbr,pts})=>{
+          const isTop=uid===clanTopScorerId;
+          const isMe=uid===state.userId;
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(201,162,39,0.1);font-size:12px">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span style="font-weight:${isMe?700:400};color:${isMe?'#F5E6B3':'var(--text)'}">${mbr.name}${isMe?' <span style="opacity:0.45;font-size:10px">(you)</span>':''}</span>
+              ${isTop?titleBadgeHtml(clanTitle):''}
+            </div>
+            <span style="font-size:13px;font-weight:700;color:#C9A227;flex-shrink:0">${pts}pts</span>
+          </div>`;
+        }).join('');
       clanSec.innerHTML=`
         <div class="profile-clan-card">
           <div class="profile-clan-header" style="${tartanHeaderStyle(clan.tartanId)}">
@@ -1687,6 +1752,7 @@
               <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanPts}</div><div class="profile-clan-stat-lbl">Total Pts</div></div>
               <div class="profile-clan-stat"><div class="profile-clan-stat-val">${myContrib}</div><div class="profile-clan-stat-lbl">My Contrib</div></div>
             </div>
+            <div style="margin-top:10px">${memberListHtml}</div>
             <div style="margin-top:8px;font-size:12px;color:var(--text-2)">Share code: <span style="font-weight:800;color:var(--primary);font-family:monospace;letter-spacing:.1em;cursor:pointer" onclick="navigator.clipboard?.writeText('${clan.code||''}');app_toast('Clan code copied: ${clan.code||''}')">${clan.code||'—'}</span></div>
           </div>
         </div>
@@ -3583,7 +3649,21 @@
   init();
 
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/CardioCrew/sw.js'));
+    navigator.serviceWorker.register('/CardioCrew/sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
+            // New version activated — silently reload to pick up latest app
+            window.location.reload();
+          }
+        });
+      });
+    });
+    // Also reload when the controlling SW changes (covers skipWaiting path)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   }
 </script>
 </body>
