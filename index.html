@@ -1281,15 +1281,17 @@
     if(clan.createdBy) earned.add('clan_founded');
     if(clanMembers.length>=3) earned.add('clan_mustered');
 
-    // Dominant: check if this clan has highest total pts
-    const clanTotals={};
-    Object.values(state.clans).forEach(c=>{
-      const id=Object.keys(state.clans).find(k=>state.clans[k]===c);
-      if(id){ const pts=Object.entries(state.members).filter(([,m])=>m.clanId===id).reduce((s,[uid])=>s+getTotalPoints(uid),0); clanTotals[id]=pts; }
+    // Dominant: check if this clan has highest average pts/member
+    const clanAvgs={};
+    Object.keys(state.clans).forEach(id=>{
+      const ms=Object.entries(state.members).filter(([,m])=>m.clanId===id);
+      const pts=ms.reduce((s,[uid])=>s+getTotalPoints(uid),0);
+      clanAvgs[id]=ms.length?pts/ms.length:0;
     });
-    const maxPts=Math.max(...Object.values(clanTotals),0);
+    const maxAvg=Math.max(...Object.values(clanAvgs),0);
     const myPts=(Object.entries(state.members).filter(([,m])=>m.clanId===clanId).reduce((s,[uid])=>s+getTotalPoints(uid),0));
-    if(myPts>=maxPts&&myPts>0) earned.add('clan_dominant');
+    const myAvg=clanMembers.length?myPts/clanMembers.length:0;
+    if(myAvg>=maxAvg&&myAvg>0) earned.add('clan_dominant');
 
     // United: any day where ALL clan members got a perfect day
     const cur=getDayNumber(state.campaignData.startDate);
@@ -1530,15 +1532,16 @@
     const clanData=Object.entries(state.clans).map(([clanId,clan])=>{
       const members=Object.entries(state.members).filter(([,m])=>m.clanId===clanId).map(([id])=>id);
       const totalPts=members.reduce((s,uid)=>s+getTotalPoints(uid),0);
-      return { clanId, clan, members, totalPts };
-    }).sort((a,b)=>b.totalPts-a.totalPts||a.clan.name.localeCompare(b.clan.name));
+      const avgPts=members.length?totalPts/members.length:0;
+      return { clanId, clan, members, totalPts, avgPts };
+    }).sort((a,b)=>b.avgPts-a.avgPts||a.clan.name.localeCompare(b.clan.name));
 
-    const maxPts=clanData[0]?.totalPts||1;
+    const maxAvg=clanData[0]?.avgPts||1;
     const rank1Id=clanData[0]?.clanId;
 
-    clanData.forEach(({clanId,clan,members,totalPts},i)=>{
+    clanData.forEach(({clanId,clan,members,totalPts,avgPts},i)=>{
       const t=getTartan(clan.tartanId);
-      const pct=Math.round((totalPts/Math.max(1,maxPts))*100);
+      const pct=Math.round((avgPts/Math.max(1,maxAvg))*100);
       const isMe=clanId===myClanId;
       const rank=i+1;
       const trophies=getClanTrophies(clanId);
@@ -1554,7 +1557,7 @@
         <div class="clan-crest-circle" style="background:color-mix(in srgb,${t.c1} 30%,var(--surface-2))">${clan.crest||'🏰'}</div>
         <div class="clan-info">
           <div class="clan-name">${clan.name}${isMe?' <span style="font-size:10px;color:var(--text-2)">(you)</span>':''}</div>
-          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} pts${clan.motto?` · <em style="opacity:0.7">${clan.motto}</em>`:''}</div>
+          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} total pts${clan.motto?` · <em style="opacity:0.7">${clan.motto}</em>`:''}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
             <div class="clan-color-dots">
               <div class="clan-color-dot" style="background:${t.c1}"></div>
@@ -1568,8 +1571,8 @@
           </div>
         </div>
         <div class="clan-score">
-          <div class="clan-pts">${totalPts}</div>
-          <div class="clan-pts-label">pts</div>
+          <div class="clan-pts">${avgPts%1===0?avgPts:avgPts.toFixed(1)}</div>
+          <div class="clan-pts-label">avg pts/member</div>
         </div>`;
       list.appendChild(card);
     });
@@ -1660,6 +1663,7 @@
       const t=getTartan(clan.tartanId);
       const clanMembers=Object.entries(state.members).filter(([,m])=>m.clanId===myClanId);
       const clanPts=clanMembers.reduce((s,[uid])=>s+getTotalPoints(uid),0);
+      const clanAvg=clanMembers.length?clanPts/clanMembers.length:0;
       const myContrib=getTotalPoints(state.userId);
       const trophies=getClanTrophies(myClanId);
       const trophyHtml=[...trophies].map(id=>{
@@ -1679,7 +1683,8 @@
           <div class="profile-clan-body">
             <div class="profile-clan-stats">
               <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanMembers.length}</div><div class="profile-clan-stat-lbl">Members</div></div>
-              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanPts}</div><div class="profile-clan-stat-lbl">Clan Pts</div></div>
+              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanAvg%1===0?clanAvg:clanAvg.toFixed(1)}</div><div class="profile-clan-stat-lbl">Avg pts/member</div></div>
+              <div class="profile-clan-stat"><div class="profile-clan-stat-val">${clanPts}</div><div class="profile-clan-stat-lbl">Total Pts</div></div>
               <div class="profile-clan-stat"><div class="profile-clan-stat-val">${myContrib}</div><div class="profile-clan-stat-lbl">My Contrib</div></div>
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--text-2)">Share code: <span style="font-weight:800;color:var(--primary);font-family:monospace;letter-spacing:.1em;cursor:pointer" onclick="navigator.clipboard?.writeText('${clan.code||''}');app_toast('Clan code copied: ${clan.code||''}')">${clan.code||'—'}</span></div>
