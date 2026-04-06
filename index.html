@@ -817,24 +817,24 @@
 
     /* Campaign rows in admin */
     .admin-camp-row {
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid var(--border);
       padding: 10px 0;
     }
     .admin-camp-row:last-child { border-bottom: none; }
     .admin-camp-main { display: flex; align-items: center; gap: 10px; }
     .admin-camp-name {
       flex: 1; min-width: 0; font-size: 14px; font-weight: 700;
-      color: #E6EDF3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .admin-camp-meta { font-size: 11px; color: #8B949E; margin-top: 2px; }
+    .admin-camp-meta { font-size: 11px; color: var(--text-2); margin-top: 2px; }
     .admin-camp-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .btn-camp-action {
-      padding: 5px 10px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05); color: var(--text-2);
+      padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-2);
       font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
       white-space: nowrap;
     }
-    .btn-camp-action:hover { background: rgba(255,255,255,0.1); }
+    .btn-camp-action:hover { background: var(--surface-2); }
     .btn-camp-action.danger { border-color: rgba(248,81,73,0.3); color: #F85149; }
     .btn-camp-action.danger:hover { background: rgba(248,81,73,0.12); }
     .btn-camp-action.gold { border-color: rgba(201,162,39,0.4); color: #C9A227; }
@@ -861,29 +861,29 @@
     }
     .btn-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-edit-cancel {
-      padding: 9px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+      padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border);
       background: transparent; color: var(--text-2); font-size: 13px; cursor: pointer;
     }
     /* Members expand */
     .admin-members-list { margin-top: 10px; padding-left: 4px; display: flex; flex-direction: column; gap: 5px; }
     .admin-member-item {
       display: flex; align-items: center; gap: 8px;
-      font-size: 13px; color: #8B949E; padding: 5px 8px;
-      background: rgba(255,255,255,0.03); border-radius: 7px;
+      font-size: 13px; color: var(--text-2); padding: 5px 8px;
+      background: var(--surface); border-radius: 7px;
     }
     .admin-member-avatar { font-size: 16px; }
-    .admin-member-name { flex: 1; color: #E6EDF3; font-weight: 600; }
+    .admin-member-name { flex: 1; color: var(--text); font-weight: 600; }
     .admin-member-pts { font-size: 12px; color: #C9A227; font-weight: 700; }
 
     /* Admin create form */
     .admin-input {
-      width: 100%; background: #0D1117; border: 1.5px solid rgba(201,162,39,0.25);
+      width: 100%; background: var(--bg); border: 1.5px solid rgba(201,162,39,0.25);
       border-radius: 10px; padding: 11px 13px; font-size: 15px;
-      color: #E6EDF3; outline: none; transition: border-color 0.2s; margin-bottom: 10px;
+      color: var(--text); outline: none; transition: border-color 0.2s; margin-bottom: 10px;
     }
     .admin-input:focus { border-color: #C9A227; }
-    .admin-input::placeholder { color: #484F58; }
-    .admin-input-label { font-size: 11px; color: #8B7A4A; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; display: block; }
+    .admin-input::placeholder { color: var(--text-3); }
+    .admin-input-label { font-size: 11px; color: var(--text-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; display: block; }
     .admin-wager-wrap { position: relative; }
     .admin-wager-prefix {
       position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
@@ -897,8 +897,8 @@
       transition: opacity 0.15s, transform 0.1s; margin-top: 4px;
     }
     .btn-admin-create:active { opacity: 0.85; transform: scale(0.97); }
-    .admin-empty { text-align: center; padding: 24px 0; color: #484F58; font-size: 13px; }
-    .admin-loading { text-align: center; padding: 20px 0; color: #8B7A4A; font-size: 13px; }
+    .admin-empty { text-align: center; padding: 24px 0; color: var(--text-3); font-size: 13px; }
+    .admin-loading { text-align: center; padding: 20px 0; color: var(--text-2); font-size: 13px; }
 
     /* ── Auth section ── */
     .auth-mode-toggle { display: flex; background: var(--surface-2); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 18px; }
@@ -915,7 +915,7 @@
 
     /* ── Admin Panel v2 ── */
     .admin-tab-strip {
-      display: flex; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(201,162,39,0.25);
+      display: flex; background: var(--bg-alt); border-bottom: 1px solid rgba(201,162,39,0.25);
       flex-shrink: 0;
     }
     .admin-tab-btn {
@@ -959,7 +959,7 @@
     .btn-adm-gold { background: rgba(201,162,39,0.15); color: #C9A227; border: 1px solid rgba(201,162,39,0.3); }
     .admin-member-row-v2 {
       display: flex; align-items: center; gap: 10px; padding: 10px;
-      background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 6px;
+      background: var(--surface); border-radius: 8px; margin-bottom: 6px;
     }
     .admin-member-row-v2:last-child { margin-bottom: 0; }
     .admin-member-name-v2 { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
