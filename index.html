@@ -294,7 +294,6 @@
     .setting-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
     .setting-row span { font-size: 14px; }
     .setting-row .setting-val { font-size: 13px; color: var(--text-2); }
-    .code-pill { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 3px 10px; font-size: 17px; font-weight: 800; letter-spacing: 0.1em; color: var(--primary); font-family: monospace; cursor: pointer; }
     .btn-danger { background: rgba(248,81,73,0.10); color: #F85149; border: 1px solid rgba(248,81,73,0.25); border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 6px; }
 
     /* ── Feedback tab ── */
@@ -823,23 +822,30 @@
     .btn-camp-action.gold { border-color: rgba(201,162,39,0.4); color: #C9A227; }
     .btn-camp-action.gold:hover { background: rgba(201,162,39,0.12); }
 
-    /* Inline rename */
-    .admin-rename-row { display: flex; gap: 8px; margin-top: 8px; }
-    .admin-rename-input {
-      flex: 1; background: #0D1117; border: 1.5px solid rgba(201,162,39,0.4);
-      border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #E6EDF3; outline: none;
+    /* Inline edit form */
+    .admin-edit-form { margin-top: 10px; padding: 14px; background: rgba(201,162,39,0.06); border: 1px solid rgba(201,162,39,0.25); border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .admin-edit-form.hidden { display: none !important; }
+    .admin-edit-field { display: flex; flex-direction: column; gap: 4px; }
+    .admin-edit-label { font-size: 11px; font-weight: 700; color: #8B949E; text-transform: uppercase; letter-spacing: 0.5px; }
+    .admin-edit-input {
+      background: #0D1117; border: 1.5px solid rgba(201,162,39,0.35);
+      border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #E6EDF3; outline: none; width: 100%; box-sizing: border-box;
     }
-    .admin-rename-input:focus { border-color: #C9A227; }
-    .btn-rename-save {
-      padding: 8px 14px; border-radius: 8px; border: none;
+    .admin-edit-input:focus { border-color: #C9A227; }
+    .admin-wager-wrap { display: flex; align-items: center; }
+    .admin-wager-prefix { background: #0D1117; border: 1.5px solid rgba(201,162,39,0.35); border-right: none; border-radius: 8px 0 0 8px; padding: 8px 10px; font-size: 14px; color: #C9A227; font-weight: 700; flex-shrink: 0; }
+    .admin-wager-wrap .admin-edit-input { border-radius: 0 8px 8px 0; }
+    .admin-edit-actions { display: flex; gap: 8px; margin-top: 2px; }
+    .btn-edit-save {
+      padding: 9px 18px; border-radius: 8px; border: none;
       background: linear-gradient(135deg,#C9A227,#8B6914); color: #000;
-      font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
+      font-size: 13px; font-weight: 800; cursor: pointer;
     }
-    .btn-rename-cancel {
-      padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+    .btn-edit-save:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-edit-cancel {
+      padding: 9px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
       background: transparent; color: var(--text-2); font-size: 13px; cursor: pointer;
     }
-
     /* Members expand */
     .admin-members-list { margin-top: 10px; padding-left: 4px; display: flex; flex-direction: column; gap: 5px; }
     .admin-member-item {
@@ -1333,7 +1339,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey:            "AIzaSyARd79y3L8Bfew1ubdJVaY7zsIULJUf4Bs",
@@ -2125,7 +2131,6 @@
               <div class="profile-clan-stat"><div class="profile-clan-stat-val">${myContrib}</div><div class="profile-clan-stat-lbl">My Contrib</div></div>
             </div>
             <div style="margin-top:10px">${memberListHtml}</div>
-            <div style="margin-top:8px;font-size:12px;color:var(--text-2)">Share code: <span style="font-weight:800;color:var(--primary);font-family:monospace;letter-spacing:.1em;cursor:pointer" onclick="navigator.clipboard?.writeText('${clan.code||''}');app_toast('Clan code copied: ${clan.code||''}')">${clan.code||'—'}</span></div>
           </div>
         </div>
         <button class="btn-clan-action" id="btn-leave-clan">Leave Clan</button>`;
