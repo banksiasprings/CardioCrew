@@ -4025,34 +4025,49 @@
         const pts=state.campaignData?getTotalPoints(state.userId):0;
         this.draw(canvas,this.cfg,pts,false);
       }
+      // Clone-replace each cat button to clear any stale listeners from previous init() calls
       document.querySelectorAll('.warrior-cat-btn').forEach(b=>{
-        b.addEventListener('click',()=>{
+        const fresh=b.cloneNode(true);
+        b.replaceWith(fresh);
+        fresh.addEventListener('click',()=>{
           document.querySelectorAll('.warrior-cat-btn').forEach(x=>x.classList.remove('active'));
-          b.classList.add('active');
-          WC._currentCat=b.dataset.cat;
+          fresh.classList.add('active');
+          WC._currentCat=fresh.dataset.cat;
           WC._renderOptions();
         });
       });
       this._currentCat='face';
       this._renderOptions();
-      document.getElementById('warrior-back-btn')?.addEventListener('click',()=>{
-        showScreen('screen-app');switchTab('profile');
-        const d=getDayNumber(state.campaignData?.startDate)||1;
-        renderProfile(d);
-      });
-      document.getElementById('warrior-save-btn')?.addEventListener('click',async()=>{
-        try{
-          await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{
-            warriorConfig:JSON.parse(JSON.stringify(this.cfg))
-          });
-          if(!state.members[state.userId])state.members[state.userId]={};
-          state.members[state.userId].warriorConfig=JSON.parse(JSON.stringify(this.cfg));
-          toast('⚔️ Warrior saved!');
+      // Clone-replace back/save buttons to prevent duplicate listeners across multiple init() calls
+      const backBtn=document.getElementById('warrior-back-btn');
+      if(backBtn){
+        const freshBack=backBtn.cloneNode(true);
+        backBtn.replaceWith(freshBack);
+        freshBack.addEventListener('click',()=>{
           showScreen('screen-app');switchTab('profile');
           const d=getDayNumber(state.campaignData?.startDate)||1;
           renderProfile(d);
-        }catch(e){toast('Error saving: '+e.message);}
-      });
+        });
+      }
+      const saveBtn=document.getElementById('warrior-save-btn');
+      if(saveBtn){
+        const freshSave=saveBtn.cloneNode(true);
+        saveBtn.replaceWith(freshSave);
+        freshSave.addEventListener('click',async()=>{
+          try{
+            await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{
+              warriorConfig:JSON.parse(JSON.stringify(this.cfg))
+            });
+            if(!state.members[state.userId])state.members[state.userId]={};
+            state.members[state.userId].warriorConfig=JSON.parse(JSON.stringify(this.cfg));
+            toast('⚔️ Warrior saved!');
+            showScreen('screen-app');switchTab('profile');
+            const d=getDayNumber(state.campaignData?.startDate)||1;
+            renderProfile(d);
+            renderLeaderboard(d);
+          }catch(e){toast('Error saving: '+e.message);}
+        });
+      }
     },
   };
   window.WC=WC;
@@ -4083,7 +4098,7 @@
     info.innerHTML=`<div class="warrior-profile-title">${cfg?'Your Warrior':'Create Your Warrior'}</div><div class="warrior-profile-sub">${cfg?'Looking fierce! Edit anytime.':'Customise your Highland warrior avatar with face, hair, weapons & more.'}</div>`;
     const editBtn=document.createElement('button'); editBtn.className='btn-warrior-edit';
     editBtn.textContent=cfg?'⚔️ Edit Warrior':'⚔️ Create Warrior';
-    editBtn.addEventListener('click',()=>{ WC.init(); showScreen('screen-warrior'); });
+    editBtn.addEventListener('click',()=>{ showScreen('screen-warrior'); WC.init(); });
     info.appendChild(editBtn);
     wrap.appendChild(portraitEl); wrap.appendChild(info);
     sec.innerHTML=''; sec.appendChild(wrap);
