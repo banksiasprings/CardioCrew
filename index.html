@@ -735,7 +735,57 @@
       cursor: pointer; margin-top: 6px; transition: background 0.15s;
     }
     .btn-manage-campaigns:active { background: rgba(201,162,39,0.2); }
+
+    /* ─── Day Theme (warm parchment) ─────────────────── */
+    html.theme-day {
+      --bg:        #F5EDD6;
+      --bg-alt:    #EEE3C4;
+      --surface:   #FFF8E8;
+      --surface-2: #F5ECD6;
+      --border:    rgba(44,24,16,0.12);
+      --text:      #2C1810;
+      --text-2:    #6B4A30;
+      --text-3:    #A07850;
+      --primary:   #1A5CA8;
+      --success:   #1E7A35;
+    }
+    html.theme-day body,
+    html.theme-day #screen-app { background: var(--bg); color: var(--text); }
+    html.theme-day .app-content { background: var(--bg); }
+    html.theme-day #bottom-nav {
+      background: rgba(245,237,214,0.96);
+      border-top-color: rgba(44,24,16,0.12);
+    }
+    html.theme-day .stat-card { background: #FFF8E8; border-color: rgba(201,162,39,0.3); }
+    html.theme-day .lb-row,
+    html.theme-day .hist-row,
+    html.theme-day .setting-row,
+    html.theme-day .challenge-card,
+    html.theme-day .badge-card { background: var(--surface); }
+    html.theme-day #toast { background: var(--surface-2); color: var(--text); }
+
+    /* ─── Theme toggle pill ───────────────────────────── */
+    .theme-toggle-pill { display:flex; background:var(--surface); border-radius:10px; padding:4px; gap:4px; margin-bottom:8px; border:1px solid var(--border); }
+    .theme-btn { flex:1; padding:9px 4px; border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.2s; }
+    .theme-btn.active { background:linear-gradient(135deg,#C9A227,#8B6914); color:#000; }
   </style>
+
+  <!-- Apply saved theme before first paint to avoid flash -->
+  <script>
+  (function(){
+    var mode=localStorage.getItem('cardio_theme')||'auto';
+    var mq=window.matchMedia('(prefers-color-scheme:dark)');
+    function applyTheme(m){
+      var day=m==='day'||(m==='auto'&&!mq.matches);
+      document.documentElement.classList.toggle('theme-day',day);
+    }
+    applyTheme(mode);
+    mq.addEventListener('change',function(){
+      if((localStorage.getItem('cardio_theme')||'auto')==='auto') applyTheme('auto');
+    });
+    window._applyTheme=applyTheme;
+  })();
+  </script>
 </head>
 <body>
 
@@ -882,8 +932,8 @@
           <button id="btn-day-next" style="background:none;border:none;color:var(--text-2);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1" title="Next day">›</button>
         </div>
         <div class="today-date" id="today-date-str"></div>
-        <div id="today-catchup-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:#FFCA28;background:rgba(255,202,40,0.12);border:1px solid rgba(255,202,40,0.3);border-radius:999px;padding:3px 10px;display:inline-block">⏪ Catch-up — max 4 pts</div>
-        <div id="today-locked-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 10px;display:inline-block">🔒 Locked</div>
+        <div id="today-catchup-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:#FFCA28;background:rgba(255,202,40,0.12);border:1px solid rgba(255,202,40,0.3);border-radius:999px;padding:3px 10px">⏪ Catch-up — max 4 pts</div>
+        <div id="today-locked-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 10px">🔒 Locked</div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
       <div class="progress-label"><span id="progress-text">Day 1 of 30</span><span id="progress-pct">0%</span></div>
@@ -963,9 +1013,14 @@
         <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
         <button class="btn-manage-campaigns" id="btn-manage-campaigns">⚙️ Manage Campaigns</button>
+        <div class="section-header">Appearance</div>
+        <div class="theme-toggle-pill" id="theme-toggle">
+          <button class="theme-btn" data-theme="day">☀️ Day</button>
+          <button class="theme-btn" data-theme="night">🌙 Night</button>
+          <button class="theme-btn" data-theme="auto">🔄 Auto</button>
+        </div>
         <div class="section-header">My Challenges</div>
         <div id="challenge-progress-list"></div>
-        <button class="btn-danger" id="btn-leave">Leave Campaign</button>
         <button class="btn-danger" id="btn-leave">Leave Campaign</button>
 
         <!-- Community: Chat + Feedback merged into Profile -->
@@ -2447,8 +2502,6 @@
     }
   }
 
-  // Init feedback when tab opens
-  const origSwitchTab = switchTab;
   // Community tab toggle (Chat / Feedback inside Profile)
   document.querySelectorAll('.profile-comm-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3838,8 +3891,6 @@
   };
   window.WC=WC;
 
-  window.WC=WC;
-
   // ─── Render warrior thumbnail on profile ─────────────
   function renderWarriorProfile() {
     const sec=document.getElementById('profile-warrior-section');
@@ -4041,6 +4092,23 @@
       document.getElementById('campaign-mgmt-overlay').classList.add('hidden');
     }
   });
+
+  // ─── Day / Night / Auto theme toggle ─────────────────
+  (function(){
+    function activateThemeBtn(mode){
+      document.querySelectorAll('.theme-btn').forEach(b=>
+        b.classList.toggle('active',b.dataset.theme===mode));
+    }
+    activateThemeBtn(localStorage.getItem('cardio_theme')||'auto');
+    document.getElementById('theme-toggle')?.addEventListener('click',e=>{
+      const btn=e.target.closest('.theme-btn');
+      if(!btn) return;
+      const mode=btn.dataset.theme;
+      localStorage.setItem('cardio_theme',mode);
+      window._applyTheme(mode);
+      activateThemeBtn(mode);
+    });
+  })();
 
   // ─── App startup ──────────────────────────────────────
   async function startApp() {

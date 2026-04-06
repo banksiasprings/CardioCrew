@@ -1,4 +1,4 @@
-const CACHE = 'cardio-crew-v2';
+const CACHE = 'cardio-crew-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(
