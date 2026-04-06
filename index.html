@@ -859,7 +859,6 @@
     <div id="tab-profile" class="tab-page">
       <div class="profile-wrap">
         <div class="profile-top">
-          <div class="profile-avatar" id="profile-avatar" title="Edit warrior"></div>
           <div class="profile-info">
             <div class="profile-name" id="profile-name">—</div>
             <div id="profile-title-badge" style="margin-top:5px"></div>
@@ -1723,17 +1722,6 @@
 
   function renderProfile(day) {
     const me=state.members[state.userId]; if(!me) return;
-    // Render warrior canvas in profile header
-    const profileAvatarEl=document.getElementById('profile-avatar');
-    if(profileAvatarEl){
-      profileAvatarEl.innerHTML='';
-      try{
-        const myPts2=getTotalPoints(state.userId);
-        const wc=makeWarriorCanvas(state.userId,72,96,false);
-        wc.style.borderRadius='10px';
-        profileAvatarEl.appendChild(wc);
-      }catch(e){ profileAvatarEl.textContent='⚔️'; }
-    }
     document.getElementById('profile-name').textContent=me.name;
     // Show title badge in profile header if current user is clan top scorer
     const myTitle=getClanTitleForUser(state.userId);
@@ -2071,11 +2059,6 @@
       const wagerMsg=selectedWager>0?` 💰 Wager: $${selectedWager}/person`:'';
       toast(`🎉 "${cName}" is live! Share the app link to invite others.${wagerMsg}`,4500);
     } catch(e2) { err.textContent=e2.message; }
-  });
-
-  // Profile avatar click → open warrior creator
-  document.getElementById('profile-avatar').addEventListener('click',()=>{
-    WC.init(); showScreen('screen-warrior');
   });
 
   // Feedback send
