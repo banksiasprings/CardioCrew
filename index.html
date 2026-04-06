@@ -642,7 +642,45 @@
       text-shadow: none;
     }
     .btn-warrior-edit:active { transform: scale(0.95); opacity: 0.9; }
+
+    /* -- Theme Segmented Control -- */
+    .theme-seg { display:flex; background:var(--surface-2); border-radius:999px; padding:3px; gap:2px; border:1px solid var(--border); }
+    .theme-seg-btn { flex:1; padding:6px 10px; border:none; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.2s; white-space:nowrap; -webkit-tap-highlight-color:transparent; }
+    .theme-seg-btn.active { background:var(--surface); color:var(--text); box-shadow:0 1px 5px rgba(0,0,0,0.25); }
+
+    /* -- Day (Parchment / Highland) Theme -- */
+    html.theme-day {
+      --bg:        #F5EDD6;
+      --bg-alt:    #EDE3C4;
+      --surface:   #FFF8E8;
+      --surface-2: #F5EDCF;
+      --border:    rgba(180,130,60,0.28);
+      --text:      #2C1810;
+      --text-2:    #7A5C3A;
+      --text-3:    #B09070;
+      --primary:   #1A5C9E;
+      --success:   #276749;
+      --gold:      #B8860B;
+    }
+    html.theme-day body { background:var(--bg); color:var(--text); }
+    html.theme-day #screen-welcome,
+    html.theme-day #screen-clan { background:linear-gradient(160deg, #F0E4C0 0%, #E8D9AF 50%, #F0E4C0 100%); }
+    html.theme-day #bottom-nav { background:rgba(245,237,214,0.96); border-top-color:rgba(180,130,60,0.30); }
+    html.theme-day .profile-top { background: repeating-linear-gradient(90deg,rgba(201,162,39,0.12) 0px,rgba(201,162,39,0.12) 1px,transparent 1px,transparent 28px), repeating-linear-gradient(0deg,rgba(201,162,39,0.12) 0px,rgba(201,162,39,0.12) 1px,transparent 1px,transparent 28px), linear-gradient(140deg,#6B2010 0%,#3C1A08 45%,#1A3A14 100%); }
+    html.theme-day .stat-card { background:#FFF8E8; border-color:rgba(201,162,39,0.45); }
+    html.theme-day .stat-val  { color:#C9A227; }
+    html.theme-day .stat-lbl  { color:rgba(160,110,50,0.85); }
+    html.theme-day .warrior-profile-wrap { background:#FFF2DC; border-color:rgba(201,162,39,0.45); box-shadow:0 2px 12px rgba(0,0,0,0.08),inset 0 1px 0 rgba(201,162,39,0.10); }
+    html.theme-day .completed-banner { background:linear-gradient(135deg,#c8e6cd,#a8d8b4); border-color:#276749; }
+    html.theme-day .completed-banner h3 { color:#276749; }
+    html.theme-day .completed-banner p  { color:#4a8060; }
+    html.theme-day .badge-popup-inner { background:linear-gradient(135deg,#FFF8E8,#F5EDCF); }
+    html.theme-day .feed-input-wrap { background:var(--bg); border-top-color:rgba(180,130,60,0.30); }
+    html.theme-day .lb-row.goat { background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,165,0,0.06)); }
+    html.theme-day #toast { box-shadow:0 4px 16px rgba(0,0,0,0.12); }
+    html.theme-day .theme-seg-btn.active { background:#FFF8E8; color:#2C1810; box-shadow:0 1px 4px rgba(0,0,0,0.12); }
   </style>
+<script>(function(){var t=localStorage.getItem('cardio_theme')||'night';var h=document.documentElement;function _apply(theme){h.classList.remove('theme-day');if(theme==='day'){h.classList.add('theme-day');}else if(theme==='auto'){var mq=window.matchMedia('(prefers-color-scheme: light)');if(mq.matches)h.classList.add('theme-day');mq.addEventListener('change',function(e){if(localStorage.getItem('cardio_theme')==='auto')h.classList.toggle('theme-day',e.matches);});}}_apply(t);window._cardioApplyTheme=_apply;})();</script>
 </head>
 <body>
 
@@ -866,7 +904,16 @@
         <div id="profile-clan-section"></div>
         <div class="section-header">🏅 Badges</div>
         <div class="badges-grid" id="badges-grid"></div>
-        <div class="section-header">Campaign Info</div>
+        <div class="section-header">&#10024; Appearance</div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <span>Theme</span>
+          <div class="theme-seg" id="theme-toggle">
+            <button class="theme-seg-btn" data-theme="day">&#9728;&#65039; Day</button>
+            <button class="theme-seg-btn" data-theme="night">&#127769; Night</button>
+            <button class="theme-seg-btn" data-theme="auto">&#128260; Auto</button>
+          </div>
+        </div>
+          <div class="section-header">Campaign Info</div>
         <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
         <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
@@ -3793,6 +3840,23 @@
       setTimeout(()=>showScreen('screen-welcome'),3000);
     }
   }
+
+  function initThemeToggle(){
+    const tog=document.getElementById('theme-toggle');
+    if(!tog)return;
+    const pref=localStorage.getItem('cardio_theme')||'night';
+    tog.querySelectorAll('.theme-seg-btn').forEach(btn=>{
+      if(btn.dataset.theme===pref)btn.classList.add('active');
+      btn.addEventListener('click',()=>{
+        tog.querySelectorAll('.theme-seg-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const t=btn.dataset.theme;
+        localStorage.setItem('cardio_theme',t);
+        window._cardioApplyTheme&&window._cardioApplyTheme(t);
+      });
+    });
+  }
+  initThemeToggle();
 
   async function init() {
     const saved=loadLocal();
