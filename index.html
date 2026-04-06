@@ -676,23 +676,19 @@
   </div>
 
   <div class="welcome-card">
-    <h2>Join a Campaign</h2>
-    <div class="input-group">
-      <label>Your Name</label>
+    <h2>Your Name</h2>
+    <div class="input-group" style="margin-bottom:6px">
       <input class="input" id="join-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
     </div>
-    <div class="input-group">
-      <label>Campaign Code</label>
-      <input class="input" id="join-code" placeholder="e.g. CREW42" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:20px">
-    </div>
-    <button class="btn btn-primary" id="btn-join">Join Campaign</button>
-    <div class="error-msg" id="join-error"></div>
-    <div class="divider">Browse Live Campaigns</div>
+    <div class="error-msg" id="join-error" style="margin-bottom:10px"></div>
+
+    <h2 style="margin-top:8px;margin-bottom:10px">Active Campaigns</h2>
     <div id="campaigns-loading" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">⏳ Loading campaigns...</div>
-    <div id="campaigns-empty" class="hidden" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">No active campaigns yet</div>
-    <div class="campaigns-list-scroll" id="campaigns-list"></div>
-    <div class="divider">or</div>
-    <button class="btn btn-secondary" id="btn-show-create">Create New Campaign</button>
+    <div id="campaigns-empty" class="hidden" style="text-align:center;padding:24px 0;color:var(--text-2);font-size:13px">No active campaigns yet.<br><span style="font-size:12px;color:var(--text-3)">Create one below to get started.</span></div>
+    <div class="campaigns-list-scroll" id="campaigns-list" style="max-height:320px"></div>
+
+    <div class="divider" style="margin-top:16px">or</div>
+    <button class="btn btn-secondary" id="btn-show-create">＋ Create New Campaign</button>
   </div>
 </div>
 
@@ -872,7 +868,6 @@
         <div class="badges-grid" id="badges-grid"></div>
         <div class="section-header">Campaign Info</div>
         <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
-        <div class="setting-row" id="copy-code-row"><span>Join Code</span><span class="code-pill" id="prof-code">——</span></div>
         <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
         <div class="section-header">My Challenges</div>
@@ -1327,20 +1322,11 @@
 
   // ─── Firebase operations ──────────────────────────────
   async function createCampaign(cName, yourName, startDate, wagerAmount) {
-    const campaignId=genId(6), userId=genId(8), code=genCode();
-    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, code, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
+    const campaignId=genId(6), userId=genId(8);
+    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
     // Creator auto-opts in to their own wager
     await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn: (wagerAmount||0)>0 });
-    return { campaignId, userId, code };
-  }
-
-  async function joinCampaign(code, name) {
-    const snap = await getDocs(query(collection(db,'campaigns'),where('code','==',code.replace(/\s+/g,'').toUpperCase())));
-    if(snap.empty) throw new Error('Campaign code not found. Check the code and try again.');
-    const campaignDoc=snap.docs[0];
-    const userId=genId(8);
-    await setDoc(doc(db,'campaigns',campaignDoc.id,'members',userId),{ name, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{} });
-    return { campaignId:campaignDoc.id, userId, campaignData:campaignDoc.data() };
+    return { campaignId, userId };
   }
 
   async function toggleCompletion(day, challengeId) {
@@ -1759,7 +1745,6 @@
     document.getElementById('stat-streak').textContent=getStreak(state.userId);
     document.getElementById('stat-pct').textContent=Math.min(100,Math.round((day/30)*100))+'%';
     document.getElementById('prof-campaign-name').textContent=state.campaignData?.name||'—';
-    document.getElementById('prof-code').textContent=state.campaignData?.code||'—';
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
     const sorted=Object.keys(state.members).map(id=>({id,pts:getTotalPoints(id)})).sort((a,b)=>b.pts-a.pts);
@@ -1973,6 +1958,9 @@
 
   // ─── Live Campaign Browser ────────────────────────────
   let _campaignsBrowserStarted = false;
+  // Map of campaignId → campaign data, kept in sync with onSnapshot
+  const _campaignDataMap = {};
+
   function startCampaignsBrowser() {
     if (_campaignsBrowserStarted) return;
     _campaignsBrowserStarted = true;
@@ -1992,6 +1980,7 @@
       // Fetch member counts in parallel
       const items = await Promise.all(snap.docs.map(async (cdoc) => {
         const data = cdoc.data();
+        _campaignDataMap[cdoc.id] = data;
         let memberCount = typeof data.memberCount === 'number' ? data.memberCount : null;
         if (memberCount === null) {
           try {
@@ -2001,24 +1990,50 @@
         }
         return { id: cdoc.id, data, memberCount };
       }));
-      listEl.innerHTML = items.map(({ id, data, memberCount }) => `
-        <div class="campaign-browse-card">
+      listEl.innerHTML = items.map(({ id, data, memberCount }) => {
+        const wagerLabel = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}/person` : '';
+        return `
+        <div class="campaign-browse-card" style="cursor:pointer" data-campaign-id="${escHtml(id)}">
           <div style="flex:1;min-width:0">
             <div class="campaign-browse-name">${escHtml(data.name || 'Unnamed Campaign')}</div>
-            <div class="campaign-browse-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}</div>
+            <div class="campaign-browse-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wagerLabel}</div>
           </div>
-          <button class="btn-browse-join" data-code="${escHtml(data.code || '')}">Join</button>
-        </div>
-      `).join('');
+          <button class="btn-browse-join" data-campaign-id="${escHtml(id)}">Join →</button>
+        </div>`;
+      }).join('');
+
       listEl.querySelectorAll('.btn-browse-join').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.getElementById('join-code').value = btn.dataset.code;
-          document.getElementById('join-error').textContent = '';
-          const nameInput = document.getElementById('join-name');
-          if (!nameInput.value.trim()) {
-            nameInput.focus();
-          } else {
-            document.getElementById('btn-join').click();
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const campaignId = btn.dataset.campaignId;
+          const campaignData = _campaignDataMap[campaignId] || {};
+          const name = document.getElementById('join-name').value.trim();
+          const err = document.getElementById('join-error');
+          if (!name) {
+            err.textContent = 'Enter your name first';
+            document.getElementById('join-name').focus();
+            return;
+          }
+          err.textContent = '';
+          btn.textContent = '…';
+          btn.disabled = true;
+          try {
+            const userId = genId(8);
+            const wager = campaignData.wagerAmount || 0;
+            let wagerOptIn = false;
+            if (wager > 0) {
+              wagerOptIn = confirm(`💰 This campaign has a $${wager}/person wager!\n\nDo you want to opt in to the prize pool?\n\nOK = Yes, I'm in!\nCancel = No thanks, just train`);
+            }
+            await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name, avatar:'⚔️', joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
+            state.userId = userId; state.campaignId = campaignId;
+            state.campaignData = campaignData;
+            saveLocal();
+            initClanScreen(); showScreen('screen-clan');
+            toast(wagerOptIn ? `Welcome to the crew, ${name}! 💰 You're in for $${wager}!` : wager > 0 ? `Welcome to the crew, ${name}! (Wager skipped) ⚔️` : `Welcome to the crew, ${name}! ⚔️`, 3500);
+          } catch(e2) {
+            err.textContent = e2.message;
+            btn.textContent = 'Join →';
+            btn.disabled = false;
           }
         });
       });
@@ -2028,36 +2043,6 @@
   // ─── Welcome screen ───────────────────────────────────
   document.getElementById('btn-show-create').addEventListener('click',()=>{ showScreen('screen-create'); document.getElementById('create-start-date').value=new Date().toISOString().slice(0,10); });
   document.getElementById('btn-back-to-join').addEventListener('click',()=>showScreen('screen-welcome'));
-
-  document.getElementById('btn-join').addEventListener('click',async()=>{
-    const name=document.getElementById('join-name').value.trim();
-    const code=document.getElementById('join-code').value.trim().replace(/\s+/g,'');
-    const err=document.getElementById('join-error');
-    if(!name){err.textContent='Enter your name';return;}
-    if(!code||code.length<4){err.textContent='Enter a valid campaign code';return;}
-    err.textContent='';
-    document.getElementById('btn-join').textContent='Checking...';
-    try {
-      // Validate first then show avatar picker
-      const snap=await getDocs(query(collection(db,'campaigns'),where('code','==',code.toUpperCase())));
-      if(snap.empty) throw new Error('Campaign code not found.');
-      // Store pending join data then go straight to warrior creator
-      state.pendingJoin={ name, code, campaignData:snap.docs[0].data(), campaignId:snap.docs[0].id };
-      const userId=genId(8);
-      const wager=snap.docs[0].data().wagerAmount||0;
-      // Opt-in prompt for wager campaigns
-      let wagerOptIn=false;
-      if(wager>0){
-        wagerOptIn=confirm(`💰 This campaign has a $${wager}/person wager!\n\nDo you want to opt in to the prize pool?\n\nOK = Yes, I'm in!\nCancel = No thanks, just train`);
-      }
-      await setDoc(doc(db,'campaigns',snap.docs[0].id,'members',userId),{ name, avatar:'⚔️', joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
-      state.userId=userId; state.campaignId=snap.docs[0].id;
-      state.campaignData=snap.docs[0].data();
-      saveLocal();
-      initClanScreen(); showScreen('screen-clan');
-      toast(wagerOptIn?`Welcome to the crew, ${name}! 💰 You're in for $${wager}!`:wager>0?`Welcome to the crew, ${name}! (Wager skipped) ⚔️`:`Welcome to the crew, ${name}! ⚔️`,3500);
-    } catch(e){ err.textContent=e.message; document.getElementById('btn-join').textContent='Join Campaign'; }
-  });
 
   // Wager selector toggle
   let selectedWager=0;
@@ -2078,25 +2063,19 @@
     if(!startDate){err.textContent='Choose a start date';return;}
     err.textContent='';
     try {
-      const {campaignId,userId,code}=await createCampaign(cName,yourName,startDate,selectedWager);
+      const {campaignId,userId}=await createCampaign(cName,yourName,startDate,selectedWager);
       state.userId=userId; state.campaignId=campaignId;
-      state.campaignData={name:cName,startDate,code,wagerAmount:selectedWager};
+      state.campaignData={name:cName,startDate,wagerAmount:selectedWager};
       saveLocal();
       initClanScreen(); showScreen('screen-clan');
       const wagerMsg=selectedWager>0?` 💰 Wager: $${selectedWager}/person`:'';
-      toast(`🎉 Campaign created! Code: ${code}${wagerMsg}`,4500);
+      toast(`🎉 "${cName}" is live! Share the app link to invite others.${wagerMsg}`,4500);
     } catch(e2) { err.textContent=e2.message; }
   });
 
   // Profile avatar click → open warrior creator
   document.getElementById('profile-avatar').addEventListener('click',()=>{
     WC.init(); showScreen('screen-warrior');
-  });
-
-  // Copy code
-  document.getElementById('copy-code-row').addEventListener('click',()=>{
-    const code=state.campaignData?.code;
-    if(code){ navigator.clipboard?.writeText(code); toast('Code copied: '+code); }
   });
 
   // Feedback send
