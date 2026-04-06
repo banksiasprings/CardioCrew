@@ -523,7 +523,7 @@
     .warrior-toggle.on { background: var(--primary); }
     .warrior-toggle.on::after { transform: translateX(20px); }
 
-    /* Warrior thumbnail on profile/leaderboard */
+    /* Warrior thumbnail on leaderboard (small, left-col avatar) */
     .warrior-thumb {
       width: 100px; height: 134px; border-radius: 8px; overflow: visible;
       flex-shrink: 0; position: relative;
@@ -544,17 +544,38 @@
     }
     .warrior-thumb::before { top: -10px; left: -10px; }
     .warrior-thumb::after  { bottom: -10px; right: -10px; }
+
+    /* Full-size portrait in the "My Warrior" profile card */
+    .warrior-profile-portrait {
+      width: 260px; height: 340px; border-radius: 16px; overflow: hidden;
+      flex-shrink: 0; position: relative; align-self: center;
+    }
+    .warrior-profile-portrait canvas {
+      display: block; width: 260px; height: 340px; border-radius: 16px;
+      border: 3px solid #C9A227;
+      box-shadow:
+        0 0 0 1px #8B6914,
+        0 0 0 5px rgba(201,162,39,0.25),
+        0 0 28px rgba(201,162,39,0.35),
+        0 8px 32px rgba(0,0,0,0.7);
+    }
+    .warrior-profile-portrait::before, .warrior-profile-portrait::after {
+      content: '✦'; position: absolute; font-size: 18px; color: #C9A227;
+      text-shadow: 0 0 8px rgba(201,162,39,0.9); z-index: 2; line-height: 1;
+    }
+    .warrior-profile-portrait::before { top: -12px; left: -12px; }
+    .warrior-profile-portrait::after  { bottom: -12px; right: -12px; }
     .lb-warrior-icon {
       width: 32px; height: 32px; border-radius: 8px; overflow: hidden;
       flex-shrink: 0; border: 1px solid rgba(201,162,39,0.4);
     }
     .warrior-profile-wrap {
-      display: flex; gap: 20px; align-items: flex-start;
+      display: flex; flex-direction: column; gap: 16px; align-items: center;
       background: #130E03; border: 1px solid rgba(201,162,39,0.4);
-      border-radius: var(--radius); padding: 18px 14px; margin-bottom: 8px;
+      border-radius: var(--radius); padding: 20px 16px; margin-bottom: 8px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,162,39,0.08);
     }
-    .warrior-profile-info { flex: 1; min-width: 0; }
+    .warrior-profile-info { width: 100%; text-align: center; }
     .warrior-profile-title { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: #F5E6B3; }
     .warrior-profile-sub { font-size: 12px; color: rgba(201,162,39,0.55); margin-bottom: 10px; }
     .btn-warrior-edit {
@@ -2281,12 +2302,14 @@
       const pts=typeof points==='number'?points:0;
       const physLvl=getPhysiqueLevel(pts);
 
-      // Head geometry — moved up for portrait layout
-      const cx=W*0.5, cy=H*0.34;
-      const fwBase={oval:55,round:60,square:58,angular:52}[c.faceShape]||55;
-      const fhBase={oval:70,round:62,square:64,angular:68}[c.faceShape]||70;
-      const fw=isFemale?Math.round(fwBase*0.9):fwBase;
-      const fh=isFemale?Math.round(fhBase*1.04):fhBase;
+      // Head geometry — all sizes are proportional to canvas height so the figure
+      // renders correctly whether it's a 260×340 portrait or a 44×58 thumbnail.
+      const cx=W*0.5, cy=H*0.30;   // head centre: 30% down leaves ~52% below chin for body
+      const sc=H/340;               // scale factor vs 260×340 design canvas
+      const fwBase={oval:50,round:55,square:53,angular:47}[c.faceShape]||50;
+      const fhBase={oval:68,round:60,square:62,angular:65}[c.faceShape]||68;
+      const fw=isFemale?Math.round(fwBase*sc*0.9):Math.round(fwBase*sc);
+      const fh=isFemale?Math.round(fhBase*sc*1.04):Math.round(fhBase*sc);
 
       // Effective hair style (handle gender mismatch)
       const maleHairId=c.hairStyle&&!c.hairStyle.startsWith('f-')?c.hairStyle:'man-bun';
@@ -2333,7 +2356,7 @@
       ctx.fillStyle=glow; ctx.fillRect(0,H*0.4,W,H*0.6);
       // GOAT golden shimmer on background
       if(isGoat){
-        const goatGlow=ctx.createRadialGradient(W/2,H*0.34,0,W/2,H*0.34,W*0.7);
+        const goatGlow=ctx.createRadialGradient(W/2,H*0.30,0,W/2,H*0.30,W*0.7);
         goatGlow.addColorStop(0,'rgba(255,215,0,0.12)');
         goatGlow.addColorStop(0.5,'rgba(201,162,39,0.06)');
         goatGlow.addColorStop(1,'rgba(0,0,0,0)');
@@ -3509,25 +3532,28 @@
     const member=state.members[state.userId];
     const cfg=member?.warriorConfig||null;
     const wrap=document.createElement('div'); wrap.className='warrior-profile-wrap';
-    // Thumb canvas
-    const thumbEl=document.createElement('div'); thumbEl.className='warrior-thumb';
-    const thumbCanvas=document.createElement('canvas');
-    const myPtsForThumb=getTotalPoints(state.userId); WC.renderThumb(thumbCanvas, cfg, 100, myPtsForThumb, false);
-    if (!cfg) {
+    // Full-size 260×340 portrait canvas
+    const portraitEl=document.createElement('div'); portraitEl.className='warrior-profile-portrait';
+    const portraitCanvas=document.createElement('canvas');
+    portraitCanvas.width=260; portraitCanvas.height=340;
+    const myPtsForThumb=getTotalPoints(state.userId);
+    if (cfg) {
+      WC.draw(portraitCanvas, cfg, myPtsForThumb, false);
+    } else {
       // Draw placeholder
-      const ctx=thumbCanvas.getContext('2d');
-      ctx.fillStyle='#1C2128'; ctx.fillRect(0,0,100,134);
-      ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.font='48px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('⚔️',50,67);
+      const ctx=portraitCanvas.getContext('2d');
+      ctx.fillStyle='#1C2128'; ctx.fillRect(0,0,260,340);
+      ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.font='80px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('⚔️',130,170);
     }
-    thumbEl.appendChild(thumbCanvas);
+    portraitEl.appendChild(portraitCanvas);
     const info=document.createElement('div'); info.className='warrior-profile-info';
     info.innerHTML=`<div class="warrior-profile-title">${cfg?'Your Warrior':'Create Your Warrior'}</div><div class="warrior-profile-sub">${cfg?'Looking fierce! Edit anytime.':'Customise your Highland warrior avatar with face, hair, weapons & more.'}</div>`;
     const editBtn=document.createElement('button'); editBtn.className='btn-warrior-edit';
     editBtn.textContent=cfg?'⚔️ Edit Warrior':'⚔️ Create Warrior';
     editBtn.addEventListener('click',()=>{ WC.init(); showScreen('screen-warrior'); });
     info.appendChild(editBtn);
-    wrap.appendChild(thumbEl); wrap.appendChild(info);
+    wrap.appendChild(portraitEl); wrap.appendChild(info);
     sec.innerHTML=''; sec.appendChild(wrap);
   }
 
