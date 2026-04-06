@@ -4419,6 +4419,21 @@
           saveBtn.textContent = '\U0001f4be Save Changes'; saveBtn.disabled = false;
 
         } else if (action === 'delete') {
+          const rowEl = btn.closest('.admin-camp-row');
+          const campName = document.getElementById(`admin-camp-name-${campId}`)?.textContent || 'this campaign';
+          if (!confirm(`Delete "${campName}"? This cannot be undone.`)) return;
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            await deleteCampaign(campId);
+            rowEl?.remove();
+            toast('🗑️ Campaign deleted');
+          } catch(err) {
+            toast('Error: ' + err.message, 3500);
+            btn.textContent = '🗑️'; btn.disabled = false;
+          }
+        }
+      }); // end event delegation
+
     // ── Admin create campaign ──
     document.getElementById('btn-admin-create-camp').addEventListener('click', async () => {
       const nameInp  = document.getElementById('admin-create-name');
