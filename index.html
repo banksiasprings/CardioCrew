@@ -768,6 +768,177 @@
     .theme-toggle-pill { display:flex; background:var(--surface); border-radius:10px; padding:4px; gap:4px; margin-bottom:8px; border:1px solid var(--border); }
     .theme-btn { flex:1; padding:9px 4px; border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.2s; }
     .theme-btn.active { background:linear-gradient(135deg,#C9A227,#8B6914); color:#000; }
+
+    /* ── Admin Button (subtle) ── */
+    .admin-link-wrap { text-align: center; margin-top: 14px; }
+    .admin-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--text-3); cursor: pointer;
+      background: none; border: none; padding: 6px 10px;
+      border-radius: 8px; transition: color 0.2s, background 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .admin-link:hover { color: #C9A227; background: rgba(201,162,39,0.07); }
+
+    /* ── Password Modal ── */
+    #admin-pw-modal {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    #admin-pw-modal.hidden { display: none !important; }
+    .admin-pw-box {
+      background: #161B22; border: 1px solid #C9A227;
+      border-radius: 18px; padding: 28px 24px; width: 100%; max-width: 340px;
+      box-shadow: 0 0 40px rgba(201,162,39,0.2);
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .admin-pw-icon { font-size: 36px; }
+    .admin-pw-title { font-size: 18px; font-weight: 800; color: #C9A227; }
+    .admin-pw-input {
+      width: 100%; background: #0D1117; border: 1.5px solid rgba(201,162,39,0.4);
+      border-radius: 10px; padding: 12px 14px; font-size: 16px;
+      color: #E6EDF3; outline: none; text-align: center;
+      letter-spacing: 0.08em; transition: border-color 0.2s;
+    }
+    .admin-pw-input:focus { border-color: #C9A227; }
+    @keyframes adminShake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+    }
+    .admin-pw-input.shake { animation: adminShake 0.4s ease; border-color: #F85149; }
+    .admin-pw-err { font-size: 13px; color: #F85149; min-height: 18px; text-align: center; }
+    .admin-pw-actions { display: flex; gap: 10px; width: 100%; }
+    .btn-admin-cancel {
+      flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+      background: transparent; color: var(--text-2); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-admin-cancel:hover { background: rgba(255,255,255,0.05); }
+    .btn-admin-unlock {
+      flex: 2; padding: 12px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #C9A227, #8B6914); color: #000;
+      font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-admin-unlock:active { opacity: 0.85; transform: scale(0.97); }
+
+    /* ── Admin Panel (full-screen overlay) ── */
+    #admin-panel {
+      position: fixed; inset: 0; z-index: 9100;
+      background: #0D1117;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    #admin-panel.hidden { display: none !important; }
+    .admin-header {
+      background: linear-gradient(135deg, #161208, #1E1A0A);
+      border-bottom: 1px solid #C9A227;
+      padding: calc(env(safe-area-inset-top,0px) + 16px) 20px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .admin-header-left { display: flex; align-items: center; gap: 10px; }
+    .admin-header-icon { font-size: 22px; }
+    .admin-header-title { font-size: 20px; font-weight: 900; color: #C9A227; letter-spacing: -0.3px; }
+    .admin-header-sub { font-size: 12px; color: #8B7A4A; margin-top: 1px; }
+    .btn-admin-close {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(201,162,39,0.3);
+      background: rgba(201,162,39,0.08); color: #C9A227; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+    }
+    .btn-admin-close:hover { background: rgba(201,162,39,0.18); }
+    .admin-body { flex: 1; overflow-y: auto; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 24px; }
+    .admin-body::-webkit-scrollbar { width: 3px; }
+    .admin-body::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3); border-radius: 999px; }
+
+    /* Admin sections */
+    .admin-section { background: #161B22; border: 1px solid rgba(201,162,39,0.2); border-radius: 14px; overflow: hidden; }
+    .admin-section-header {
+      padding: 14px 16px; background: rgba(201,162,39,0.06);
+      border-bottom: 1px solid rgba(201,162,39,0.15);
+      font-size: 13px; font-weight: 800; color: #C9A227;
+      text-transform: uppercase; letter-spacing: 0.07em; display: flex; align-items: center; gap: 8px;
+    }
+    .admin-section-body { padding: 14px 16px; }
+
+    /* Campaign rows in admin */
+    .admin-camp-row {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 10px 0;
+    }
+    .admin-camp-row:last-child { border-bottom: none; }
+    .admin-camp-main { display: flex; align-items: center; gap: 10px; }
+    .admin-camp-name {
+      flex: 1; min-width: 0; font-size: 14px; font-weight: 700;
+      color: #E6EDF3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .admin-camp-meta { font-size: 11px; color: #8B949E; margin-top: 2px; }
+    .admin-camp-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-camp-action {
+      padding: 5px 10px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text-2);
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-camp-action:hover { background: rgba(255,255,255,0.1); }
+    .btn-camp-action.danger { border-color: rgba(248,81,73,0.3); color: #F85149; }
+    .btn-camp-action.danger:hover { background: rgba(248,81,73,0.12); }
+    .btn-camp-action.gold { border-color: rgba(201,162,39,0.4); color: #C9A227; }
+    .btn-camp-action.gold:hover { background: rgba(201,162,39,0.12); }
+
+    /* Inline rename */
+    .admin-rename-row { display: flex; gap: 8px; margin-top: 8px; }
+    .admin-rename-input {
+      flex: 1; background: #0D1117; border: 1.5px solid rgba(201,162,39,0.4);
+      border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #E6EDF3; outline: none;
+    }
+    .admin-rename-input:focus { border-color: #C9A227; }
+    .btn-rename-save {
+      padding: 8px 14px; border-radius: 8px; border: none;
+      background: linear-gradient(135deg,#C9A227,#8B6914); color: #000;
+      font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
+    }
+    .btn-rename-cancel {
+      padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+      background: transparent; color: var(--text-2); font-size: 13px; cursor: pointer;
+    }
+
+    /* Members expand */
+    .admin-members-list { margin-top: 10px; padding-left: 4px; display: flex; flex-direction: column; gap: 5px; }
+    .admin-member-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #8B949E; padding: 5px 8px;
+      background: rgba(255,255,255,0.03); border-radius: 7px;
+    }
+    .admin-member-avatar { font-size: 16px; }
+    .admin-member-name { flex: 1; color: #E6EDF3; font-weight: 600; }
+    .admin-member-pts { font-size: 12px; color: #C9A227; font-weight: 700; }
+
+    /* Admin create form */
+    .admin-input {
+      width: 100%; background: #0D1117; border: 1.5px solid rgba(201,162,39,0.25);
+      border-radius: 10px; padding: 11px 13px; font-size: 15px;
+      color: #E6EDF3; outline: none; transition: border-color 0.2s; margin-bottom: 10px;
+    }
+    .admin-input:focus { border-color: #C9A227; }
+    .admin-input::placeholder { color: #484F58; }
+    .admin-input-label { font-size: 11px; color: #8B7A4A; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; display: block; }
+    .admin-wager-wrap { position: relative; }
+    .admin-wager-prefix {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: #C9A227; font-weight: 700; font-size: 15px; pointer-events: none;
+    }
+    .admin-wager-input { padding-left: 26px !important; }
+    .btn-admin-create {
+      width: 100%; padding: 13px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #C9A227, #8B6914); color: #000;
+      font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s; margin-top: 4px;
+    }
+    .btn-admin-create:active { opacity: 0.85; transform: scale(0.97); }
+    .admin-empty { text-align: center; padding: 24px 0; color: #484F58; font-size: 13px; }
+    .admin-loading { text-align: center; padding: 20px 0; color: #8B7A4A; font-size: 13px; }
   </style>
 
   <!-- Apply saved theme before first paint to avoid flash -->
@@ -832,6 +1003,68 @@
 
     <div class="divider" style="margin-top:16px">or</div>
     <button class="btn btn-secondary" id="btn-show-create">＋ Create New Campaign</button>
+  </div>
+
+  <!-- Subtle admin link -->
+  <div class="admin-link-wrap">
+    <button class="admin-link" id="btn-open-admin">⚙️ Admin</button>
+  </div>
+</div>
+
+<!-- Password Gate Modal -->
+<div id="admin-pw-modal" class="hidden">
+  <div class="admin-pw-box">
+    <div class="admin-pw-icon">🔐</div>
+    <div class="admin-pw-title">Admin Access</div>
+    <input class="admin-pw-input" id="admin-pw-input" type="password" placeholder="Enter password" autocomplete="off">
+    <div class="admin-pw-err" id="admin-pw-err"></div>
+    <div class="admin-pw-actions">
+      <button class="btn-admin-cancel" id="btn-admin-pw-cancel">Cancel</button>
+      <button class="btn-admin-unlock" id="btn-admin-pw-unlock">Unlock ⚙️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Panel (full-screen overlay) -->
+<div id="admin-panel" class="hidden">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-header-icon">⚙️</div>
+      <div>
+        <div class="admin-header-title">CardioCrew Admin</div>
+        <div class="admin-header-sub">Campaign Management</div>
+      </div>
+    </div>
+    <button class="btn-admin-close" id="btn-admin-close">✕</button>
+  </div>
+  <div class="admin-body">
+
+    <!-- All Campaigns -->
+    <div class="admin-section">
+      <div class="admin-section-header">📋 All Campaigns</div>
+      <div class="admin-section-body">
+        <div class="admin-loading" id="admin-camps-loading">⏳ Loading campaigns…</div>
+        <div class="admin-empty hidden" id="admin-camps-empty">No campaigns found.</div>
+        <div id="admin-camps-list"></div>
+      </div>
+    </div>
+
+    <!-- Create Campaign -->
+    <div class="admin-section">
+      <div class="admin-section-header">➕ Create Campaign</div>
+      <div class="admin-section-body">
+        <label class="admin-input-label">Campaign Name</label>
+        <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
+        <label class="admin-input-label">Wager Amount (optional)</label>
+        <div class="admin-wager-wrap">
+          <span class="admin-wager-prefix">$</span>
+          <input class="admin-input admin-wager-input" id="admin-create-wager" type="number" min="0" placeholder="0" autocomplete="off">
+        </div>
+        <button class="btn-admin-create" id="btn-admin-create-camp">Create Campaign</button>
+        <div class="admin-pw-err" id="admin-create-err" style="margin-top:8px"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -4134,6 +4367,275 @@
   }
 
   init();
+
+  // ─── Admin Panel ──────────────────────────────────────
+  (function() {
+    // Password: btoa("highland2024") = "aGlnaGxhbmQyMDI0"
+    const ADMIN_HASH = btoa('highland2024');
+
+    function isUnlocked() { return sessionStorage.getItem('cardioAdminUnlocked') === 'true'; }
+    function setUnlocked() { sessionStorage.setItem('cardioAdminUnlocked', 'true'); }
+
+    // ── Password modal ──
+    document.getElementById('btn-open-admin').addEventListener('click', () => {
+      if (isUnlocked()) { openAdminPanel(); return; }
+      const modal = document.getElementById('admin-pw-modal');
+      modal.classList.remove('hidden');
+      const inp = document.getElementById('admin-pw-input');
+      inp.value = '';
+      document.getElementById('admin-pw-err').textContent = '';
+      setTimeout(() => inp.focus(), 80);
+    });
+
+    function closePasswordModal() {
+      document.getElementById('admin-pw-modal').classList.add('hidden');
+    }
+
+    document.getElementById('btn-admin-pw-cancel').addEventListener('click', closePasswordModal);
+
+    document.getElementById('admin-pw-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('admin-pw-modal')) closePasswordModal();
+    });
+
+    function attemptUnlock() {
+      const inp = document.getElementById('admin-pw-input');
+      const val = inp.value;
+      if (btoa(val) === ADMIN_HASH) {
+        setUnlocked();
+        closePasswordModal();
+        openAdminPanel();
+      } else {
+        document.getElementById('admin-pw-err').textContent = 'Incorrect password';
+        inp.classList.remove('shake');
+        void inp.offsetWidth; // reflow to restart animation
+        inp.classList.add('shake');
+        setTimeout(() => inp.classList.remove('shake'), 450);
+        inp.select();
+      }
+    }
+
+    document.getElementById('btn-admin-pw-unlock').addEventListener('click', attemptUnlock);
+    document.getElementById('admin-pw-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') attemptUnlock();
+    });
+
+    // ── Admin panel open/close ──
+    function openAdminPanel() {
+      document.getElementById('admin-panel').classList.remove('hidden');
+      loadAdminCampaigns();
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('admin-panel').classList.add('hidden');
+    }
+
+    document.getElementById('btn-admin-close').addEventListener('click', closeAdminPanel);
+
+    // ── Helper: calculate total points for a member across all days ──
+    function calcMemberPoints(memberData, startDate) {
+      if (!startDate || !memberData?.completions) return 0;
+      const dayNum = Math.max(1, Math.min(
+        Math.floor((new Date() - new Date(startDate + 'T00:00:00')) / 86400000) + 1, 30
+      ));
+      let total = 0;
+      for (let d = 1; d <= dayNum; d++) {
+        let dayPts = 0;
+        ['squats','pushups','plank','crunches'].forEach(ex => {
+          if (memberData.completions[`d${d}_${ex}`]) dayPts++;
+        });
+        if (d === dayNum && dayPts >= 4) total += 5;
+        else total += dayPts;
+      }
+      return total;
+    }
+
+    // ── Load all campaigns into admin list ──
+    async function loadAdminCampaigns() {
+      const loadingEl = document.getElementById('admin-camps-loading');
+      const emptyEl   = document.getElementById('admin-camps-empty');
+      const listEl    = document.getElementById('admin-camps-list');
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      listEl.innerHTML = '';
+      try {
+        const snap = await getDocs(query(collection(db, 'campaigns'), orderBy('createdAt', 'desc')));
+        loadingEl.classList.add('hidden');
+        if (snap.empty) { emptyEl.classList.remove('hidden'); return; }
+
+        const items = await Promise.all(snap.docs.map(async cdoc => {
+          const data = cdoc.data();
+          let memberCount = 0;
+          try {
+            const ms = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
+            memberCount = ms.size;
+          } catch(e) { memberCount = '?'; }
+          const createdAt = data.createdAt?.toDate?.() || null;
+          const dateStr = createdAt ? createdAt.toLocaleDateString() : '—';
+          return { id: cdoc.id, data, memberCount, dateStr };
+        }));
+
+        renderAdminCampaignList(items);
+      } catch(e) {
+        loadingEl.classList.add('hidden');
+        listEl.innerHTML = `<div class="admin-empty">Error: ${escHtml(e.message)}</div>`;
+      }
+    }
+
+    function renderAdminCampaignList(items) {
+      const listEl = document.getElementById('admin-camps-list');
+      if (!items.length) {
+        document.getElementById('admin-camps-empty').classList.remove('hidden');
+        return;
+      }
+      listEl.innerHTML = items.map(({ id, data, memberCount, dateStr }) => {
+        const wager = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}` : '';
+        return `
+        <div class="admin-camp-row" data-camp-id="${escHtml(id)}">
+          <div class="admin-camp-main">
+            <div style="flex:1;min-width:0">
+              <div class="admin-camp-name" id="admin-camp-name-${escHtml(id)}">${escHtml(data.name || 'Unnamed')}</div>
+              <div class="admin-camp-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''} · 📅 ${dateStr}${wager}</div>
+            </div>
+            <div class="admin-camp-actions">
+              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">👥</button>
+              <button class="btn-camp-action" data-action="rename" data-camp-id="${escHtml(id)}">✏️ Rename</button>
+              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">🗑️</button>
+            </div>
+          </div>
+          <div id="admin-rename-row-${escHtml(id)}" class="admin-rename-row hidden">
+            <input class="admin-rename-input" id="admin-rename-input-${escHtml(id)}" value="${escHtml(data.name||'')}" maxlength="30">
+            <button class="btn-rename-save" data-action="rename-save" data-camp-id="${escHtml(id)}">Save</button>
+            <button class="btn-rename-cancel" data-action="rename-cancel" data-camp-id="${escHtml(id)}">✕</button>
+          </div>
+          <div id="admin-members-${escHtml(id)}" class="admin-members-list hidden"></div>
+        </div>`;
+      }).join('');
+
+      // Event delegation
+      listEl.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const campId = btn.dataset.campId;
+
+        if (action === 'rename') {
+          document.getElementById(`admin-rename-row-${campId}`)?.classList.toggle('hidden');
+          document.getElementById(`admin-rename-input-${campId}`)?.focus();
+
+        } else if (action === 'rename-cancel') {
+          document.getElementById(`admin-rename-row-${campId}`)?.classList.add('hidden');
+
+        } else if (action === 'rename-save') {
+          const inp = document.getElementById(`admin-rename-input-${campId}`);
+          const newName = inp?.value?.trim();
+          if (!newName) { inp.style.borderColor='#F85149'; return; }
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            await updateDoc(doc(db, 'campaigns', campId), { name: newName });
+            document.getElementById(`admin-camp-name-${campId}`).textContent = newName;
+            document.getElementById(`admin-rename-row-${campId}`)?.classList.add('hidden');
+            toast('✅ Campaign renamed');
+          } catch(err) {
+            toast('Error: ' + err.message, 3500);
+          }
+          btn.textContent = 'Save'; btn.disabled = false;
+
+        } else if (action === 'delete') {
+          const name = btn.dataset.campName;
+          if (!confirm(`Delete campaign "${name}"?\n\nThis will permanently remove all members, messages, and clan data. This cannot be undone.`)) return;
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            // Delete subcollections: members, messages, clans
+            const subcols = ['members', 'messages', 'clans'];
+            for (const sub of subcols) {
+              const subSnap = await getDocs(collection(db, 'campaigns', campId, sub));
+              for (const sdoc of subSnap.docs) {
+                await deleteDoc(sdoc.ref);
+              }
+            }
+            await deleteDoc(doc(db, 'campaigns', campId));
+            const row = listEl.querySelector(`.admin-camp-row[data-camp-id="${campId}"]`);
+            if (row) row.remove();
+            toast('🗑️ Campaign deleted');
+            if (!listEl.querySelector('.admin-camp-row')) {
+              document.getElementById('admin-camps-empty').classList.remove('hidden');
+            }
+          } catch(err) {
+            toast('Error: ' + err.message, 3500);
+            btn.textContent = '🗑️'; btn.disabled = false;
+          }
+
+        } else if (action === 'expand') {
+          const membersDiv = document.getElementById(`admin-members-${campId}`);
+          if (!membersDiv) return;
+          if (!membersDiv.classList.contains('hidden')) {
+            membersDiv.classList.add('hidden');
+            btn.textContent = '👥';
+            return;
+          }
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            const msSnap = await getDocs(collection(db, 'campaigns', campId, 'members'));
+            // Find campaign start date from rendered data
+            const row = listEl.querySelector(`.admin-camp-row[data-camp-id="${campId}"]`);
+            // We don't have startDate easily here; just show names + raw completion count
+            if (msSnap.empty) {
+              membersDiv.innerHTML = '<div style="color:#484F58;font-size:12px;padding:6px 0">No members yet.</div>';
+            } else {
+              const memberRows = msSnap.docs.map(md => {
+                const mdata = md.data();
+                const compCount = mdata.completions ? Object.values(mdata.completions).filter(Boolean).length : 0;
+                return `<div class="admin-member-item">
+                  <span class="admin-member-avatar">${escHtml(mdata.avatar||'⚔️')}</span>
+                  <span class="admin-member-name">${escHtml(mdata.name||'Unknown')}</span>
+                  <span class="admin-member-pts">✅ ${compCount} completions</span>
+                </div>`;
+              }).join('');
+              membersDiv.innerHTML = memberRows;
+            }
+            membersDiv.classList.remove('hidden');
+            btn.textContent = '🙈';
+          } catch(err) {
+            toast('Error loading members: ' + err.message, 3500);
+            btn.textContent = '👥';
+          }
+          btn.disabled = false;
+        }
+      });
+    }
+
+    // ── Admin create campaign ──
+    document.getElementById('btn-admin-create-camp').addEventListener('click', async () => {
+      const nameInp  = document.getElementById('admin-create-name');
+      const wagerInp = document.getElementById('admin-create-wager');
+      const errEl    = document.getElementById('admin-create-err');
+      const name     = nameInp.value.trim();
+      const wager    = parseFloat(wagerInp.value) || 0;
+
+      errEl.textContent = '';
+      if (!name) { errEl.textContent = 'Campaign name is required.'; nameInp.focus(); return; }
+
+      const btn = document.getElementById('btn-admin-create-camp');
+      btn.textContent = 'Creating…'; btn.disabled = true;
+      try {
+        const newRef = await addDoc(collection(db, 'campaigns'), {
+          name,
+          wagerAmount: wager || 0,
+          createdAt: serverTimestamp(),
+          createdBy: 'admin',
+        });
+        nameInp.value = '';
+        wagerInp.value = '';
+        toast(`✅ Campaign "${name}" created!`);
+        // Refresh list
+        await loadAdminCampaigns();
+      } catch(err) {
+        errEl.textContent = 'Error: ' + err.message;
+      }
+      btn.textContent = 'Create Campaign'; btn.disabled = false;
+    });
+
+  })(); // end admin IIFE
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/CardioCrew/sw.js').then(reg => {
