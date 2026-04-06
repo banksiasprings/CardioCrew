@@ -979,8 +979,8 @@
     <input class="admin-pw-input" id="admin-pw-input" type="password" placeholder="Enter password" autocomplete="off">
     <div class="admin-pw-err" id="admin-pw-err"></div>
     <div class="admin-pw-actions">
-      <button class="btn-admin-cancel" id="btn-admin-pw-cancel">Cancel</button>
-      <button class="btn-admin-unlock" id="btn-admin-pw-unlock">Unlock ⚙️</button>
+      <button type="button" class="btn-admin-cancel" id="btn-admin-pw-cancel">Cancel</button>
+      <button type="button" class="btn-admin-unlock" id="btn-admin-pw-unlock">Unlock ⚙️</button>
     </div>
   </div>
 </div>
@@ -1020,8 +1020,32 @@
           <span class="admin-wager-prefix">$</span>
           <input class="admin-input admin-wager-input" id="admin-create-wager" type="number" min="0" placeholder="0" autocomplete="off">
         </div>
-        <button class="btn-admin-create" id="btn-admin-create-camp">Create Campaign</button>
+        <button type="button" class="btn-admin-create" id="btn-admin-create-camp">Create Campaign</button>
         <div class="admin-pw-err" id="admin-create-err" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- Manage Clans -->
+    <div class="admin-section">
+      <div class="admin-section-header">🏰 Manage Clans</div>
+      <div class="admin-section-body">
+        <label class="admin-input-label">Campaign</label>
+        <select class="admin-input" id="admin-clan-camp-select" style="padding:10px 12px;cursor:pointer">
+          <option value="">— Select a campaign —</option>
+        </select>
+        <div id="admin-clan-panel" class="hidden" style="margin-top:12px">
+          <div id="admin-clan-list" style="margin-bottom:14px"></div>
+          <div style="border-top:1px solid var(--border);padding-top:12px">
+            <label class="admin-input-label" style="margin-bottom:6px;display:block">➕ Add New Clan</label>
+            <input class="admin-input" id="admin-clan-name-inp" placeholder="Clan name (e.g. Clan MacDonald)" maxlength="30" style="margin-bottom:8px">
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input class="admin-input" id="admin-clan-crest-inp" placeholder="Crest 🏰" maxlength="4" style="width:80px;text-align:center;font-size:20px">
+              <select class="admin-input" id="admin-clan-tartan-sel" style="flex:1;padding:10px 8px;cursor:pointer"></select>
+            </div>
+            <button type="button" class="btn-admin-create" id="btn-admin-add-clan" style="margin-bottom:4px">Add Clan ⚔️</button>
+            <div class="admin-pw-err" id="admin-clan-err"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1070,41 +1094,12 @@
   <div class="clan-wrap">
     <div style="font-size:48px;margin-bottom:6px">🏰</div>
     <div class="clan-screen-title">Choose Your House</div>
-    <div class="clan-screen-sub">Join a clan to compete together — or go solo</div>
+    <div class="clan-screen-sub">Choose your clan and compete for glory</div>
 
-    <!-- Preset houses -->
-    <label class="clan-label" style="width:100%">⚔️ The Three Houses</label>
+    <!-- Available clans -->
+    <label class="clan-label" style="width:100%">⚔️ Available Clans</label>
     <div class="house-list" id="house-list"></div>
-
-    <div class="clan-divider">or create / join your own</div>
-
-    <!-- Mode toggle -->
-    <div class="clan-mode-toggle" style="width:100%">
-      <button class="clan-mode-btn active" data-clan-mode="create">⚔️ Create</button>
-      <button class="clan-mode-btn" data-clan-mode="join">🛡️ Join by Code</button>
-    </div>
-
-    <!-- Create Clan -->
-    <div id="clan-create-form" class="clan-form-section active" style="width:100%">
-      <div class="input-group" style="margin-bottom:12px">
-        <label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Name</label>
-        <input class="input" id="clan-name-input" placeholder="e.g. Clan McNichol" maxlength="24" autocomplete="off">
-      </div>
-      <label class="clan-label">Choose Your Crest</label>
-      <div class="crest-grid" id="crest-grid"></div>
-      <label class="clan-label">Tartan Colours</label>
-      <div class="tartan-grid" id="tartan-grid"></div>
-      <button class="btn btn-primary" id="btn-clan-create" style="width:100%">Found the Clan 🏰</button>
-    </div>
-
-    <!-- Join Clan -->
-    <div id="clan-join-form" class="clan-form-section" style="width:100%">
-      <div class="input-group" style="margin-bottom:12px">
-        <label style="display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Clan Code</label>
-        <input class="input" id="clan-join-code-input" placeholder="e.g. MCN001" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:20px">
-      </div>
-      <button class="btn btn-primary" id="btn-clan-join-go" style="width:100%">Join the Clan ⚔️</button>
-    </div>
+    <div class="admin-empty hidden" id="clan-empty-msg" style="width:100%;text-align:center;padding:16px;color:var(--text-2);font-size:13px">No clans set up yet — ask your admin to add some!</div>
 
     <div class="error-msg" id="clan-error" style="width:100%"></div>
     <button class="btn btn-secondary" id="btn-clan-skip" style="width:100%;margin-top:6px">Skip for now →</button>
@@ -1357,7 +1352,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, deleteField, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey:            "AIzaSyARd79y3L8Bfew1ubdJVaY7zsIULJUf4Bs",
@@ -2157,7 +2152,7 @@
         await leaveClan(); toast('You left the clan');
       });
     } else {
-      clanSec.innerHTML=`<button class="btn-clan-action" id="btn-join-create-clan">🏰 Join or Create a Clan</button>`;
+      clanSec.innerHTML=`<button class="btn-clan-action" id="btn-join-create-clan">🏰 Join a Clan</button>`;
       document.getElementById('btn-join-create-clan')?.addEventListener('click',()=>{
         initClanScreen(); showScreen('screen-clan');
       });
@@ -2442,14 +2437,16 @@
   let selectedCrest = CLAN_CRESTS[0];
   let selectedTartan = TARTAN_THEMES[0].id;
 
-  // ─── Render preset house list ─────────────────────────
+  // ─── Render clan list (preset + admin-created) ───────────
   function renderHouseList() {
     const list = document.getElementById('house-list'); if (!list) return;
+    const emptyMsg = document.getElementById('clan-empty-msg');
     const myClanId = state.members[state.userId]?.clanId || null;
     list.innerHTML = '';
+
+    // ── Preset clans ──
     PRESET_CLANS.forEach(pc => {
       const t = getTartan(pc.tartanId);
-      // Find if this preset clan already exists in this campaign
       const existing = Object.entries(state.clans).find(([,c]) => c.presetId === pc.id);
       const isJoined = existing && myClanId === existing[0];
       const card = document.createElement('div');
@@ -2494,6 +2491,56 @@
       });
       list.appendChild(card);
     });
+
+    // ── Admin-created clans ──
+    const adminClans = Object.entries(state.clans).filter(([,c]) => c.adminCreated === true);
+    adminClans.forEach(([clanId, clan]) => {
+      const t = getTartan(clan.tartanId || 'highland');
+      const isJoined = myClanId === clanId;
+      const card = document.createElement('div');
+      card.className = 'house-card' + (isJoined ? ' joined' : '');
+      card.innerHTML = `
+        <div class="house-banner" style="background:linear-gradient(90deg,${t.c1},${t.c2} 60%,${t.c3})">
+          <span class="house-crest">${clan.crest || '🏰'}</span>
+          <div>
+            <div class="house-banner-name">${escHtml(clan.name || 'Unnamed Clan')}</div>
+            <div class="house-banner-sub">Admin Clan</div>
+          </div>
+        </div>
+        <div class="house-body">
+          <div class="house-body-info">
+            <div class="house-meta">⚔️ Compete for clan glory</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <div class="house-color-dots">
+              <div class="house-color-dot" style="background:${t.c1}"></div>
+              <div class="house-color-dot" style="background:${t.c2}"></div>
+              <div class="house-color-dot" style="background:${t.c3}"></div>
+            </div>
+            <button class="btn-join-house${isJoined?' joined':''}">${isJoined ? '✓ Joined' : 'Join ⚔️'}</button>
+          </div>
+        </div>`;
+      card.querySelector('.btn-join-house').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (isJoined) return;
+        const btn = card.querySelector('.btn-join-house');
+        btn.textContent = 'Joining…'; btn.disabled = true;
+        document.getElementById('clan-error').textContent = '';
+        try {
+          await joinAdminClan(clanId);
+          toast(`Welcome to ${clan.name || 'the clan'}! ${clan.crest || '⚔️'}`, 3000);
+          startApp();
+        } catch(err) {
+          document.getElementById('clan-error').textContent = err.message;
+          btn.textContent = 'Join ⚔️'; btn.disabled = false;
+        }
+      });
+      list.appendChild(card);
+    });
+
+    // Show empty message if no clans at all (no presets either — means campaign has zero)
+    // In practice presets always show, so hide empty msg
+    if (emptyMsg) emptyMsg.classList.add('hidden');
   }
 
   async function joinPresetClan(pc) {
@@ -2515,80 +2562,16 @@
   }
 
   function initClanScreen() {
-    selectedCrest = CLAN_CRESTS[0];
-    // Default tartan = first non-preset one
-    selectedTartan = TARTAN_THEMES.find(t => !t.preset)?.id || TARTAN_THEMES[0].id;
-    document.getElementById('clan-name-input').value = '';
-    document.getElementById('clan-join-code-input').value = '';
     document.getElementById('clan-error').textContent = '';
-    // Set create mode active
-    document.querySelectorAll('.clan-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.clanMode==='create'));
-    document.getElementById('clan-create-form').classList.add('active');
-    document.getElementById('clan-join-form').classList.remove('active');
-    // Render house list
+    // Render house list (presets + admin-created)
     renderHouseList();
-    // Render crest grid
-    const cg = document.getElementById('crest-grid'); cg.innerHTML = '';
-    CLAN_CRESTS.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'crest-opt' + (c === selectedCrest ? ' selected' : '');
-      btn.textContent = c;
-      btn.addEventListener('click', () => {
-        selectedCrest = c;
-        document.querySelectorAll('.crest-opt').forEach(x => x.classList.remove('selected'));
-        btn.classList.add('selected');
-      });
-      cg.appendChild(btn);
-    });
-    // Render tartan grid (custom only — not preset clan tartans)
-    const tg = document.getElementById('tartan-grid'); tg.innerHTML = '';
-    TARTAN_THEMES.filter(t => !t.preset).forEach(t => {
-      const btn = document.createElement('div');
-      btn.className = 'tartan-opt' + (t.id === selectedTartan ? ' selected' : '');
-      btn.innerHTML = `<div class="tartan-swatch" style="${tartanSwatchStyle(t.id)}"></div><div class="tartan-name">${t.emoji} ${t.name}</div>`;
-      btn.addEventListener('click', () => {
-        selectedTartan = t.id;
-        document.querySelectorAll('.tartan-opt').forEach(x => x.classList.remove('selected'));
-        btn.classList.add('selected');
-      });
-      tg.appendChild(btn);
-    });
   }
 
-  document.querySelectorAll('.clan-mode-btn').forEach(b=>b.addEventListener('click',()=>{
-    document.querySelectorAll('.clan-mode-btn').forEach(x=>x.classList.toggle('active',x===b));
-    document.getElementById('clan-create-form').classList.toggle('active',b.dataset.clanMode==='create');
-    document.getElementById('clan-join-form').classList.toggle('active',b.dataset.clanMode==='join');
-    document.getElementById('clan-error').textContent='';
-  }));
+  async function joinAdminClan(clanId) {
+    await updateDoc(doc(db, 'campaigns', state.campaignId, 'members', state.userId), { clanId });
+  }
 
-  document.getElementById('btn-clan-create').addEventListener('click',async()=>{
-    const name=document.getElementById('clan-name-input').value.trim();
-    const err=document.getElementById('clan-error');
-    if(!name){err.textContent='Enter a clan name';return;}
-    err.textContent='';
-    document.getElementById('btn-clan-create').textContent='Founding...';
-    try {
-      const {code}=await createClan(name,selectedCrest,selectedTartan);
-      toast(`Clan "${name}" founded! Code: ${code}`,4000);
-      startApp();
-    } catch(e) { err.textContent=e.message; document.getElementById('btn-clan-create').textContent='Found the Clan 🏰'; }
-  });
-
-  document.getElementById('btn-clan-join-go').addEventListener('click',async()=>{
-    const code=document.getElementById('clan-join-code-input').value.trim();
-    const err=document.getElementById('clan-error');
-    if(!code){err.textContent='Enter a clan code';return;}
-    err.textContent='';
-    document.getElementById('btn-clan-join-go').textContent='Joining...';
-    try {
-      await joinClanByCode(code);
-      toast('You joined the clan! ⚔️',3000);
-      startApp();
-    } catch(e) { err.textContent=e.message; document.getElementById('btn-clan-join-go').textContent='Join the Clan ⚔️'; }
-  });
-
-  document.getElementById('btn-clan-skip').addEventListener('click',()=>startApp());
+  document.getElementById('btn-clan-skip').addEventListener('click', () => startApp());
 
   // expose toast for inline onclick handlers
   window.app_toast = toast;
@@ -4245,10 +4228,122 @@
     function openAdminPanel() {
       document.getElementById('admin-panel').classList.remove('hidden');
       loadAdminCampaigns();
+      populateAdminClanCampSelect();
+      // Populate tartan select in clan form
+      const tartanSel = document.getElementById('admin-clan-tartan-sel');
+      if (tartanSel && !tartanSel.options.length) {
+        TARTAN_THEMES.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `${t.emoji} ${t.name}`;
+          tartanSel.appendChild(opt);
+        });
+      }
       // Reveal admin badge in Profile if it's rendered
       const badge = document.getElementById('profile-admin-badge');
       if (badge) badge.style.display = 'inline-flex';
     }
+
+    async function populateAdminClanCampSelect() {
+      const sel = document.getElementById('admin-clan-camp-select');
+      if (!sel) return;
+      // Keep first placeholder option
+      while (sel.options.length > 1) sel.remove(1);
+      try {
+        const snap = await getDocs(query(collection(db, 'campaigns'), orderBy('createdAt', 'desc')));
+        snap.docs.forEach(cdoc => {
+          const opt = document.createElement('option');
+          opt.value = cdoc.id;
+          opt.textContent = cdoc.data().name || cdoc.id;
+          sel.appendChild(opt);
+        });
+      } catch(e) { /* ignore */ }
+    }
+
+    document.getElementById('admin-clan-camp-select').addEventListener('change', async (e) => {
+      const campId = e.target.value;
+      const panel = document.getElementById('admin-clan-panel');
+      if (!campId) { panel.classList.add('hidden'); return; }
+      panel.classList.remove('hidden');
+      await loadAdminClans(campId);
+    });
+
+    async function loadAdminClans(campId) {
+      const listEl = document.getElementById('admin-clan-list');
+      listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">⏳ Loading clans…</div>';
+      try {
+        const snap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
+        if (snap.empty) {
+          listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">No clans yet — add one below.</div>';
+          return;
+        }
+        listEl.innerHTML = '';
+        snap.docs.forEach(cdoc => {
+          const clan = cdoc.data();
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border-radius:8px;margin-bottom:6px';
+          row.innerHTML = `
+            <span style="font-size:20px">${clan.crest || '🏰'}</span>
+            <span style="flex:1;font-size:14px;font-weight:700;color:var(--text-1)">${escHtml(clan.name || 'Unnamed')}</span>
+            <span style="font-size:11px;color:var(--text-2)">${clan.adminCreated ? 'Custom' : 'Preset'}</span>
+            <button type="button" style="background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.3);color:#F85149;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer" data-delete-clan="${cdoc.id}" data-camp-id="${campId}">🗑️</button>`;
+          row.querySelector('[data-delete-clan]').addEventListener('click', async (ev) => {
+            const cId = ev.currentTarget.dataset.deleteClan;
+            const cCamp = ev.currentTarget.dataset.campId;
+            if (!confirm(`Delete clan "${clan.name}"? Members will be removed from this clan.`)) return;
+            ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
+            try {
+              // Remove clanId from all members in this clan
+              const membersSnap = await getDocs(
+                query(collection(db, 'campaigns', cCamp, 'members'), where('clanId', '==', cId))
+              );
+              await Promise.all(membersSnap.docs.map(m =>
+                updateDoc(doc(db, 'campaigns', cCamp, 'members', m.id), { clanId: deleteField() })
+              ));
+              await deleteDoc(doc(db, 'campaigns', cCamp, 'clans', cId));
+              row.remove();
+              toast('🗑️ Clan deleted');
+            } catch(err) {
+              toast('Error: ' + err.message, 3500);
+              ev.currentTarget.textContent = '🗑️'; ev.currentTarget.disabled = false;
+            }
+          });
+          listEl.appendChild(row);
+        });
+      } catch(e) {
+        listEl.innerHTML = `<div style="color:#F85149;font-size:13px">Error: ${escHtml(e.message)}</div>`;
+      }
+    }
+
+    document.getElementById('btn-admin-add-clan').addEventListener('click', async () => {
+      const campId = document.getElementById('admin-clan-camp-select').value;
+      const nameInp = document.getElementById('admin-clan-name-inp');
+      const crestInp = document.getElementById('admin-clan-crest-inp');
+      const tartanSel = document.getElementById('admin-clan-tartan-sel');
+      const errEl = document.getElementById('admin-clan-err');
+      const name = nameInp.value.trim();
+      const crest = crestInp.value.trim() || '🏰';
+      const tartanId = tartanSel.value || 'highland';
+      errEl.textContent = '';
+      if (!campId) { errEl.textContent = 'Select a campaign first.'; return; }
+      if (!name) { errEl.textContent = 'Enter a clan name.'; nameInp.focus(); return; }
+      const btn = document.getElementById('btn-admin-add-clan');
+      btn.textContent = 'Adding…'; btn.disabled = true;
+      try {
+        const clanId = genId(8);
+        await setDoc(doc(db, 'campaigns', campId, 'clans', clanId), {
+          name, crest, tartanId,
+          adminCreated: true,
+          createdAt: serverTimestamp(),
+        });
+        nameInp.value = ''; crestInp.value = '';
+        toast(`✅ Clan "${name}" added!`);
+        await loadAdminClans(campId);
+      } catch(err) {
+        errEl.textContent = 'Error: ' + err.message;
+      }
+      btn.textContent = 'Add Clan ⚔️'; btn.disabled = false;
+    });
 
     function closeAdminPanel() {
       document.getElementById('admin-panel').classList.add('hidden');
