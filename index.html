@@ -1319,7 +1319,7 @@
   }
 
   async function joinCampaign(code, name) {
-    const snap = await getDocs(query(collection(db,'campaigns'),where('code','==',code.toUpperCase())));
+    const snap = await getDocs(query(collection(db,'campaigns'),where('code','==',code.replace(/\s+/g,'').toUpperCase())));
     if(snap.empty) throw new Error('Campaign code not found. Check the code and try again.');
     const campaignDoc=snap.docs[0];
     const userId=genId(8);
@@ -1961,7 +1961,7 @@
 
   document.getElementById('btn-join').addEventListener('click',async()=>{
     const name=document.getElementById('join-name').value.trim();
-    const code=document.getElementById('join-code').value.trim();
+    const code=document.getElementById('join-code').value.trim().replace(/\s+/g,'');
     const err=document.getElementById('join-error');
     if(!name){err.textContent='Enter your name';return;}
     if(!code||code.length<4){err.textContent='Enter a valid campaign code';return;}
