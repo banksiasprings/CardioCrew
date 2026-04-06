@@ -111,6 +111,17 @@
     .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
     .error-msg { color: #F85149; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 
+    /* ── Campaign Browser ── */
+    .campaigns-list-scroll { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+    .campaigns-list-scroll::-webkit-scrollbar { width: 3px; }
+    .campaigns-list-scroll::-webkit-scrollbar-track { background: transparent; }
+    .campaigns-list-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+    .campaign-browse-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px; display: flex; align-items: center; gap: 10px; }
+    .campaign-browse-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .campaign-browse-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .btn-browse-join { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #C9A227; background: rgba(201,162,39,0.1); color: #C9A227; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn-browse-join:active { background: rgba(201,162,39,0.3); transform: scale(0.96); }
+
     /* ── Avatar Picker ── */
     .avatar-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
     .avatar-sub { font-size: 14px; color: var(--text-2); margin-bottom: 24px; text-align: center; }
@@ -675,9 +686,13 @@
       <input class="input" id="join-code" placeholder="e.g. CREW42" maxlength="8" autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:20px">
     </div>
     <button class="btn btn-primary" id="btn-join">Join Campaign</button>
+    <div class="error-msg" id="join-error"></div>
+    <div class="divider">Browse Live Campaigns</div>
+    <div id="campaigns-loading" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">⏳ Loading campaigns...</div>
+    <div id="campaigns-empty" class="hidden" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">No active campaigns yet</div>
+    <div class="campaigns-list-scroll" id="campaigns-list"></div>
     <div class="divider">or</div>
     <button class="btn btn-secondary" id="btn-show-create">Create New Campaign</button>
-    <div class="error-msg" id="join-error"></div>
   </div>
 </div>
 
@@ -1135,6 +1150,7 @@
     ['screen-loading','screen-welcome','screen-create','screen-clan','screen-app','screen-warrior'].forEach(s=>
       document.getElementById(s).classList.toggle('hidden',s!==id));
     if (id === 'screen-welcome' && typeof showInstallBanner === 'function') showInstallBanner();
+    if (id === 'screen-welcome') startCampaignsBrowser();
   }
 
   // ─── LocalStorage ─────────────────────────────────────
@@ -1954,6 +1970,60 @@
     document.getElementById('install-banner').classList.remove('visible');
     localStorage.setItem('cardio_install_dismissed', '1');
   });
+
+  // ─── Live Campaign Browser ────────────────────────────
+  let _campaignsBrowserStarted = false;
+  function startCampaignsBrowser() {
+    if (_campaignsBrowserStarted) return;
+    _campaignsBrowserStarted = true;
+    const q = query(collection(db, 'campaigns'), orderBy('createdAt', 'desc'), limit(20));
+    onSnapshot(q, async (snap) => {
+      const loadingEl = document.getElementById('campaigns-loading');
+      const emptyEl   = document.getElementById('campaigns-empty');
+      const listEl    = document.getElementById('campaigns-list');
+      if (!listEl) return;
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (snap.empty) {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        listEl.innerHTML = '';
+        return;
+      }
+      if (emptyEl) emptyEl.classList.add('hidden');
+      // Fetch member counts in parallel
+      const items = await Promise.all(snap.docs.map(async (cdoc) => {
+        const data = cdoc.data();
+        let memberCount = typeof data.memberCount === 'number' ? data.memberCount : null;
+        if (memberCount === null) {
+          try {
+            const ms = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
+            memberCount = ms.size;
+          } catch(e) { memberCount = '?'; }
+        }
+        return { id: cdoc.id, data, memberCount };
+      }));
+      listEl.innerHTML = items.map(({ id, data, memberCount }) => `
+        <div class="campaign-browse-card">
+          <div style="flex:1;min-width:0">
+            <div class="campaign-browse-name">${escHtml(data.name || 'Unnamed Campaign')}</div>
+            <div class="campaign-browse-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}</div>
+          </div>
+          <button class="btn-browse-join" data-code="${escHtml(data.code || '')}">Join</button>
+        </div>
+      `).join('');
+      listEl.querySelectorAll('.btn-browse-join').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('join-code').value = btn.dataset.code;
+          document.getElementById('join-error').textContent = '';
+          const nameInput = document.getElementById('join-name');
+          if (!nameInput.value.trim()) {
+            nameInput.focus();
+          } else {
+            document.getElementById('btn-join').click();
+          }
+        });
+      });
+    });
+  }
 
   // ─── Welcome screen ───────────────────────────────────
   document.getElementById('btn-show-create').addEventListener('click',()=>{ showScreen('screen-create'); document.getElementById('create-start-date').value=new Date().toISOString().slice(0,10); });
