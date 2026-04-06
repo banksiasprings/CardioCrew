@@ -899,6 +899,72 @@
     .btn-admin-create:active { opacity: 0.85; transform: scale(0.97); }
     .admin-empty { text-align: center; padding: 24px 0; color: #484F58; font-size: 13px; }
     .admin-loading { text-align: center; padding: 20px 0; color: #8B7A4A; font-size: 13px; }
+
+    /* ── Auth section ── */
+    .auth-mode-toggle { display: flex; background: var(--surface-2); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 18px; }
+    .auth-mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-2); transition: all 0.2s; }
+    .auth-mode-btn.active { background: linear-gradient(135deg, #C9A227, #8B6914); color: #000; }
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    .campaigns-section { display: none; }
+    .campaigns-section.visible { display: block; }
+    .auth-greeting { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .auth-greeting-name { font-size: 15px; font-weight: 700; }
+    .btn-logout { background: none; border: none; color: var(--text-3); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .btn-logout:hover { color: #F85149; background: rgba(248,81,73,0.08); }
+
+    /* ── Admin Panel v2 ── */
+    .admin-tab-strip {
+      display: flex; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(201,162,39,0.25);
+      flex-shrink: 0;
+    }
+    .admin-tab-btn {
+      flex: 1; padding: 13px 8px; border: none; background: transparent;
+      color: var(--text-2); font-size: 13px; font-weight: 700; cursor: pointer;
+      border-bottom: 3px solid transparent; transition: all 0.2s;
+      white-space: nowrap; letter-spacing: 0.01em;
+    }
+    .admin-tab-btn.active { color: #C9A227; border-bottom-color: #C9A227; }
+    .admin-tab-pane { display: none; }
+    .admin-tab-pane.active { display: flex; flex-direction: column; gap: 20px; }
+    .admin-card {
+      background: #161B22; border: 1px solid rgba(201,162,39,0.2);
+      border-radius: 14px; overflow: hidden;
+    }
+    .admin-card-header {
+      padding: 14px 16px; background: rgba(201,162,39,0.06);
+      border-bottom: 1px solid rgba(201,162,39,0.15);
+      font-size: 13px; font-weight: 800; color: #C9A227;
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .admin-card-body { padding: 16px; }
+    .admin-field-label {
+      display: block; font-size: 11px; color: #8B7A4A; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; margin-top: 12px;
+    }
+    .admin-field-label:first-child { margin-top: 0; }
+    .admin-err { color: #F85149; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .admin-camp-card {
+      background: var(--bg-alt); border: 1px solid rgba(201,162,39,0.15);
+      border-radius: 10px; padding: 14px; margin-bottom: 10px;
+    }
+    .admin-camp-card:last-child { margin-bottom: 0; }
+    .admin-camp-card-name { font-size: 16px; font-weight: 800; color: #E6EDF3; margin-bottom: 6px; }
+    .admin-camp-card-meta { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+    .admin-camp-card-meta span { font-size: 12px; color: #8B949E; }
+    .admin-camp-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-adm { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-adm-edit { background: rgba(88,166,255,0.15); color: #58A6FF; border: 1px solid rgba(88,166,255,0.3); }
+    .btn-adm-danger { background: rgba(248,81,73,0.12); color: #F85149; border: 1px solid rgba(248,81,73,0.25); }
+    .btn-adm-gold { background: rgba(201,162,39,0.15); color: #C9A227; border: 1px solid rgba(201,162,39,0.3); }
+    .admin-member-row-v2 {
+      display: flex; align-items: center; gap: 10px; padding: 10px;
+      background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 6px;
+    }
+    .admin-member-row-v2:last-child { margin-bottom: 0; }
+    .admin-member-name-v2 { flex: 1; font-size: 14px; font-weight: 700; color: #E6EDF3; }
+    .admin-member-clan-v2 { font-size: 12px; color: #8B949E; }
+    .admin-member-pts-v2 { font-size: 13px; font-weight: 700; color: #C9A227; margin-right: 4px; }
   </style>
 
   <!-- Apply saved theme before first paint to avoid flash -->
@@ -950,19 +1016,54 @@
   </div>
 
   <div class="welcome-card">
-    <h2>Your Name</h2>
-    <div class="input-group" style="margin-bottom:6px">
-      <input class="input" id="join-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
+    <!-- Phase 1: Auth -->
+    <div id="auth-section">
+      <h2 style="margin-bottom:14px">Join CardioCrew</h2>
+      <div class="auth-mode-toggle">
+        <button class="auth-mode-btn active" id="auth-tab-signup">Sign Up</button>
+        <button class="auth-mode-btn" id="auth-tab-login">Log In</button>
+      </div>
+      <!-- Sign Up form -->
+      <div class="auth-form active" id="auth-form-signup">
+        <div class="input-group">
+          <label class="input-group label">Display Name</label>
+          <input class="input" id="auth-signup-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
+        </div>
+        <div class="input-group" style="margin-bottom:6px">
+          <label class="input-group label">4-Digit PIN</label>
+          <input class="input" id="auth-signup-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 1234" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary" id="btn-auth-signup">Create Account</button>
+      </div>
+      <!-- Log In form -->
+      <div class="auth-form" id="auth-form-login">
+        <div class="input-group">
+          <label class="input-group label">Display Name</label>
+          <input class="input" id="auth-login-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
+        </div>
+        <div class="input-group" style="margin-bottom:6px">
+          <label class="input-group label">PIN</label>
+          <input class="input" id="auth-login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="****" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" id="btn-auth-login">Log In</button>
+      </div>
+      <div class="error-msg" id="auth-error"></div>
     </div>
-    <div class="error-msg" id="join-error" style="margin-bottom:10px"></div>
 
-    <h2 style="margin-top:8px;margin-bottom:10px">Active Campaigns</h2>
-    <div id="campaigns-loading" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">⏳ Loading campaigns...</div>
-    <div id="campaigns-empty" class="hidden" style="text-align:center;padding:24px 0;color:var(--text-2);font-size:13px">No active campaigns yet.<br><span style="font-size:12px;color:var(--text-3)">Create one below to get started.</span></div>
-    <div class="campaigns-list-scroll" id="campaigns-list" style="max-height:320px"></div>
-
-    <div class="divider" style="margin-top:16px">or</div>
-    <button class="btn btn-secondary" id="btn-show-create">＋ Create New Campaign</button>
+    <!-- Phase 2: Campaign selection (shown after auth) -->
+    <div class="campaigns-section" id="campaigns-section">
+      <div class="auth-greeting">
+        <div class="auth-greeting-name" id="auth-greeting-name"></div>
+        <button class="btn-logout" id="btn-logout-welcome">Log Out</button>
+      </div>
+      <h2 style="margin-bottom:10px">Active Campaigns</h2>
+      <div id="campaigns-loading" style="text-align:center;padding:18px 0;color:var(--text-2);font-size:13px">⏳ Loading campaigns...</div>
+      <div id="campaigns-empty" class="hidden" style="text-align:center;padding:24px 0;color:var(--text-2);font-size:13px">No active campaigns yet.<br><span style="font-size:12px;color:var(--text-3)">Create one below to get started.</span></div>
+      <div class="campaigns-list-scroll" id="campaigns-list" style="max-height:280px"></div>
+      <div class="error-msg" id="join-error" style="margin-top:6px"></div>
+      <div class="divider" style="margin-top:16px">or</div>
+      <button class="btn btn-secondary" id="btn-show-create">＋ Create New Campaign</button>
+    </div>
   </div>
 
   <!-- Subtle admin link -->
@@ -989,61 +1090,95 @@
 <div id="admin-panel" class="hidden">
   <div class="admin-header">
     <div class="admin-header-left">
-      <div class="admin-header-icon">⚙️</div>
+      <div class="admin-header-icon">⚔️</div>
       <div>
-        <div class="admin-header-title">CardioCrew Admin</div>
-        <div class="admin-header-sub">Campaign Management</div>
+        <div class="admin-header-title">Admin Panel</div>
+        <div class="admin-header-sub">CardioCrew Management</div>
       </div>
     </div>
-    <button class="btn-admin-close" id="btn-admin-close">✕</button>
+    <button class="btn-admin-close" id="btn-admin-close">✕ Close</button>
   </div>
+
+  <!-- Tab Strip -->
+  <div class="admin-tab-strip">
+    <button class="admin-tab-btn active" data-admin-tab="campaigns">📋 Campaigns</button>
+    <button class="admin-tab-btn" data-admin-tab="clans">🏰 Clans</button>
+    <button class="admin-tab-btn" data-admin-tab="members">👥 Members</button>
+  </div>
+
   <div class="admin-body">
 
-    <!-- All Campaigns -->
-    <div class="admin-section">
-      <div class="admin-section-header">📋 All Campaigns</div>
-      <div class="admin-section-body">
-        <div class="admin-loading" id="admin-camps-loading">⏳ Loading campaigns…</div>
-        <div class="admin-empty hidden" id="admin-camps-empty">No campaigns found.</div>
-        <div id="admin-camps-list"></div>
-      </div>
-    </div>
+    <!-- CAMPAIGNS TAB -->
+    <div id="admin-tab-campaigns" class="admin-tab-pane active">
 
-    <!-- Create Campaign -->
-    <div class="admin-section">
-      <div class="admin-section-header">➕ Create Campaign</div>
-      <div class="admin-section-body">
-        <label class="admin-input-label">Campaign Name</label>
-        <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
-        <label class="admin-input-label">Wager Amount (optional)</label>
-        <div class="admin-wager-wrap">
-          <span class="admin-wager-prefix">$</span>
-          <input class="admin-input admin-wager-input" id="admin-create-wager" type="number" min="0" placeholder="0" autocomplete="off">
+      <!-- Campaign list -->
+      <div class="admin-card">
+        <div class="admin-card-header">📋 All Campaigns</div>
+        <div class="admin-card-body">
+          <div class="admin-loading" id="admin-camps-loading">⏳ Loading campaigns…</div>
+          <div class="admin-empty hidden" id="admin-camps-empty">No campaigns found.</div>
+          <div id="admin-camps-list"></div>
         </div>
-        <button type="button" class="btn-admin-create" id="btn-admin-create-camp">Create Campaign</button>
-        <div class="admin-pw-err" id="admin-create-err" style="margin-top:8px"></div>
+      </div>
+
+      <!-- Create campaign -->
+      <div class="admin-card">
+        <div class="admin-card-header">➕ Create Campaign</div>
+        <div class="admin-card-body">
+          <label class="admin-field-label">Campaign Name</label>
+          <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
+          <label class="admin-field-label">Start Date</label>
+          <input class="admin-input" id="admin-create-startdate" type="date">
+          <label class="admin-field-label">Wager Amount (optional)</label>
+          <div class="admin-wager-wrap">
+            <span class="admin-wager-prefix">$</span>
+            <input class="admin-input admin-wager-input" id="admin-create-wager" type="number" min="0" placeholder="0" autocomplete="off">
+          </div>
+          <button type="button" class="btn-admin-create" id="btn-admin-create-camp" style="margin-top:14px">Create Campaign</button>
+          <div class="admin-err" id="admin-create-err"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Manage Clans -->
-    <div class="admin-section">
-      <div class="admin-section-header">🏰 Manage Clans</div>
-      <div class="admin-section-body">
-        <label class="admin-input-label">Campaign</label>
-        <select class="admin-input" id="admin-clan-camp-select" style="padding:10px 12px;cursor:pointer">
-          <option value="">— Select a campaign —</option>
-        </select>
-        <div id="admin-clan-panel" class="hidden" style="margin-top:12px">
-          <div id="admin-clan-list" style="margin-bottom:14px"></div>
-          <div style="border-top:1px solid var(--border);padding-top:12px">
-            <label class="admin-input-label" style="margin-bottom:6px;display:block">➕ Add New Clan</label>
-            <input class="admin-input" id="admin-clan-name-inp" placeholder="Clan name (e.g. Clan MacDonald)" maxlength="30" style="margin-bottom:8px">
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <input class="admin-input" id="admin-clan-crest-inp" placeholder="Crest 🏰" maxlength="4" style="width:80px;text-align:center;font-size:20px">
-              <select class="admin-input" id="admin-clan-tartan-sel" style="flex:1;padding:10px 8px;cursor:pointer"></select>
+    <!-- CLANS TAB -->
+    <div id="admin-tab-clans" class="admin-tab-pane">
+      <div class="admin-card">
+        <div class="admin-card-header">🏰 Manage Clans</div>
+        <div class="admin-card-body">
+          <label class="admin-field-label">Campaign</label>
+          <select class="admin-input" id="admin-clan-camp-select" style="padding:10px 12px;cursor:pointer">
+            <option value="">— Select a campaign —</option>
+          </select>
+          <div id="admin-clan-panel" class="hidden" style="margin-top:14px">
+            <div id="admin-clan-list" style="margin-bottom:14px"></div>
+            <div style="border-top:1px solid rgba(201,162,39,0.2);padding-top:14px">
+              <div class="admin-card-header" style="margin:-14px -16px 14px;padding:12px 16px">➕ Add New Clan</div>
+              <label class="admin-field-label">Clan Name</label>
+              <input class="admin-input" id="admin-clan-name-inp" placeholder="e.g. Clan MacDonald" maxlength="30" style="margin-bottom:10px">
+              <label class="admin-field-label">Crest Emoji</label>
+              <input class="admin-input" id="admin-clan-crest-inp" placeholder="🏰" maxlength="4" style="width:80px;text-align:center;font-size:20px;margin-bottom:10px">
+              <label class="admin-field-label">Tartan</label>
+              <select class="admin-input" id="admin-clan-tartan-sel" style="padding:10px 12px;cursor:pointer;margin-bottom:10px"></select>
+              <button type="button" class="btn-admin-create" id="btn-admin-add-clan">Add Clan ⚔️</button>
+              <div class="admin-err" id="admin-clan-err"></div>
             </div>
-            <button type="button" class="btn-admin-create" id="btn-admin-add-clan" style="margin-bottom:4px">Add Clan ⚔️</button>
-            <div class="admin-pw-err" id="admin-clan-err"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMBERS TAB -->
+    <div id="admin-tab-members" class="admin-tab-pane">
+      <div class="admin-card">
+        <div class="admin-card-header">👥 Campaign Members</div>
+        <div class="admin-card-body">
+          <label class="admin-field-label">Campaign</label>
+          <select class="admin-input" id="admin-members-camp-select" style="padding:10px 12px;cursor:pointer">
+            <option value="">— Select a campaign —</option>
+          </select>
+          <div id="admin-members-panel" class="hidden" style="margin-top:16px">
+            <div id="admin-members-loading" class="admin-loading hidden">⏳ Loading members…</div>
+            <div id="admin-members-list"></div>
           </div>
         </div>
       </div>
@@ -1440,7 +1575,7 @@
   ];
 
   // ─── State ────────────────────────────────────────────
-  let state = { userId:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
+  let state = { userId:null, userName:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
   let viewDay = null; // null = use current campaign day
 
   // ─── Utilities ────────────────────────────────────────
@@ -1474,11 +1609,23 @@
     ['screen-loading','screen-welcome','screen-create','screen-clan','screen-app','screen-warrior'].forEach(s=>
       document.getElementById(s).classList.toggle('hidden',s!==id));
     if (id === 'screen-welcome' && typeof showInstallBanner === 'function') showInstallBanner();
-    if (id === 'screen-welcome') startCampaignsBrowser();
+    if (id === 'screen-welcome') {
+      startCampaignsBrowser();
+      if (state.userId) {
+        document.getElementById('auth-section').classList.add('hidden');
+        const cs = document.getElementById('campaigns-section');
+        cs.classList.add('visible');
+        const gEl = document.getElementById('auth-greeting-name');
+        if (gEl) gEl.textContent = `Hi, ${state.userName || 'Warrior'} 👋`;
+      } else {
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('campaigns-section').classList.remove('visible');
+      }
+    }
   }
 
   // ─── LocalStorage ─────────────────────────────────────
-  const saveLocal = () => localStorage.setItem('cc_user',JSON.stringify({userId:state.userId,campaignId:state.campaignId}));
+  const saveLocal = () => localStorage.setItem('cc_user',JSON.stringify({userId:state.userId,userName:state.userName,campaignId:state.campaignId}));
   const loadLocal = () => { try{ return JSON.parse(localStorage.getItem('cc_user')||'null'); }catch{return null;} };
 
   // ─── Avatar picker ────────────────────────────────────
@@ -1651,7 +1798,8 @@
 
   // ─── Firebase operations ──────────────────────────────
   async function createCampaign(cName, yourName, startDate, wagerAmount) {
-    const campaignId=genId(6), userId=genId(8);
+    const campaignId=genId(6);
+    const userId = state.userId || genId(8);
     await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
     // Creator auto-opts in to their own wager
     await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn: (wagerAmount||0)>0 });
@@ -2327,18 +2475,14 @@
           e.stopPropagation();
           const campaignId = btn.dataset.campaignId;
           const campaignData = _campaignDataMap[campaignId] || {};
-          const name = document.getElementById('join-name').value.trim();
+          const name = state.userName || '';
           const err = document.getElementById('join-error');
-          if (!name) {
-            err.textContent = 'Enter your name first';
-            document.getElementById('join-name').focus();
-            return;
-          }
+          if (!name) { err.textContent = 'Please log in first'; return; }
           err.textContent = '';
           btn.textContent = '…';
           btn.disabled = true;
           try {
-            const userId = genId(8);
+            const userId = state.userId || genId(8);
             const wager = campaignData.wagerAmount || 0;
             let wagerOptIn = false;
             if (wager > 0) {
@@ -2361,8 +2505,105 @@
   }
 
   // ─── Welcome screen ───────────────────────────────────
-  document.getElementById('btn-show-create').addEventListener('click',()=>{ showScreen('screen-create'); document.getElementById('create-start-date').value=new Date().toISOString().slice(0,10); });
+  document.getElementById('btn-show-create').addEventListener('click',()=>{
+    showScreen('screen-create');
+    document.getElementById('create-start-date').value=new Date().toISOString().slice(0,10);
+    if(state.userName) document.getElementById('create-your-name').value=state.userName;
+  });
   document.getElementById('btn-back-to-join').addEventListener('click',()=>showScreen('screen-welcome'));
+
+  // ─── Auth (Sign Up / Log In) ─────────────────────────
+  // Tab toggle
+  document.getElementById('auth-tab-signup').addEventListener('click', () => {
+    document.getElementById('auth-tab-signup').classList.add('active');
+    document.getElementById('auth-tab-login').classList.remove('active');
+    document.getElementById('auth-form-signup').classList.add('active');
+    document.getElementById('auth-form-login').classList.remove('active');
+    document.getElementById('auth-error').textContent = '';
+  });
+  document.getElementById('auth-tab-login').addEventListener('click', () => {
+    document.getElementById('auth-tab-login').classList.add('active');
+    document.getElementById('auth-tab-signup').classList.remove('active');
+    document.getElementById('auth-form-login').classList.add('active');
+    document.getElementById('auth-form-signup').classList.remove('active');
+    document.getElementById('auth-error').textContent = '';
+  });
+
+  // Shared helper to show campaigns section after auth
+  function enterCampaignsView() {
+    document.getElementById('auth-section').classList.add('hidden');
+    const cs = document.getElementById('campaigns-section');
+    cs.classList.add('visible');
+    const gEl = document.getElementById('auth-greeting-name');
+    if (gEl) gEl.textContent = `Hi, ${state.userName} 👋`;
+  }
+
+  // Sign Up
+  document.getElementById('btn-auth-signup').addEventListener('click', async () => {
+    const nameEl = document.getElementById('auth-signup-name');
+    const pinEl  = document.getElementById('auth-signup-pin');
+    const errEl  = document.getElementById('auth-error');
+    const name   = nameEl.value.trim();
+    const pin    = pinEl.value.trim();
+    errEl.textContent = '';
+    if (!name) { errEl.textContent = 'Enter a display name'; nameEl.focus(); return; }
+    if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN must be exactly 4 digits'; pinEl.focus(); return; }
+    const btn = document.getElementById('btn-auth-signup');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      // Check uniqueness (case-insensitive via nameLower field)
+      const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
+      const snap = await getDocs(q);
+      if (!snap.empty) { errEl.textContent = 'Name already taken — try another or log in'; nameEl.focus(); return; }
+      // Create user doc
+      const userRef = doc(collection(db, 'users'));
+      await setDoc(userRef, { name, nameLower: name.toLowerCase(), pinHash: btoa(pin), createdAt: serverTimestamp() });
+      state.userId = userRef.id;
+      state.userName = name;
+      saveLocal();
+      enterCampaignsView();
+    } catch(e2) { errEl.textContent = e2.message; }
+    finally { btn.textContent = 'Create Account'; btn.disabled = false; }
+  });
+
+  // Log In
+  document.getElementById('btn-auth-login').addEventListener('click', async () => {
+    const nameEl = document.getElementById('auth-login-name');
+    const pinEl  = document.getElementById('auth-login-pin');
+    const errEl  = document.getElementById('auth-error');
+    const name   = nameEl.value.trim();
+    const pin    = pinEl.value.trim();
+    errEl.textContent = '';
+    if (!name) { errEl.textContent = 'Enter your display name'; nameEl.focus(); return; }
+    if (!pin) { errEl.textContent = 'Enter your PIN'; pinEl.focus(); return; }
+    const btn = document.getElementById('btn-auth-login');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
+      const snap = await getDocs(q);
+      if (snap.empty) { errEl.textContent = 'Name not found — did you mean to Sign Up?'; nameEl.focus(); return; }
+      const userDoc = snap.docs[0];
+      if (btoa(pin) !== userDoc.data().pinHash) { errEl.textContent = 'Incorrect PIN'; pinEl.value = ''; pinEl.focus(); return; }
+      state.userId = userDoc.id;
+      state.userName = userDoc.data().name;
+      saveLocal();
+      enterCampaignsView();
+    } catch(e2) { errEl.textContent = e2.message; }
+    finally { btn.textContent = 'Log In'; btn.disabled = false; }
+  });
+
+  // Log Out (welcome screen)
+  document.getElementById('btn-logout-welcome').addEventListener('click', () => {
+    state.userId = null; state.userName = null; state.campaignId = null;
+    localStorage.removeItem('cc_user');
+    document.getElementById('campaigns-section').classList.remove('visible');
+    document.getElementById('auth-section').classList.remove('hidden');
+    document.getElementById('auth-error').textContent = '';
+    document.getElementById('auth-signup-name').value = '';
+    document.getElementById('auth-signup-pin').value = '';
+    document.getElementById('auth-login-name').value = '';
+    document.getElementById('auth-login-pin').value = '';
+  });
 
   // Wager selector toggle
   let selectedWager=0;
@@ -2410,8 +2651,8 @@
   document.getElementById('btn-leave').addEventListener('click',()=>{
     if(!confirm('Leave this campaign? Your progress will be lost.')) return;
     state.unsubscribers.forEach(u=>u());
-    state.userId=null; state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
-    localStorage.removeItem('cc_user');
+    state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
+    saveLocal();
     showScreen('screen-welcome');
   });
 
@@ -4163,21 +4404,24 @@
 
   async function init() {
     const saved=loadLocal();
-    if(saved?.userId&&saved?.campaignId){ state.userId=saved.userId; state.campaignId=saved.campaignId; await startApp(); }
-    else showScreen('screen-welcome');
+    if(saved?.userId&&saved?.campaignId){
+      state.userId=saved.userId; state.userName=saved.userName||null; state.campaignId=saved.campaignId;
+      await startApp();
+    } else if(saved?.userId){
+      state.userId=saved.userId; state.userName=saved.userName||null;
+      showScreen('screen-welcome');
+    } else showScreen('screen-welcome');
   }
 
   init();
 
   // ─── Admin Panel ──────────────────────────────────────
   (function() {
-    // Password: btoa("highland2024") = "aGlnaGxhbmQyMDI0"
     const ADMIN_HASH = btoa('highland2024');
 
     function isUnlocked() { return sessionStorage.getItem('cardioAdminUnlocked') === 'true'; }
     function setUnlocked() { sessionStorage.setItem('cardioAdminUnlocked', 'true'); }
 
-    // ── Helper: open panel or show password modal ──
     function openAdminOrPrompt() {
       if (isUnlocked()) { openAdminPanel(); return; }
       const modal = document.getElementById('admin-pw-modal');
@@ -4188,18 +4432,13 @@
       setTimeout(() => inp.focus(), 80);
     }
 
-    // ── Password modal — welcome screen button ──
     document.getElementById('btn-open-admin').addEventListener('click', openAdminOrPrompt);
-
-    // ── Password modal — Profile tab button ──
     document.getElementById('btn-profile-admin').addEventListener('click', openAdminOrPrompt);
 
     function closePasswordModal() {
       document.getElementById('admin-pw-modal').classList.add('hidden');
     }
-
     document.getElementById('btn-admin-pw-cancel').addEventListener('click', closePasswordModal);
-
     document.getElementById('admin-pw-modal').addEventListener('click', e => {
       if (e.target === document.getElementById('admin-pw-modal')) closePasswordModal();
     });
@@ -4214,23 +4453,35 @@
       } else {
         document.getElementById('admin-pw-err').textContent = 'Incorrect password';
         inp.classList.remove('shake');
-        void inp.offsetWidth; // reflow to restart animation
+        void inp.offsetWidth;
         inp.classList.add('shake');
         setTimeout(() => inp.classList.remove('shake'), 450);
         inp.select();
       }
     }
-
     document.getElementById('btn-admin-pw-unlock').addEventListener('click', attemptUnlock);
     document.getElementById('admin-pw-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') attemptUnlock();
     });
 
+    // ── Tab switching ──
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.adminTab;
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.toggle('active', p.id === `admin-tab-${tab}`));
+        if (tab === 'clans') populateAdminClanCampSelect();
+        if (tab === 'members') populateAdminMembersCampSelect();
+      });
+    });
+
     // ── Admin panel open/close ──
     function openAdminPanel() {
       document.getElementById('admin-panel').classList.remove('hidden');
+      // Reset to campaigns tab
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.adminTab === 'campaigns'));
+      document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.toggle('active', p.id === 'admin-tab-campaigns'));
       loadAdminCampaigns();
-      populateAdminClanCampSelect();
       // Populate tartan select in clan form
       const tartanSel = document.getElementById('admin-clan-tartan-sel');
       if (tartanSel && !tartanSel.options.length) {
@@ -4241,112 +4492,16 @@
           tartanSel.appendChild(opt);
         });
       }
-      // Reveal admin badge in Profile if it's rendered
       const badge = document.getElementById('profile-admin-badge');
       if (badge) badge.style.display = 'inline-flex';
     }
 
-    async function populateAdminClanCampSelect() {
-      const sel = document.getElementById('admin-clan-camp-select');
-      if (!sel) return;
-      // Keep first placeholder option
-      while (sel.options.length > 1) sel.remove(1);
-      try {
-        const snap = await getDocs(query(collection(db, 'campaigns'), orderBy('createdAt', 'desc')));
-        snap.docs.forEach(cdoc => {
-          const opt = document.createElement('option');
-          opt.value = cdoc.id;
-          opt.textContent = cdoc.data().name || cdoc.id;
-          sel.appendChild(opt);
-        });
-      } catch(e) { /* ignore */ }
-    }
-
-    document.getElementById('admin-clan-camp-select').addEventListener('change', async (e) => {
-      const campId = e.target.value;
-      const panel = document.getElementById('admin-clan-panel');
-      if (!campId) { panel.classList.add('hidden'); return; }
-      panel.classList.remove('hidden');
-      await loadAdminClans(campId);
-    });
-
-    async function loadAdminClans(campId) {
-      const listEl = document.getElementById('admin-clan-list');
-      listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">⏳ Loading clans…</div>';
-      try {
-        const snap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
-        if (snap.empty) {
-          listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">No clans yet — add one below.</div>';
-          return;
-        }
-        listEl.innerHTML = '';
-        snap.docs.forEach(cdoc => {
-          const clan = cdoc.data();
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border-radius:8px;margin-bottom:6px';
-          row.innerHTML = `
-            <span style="font-size:20px">${clan.crest || '🏰'}</span>
-            <span style="flex:1;font-size:14px;font-weight:700;color:var(--text-1)">${escHtml(clan.name || 'Unnamed')}</span>
-            <span style="font-size:11px;color:var(--text-2)">${clan.adminCreated ? 'Custom' : 'Preset'}</span>
-            <button type="button" style="background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.3);color:#F85149;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer" data-delete-clan="${cdoc.id}" data-camp-id="${campId}">🗑️</button>`;
-          row.querySelector('[data-delete-clan]').addEventListener('click', async (ev) => {
-            const cId = ev.currentTarget.dataset.deleteClan;
-            const cCamp = ev.currentTarget.dataset.campId;
-            if (!confirm(`Delete clan "${clan.name}"?`)) return;
-            ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
-            try {
-              await deleteDoc(doc(db, 'campaigns', cCamp, 'clans', cId));
-              row.remove();
-              toast('🗑️ Clan deleted');
-            } catch(err) {
-              toast('Error: ' + err.message, 3500);
-              ev.currentTarget.textContent = '🗑️'; ev.currentTarget.disabled = false;
-            }
-          });
-          listEl.appendChild(row);
-        });
-      } catch(e) {
-        listEl.innerHTML = `<div style="color:#F85149;font-size:13px">Error: ${escHtml(e.message)}</div>`;
-      }
-    }
-
-    document.getElementById('btn-admin-add-clan').addEventListener('click', async () => {
-      const campId = document.getElementById('admin-clan-camp-select').value;
-      const nameInp = document.getElementById('admin-clan-name-inp');
-      const crestInp = document.getElementById('admin-clan-crest-inp');
-      const tartanSel = document.getElementById('admin-clan-tartan-sel');
-      const errEl = document.getElementById('admin-clan-err');
-      const name = nameInp.value.trim();
-      const crest = crestInp.value.trim() || '🏰';
-      const tartanId = tartanSel.value || 'highland';
-      errEl.textContent = '';
-      if (!campId) { errEl.textContent = 'Select a campaign first.'; return; }
-      if (!name) { errEl.textContent = 'Enter a clan name.'; nameInp.focus(); return; }
-      const btn = document.getElementById('btn-admin-add-clan');
-      btn.textContent = 'Adding…'; btn.disabled = true;
-      try {
-        const clanId = genId(8);
-        await setDoc(doc(db, 'campaigns', campId, 'clans', clanId), {
-          name, crest, tartanId,
-          adminCreated: true,
-          createdAt: serverTimestamp(),
-        });
-        nameInp.value = ''; crestInp.value = '';
-        toast(`✅ Clan "${name}" added!`);
-        await loadAdminClans(campId);
-      } catch(err) {
-        errEl.textContent = 'Error: ' + err.message;
-      }
-      btn.textContent = 'Add Clan ⚔️'; btn.disabled = false;
-    });
-
     function closeAdminPanel() {
       document.getElementById('admin-panel').classList.add('hidden');
     }
-
     document.getElementById('btn-admin-close').addEventListener('click', closeAdminPanel);
 
-    // ── Helper: calculate total points for a member across all days ──
+    // ── Campaign helpers ──
     function calcMemberPoints(memberData, startDate) {
       if (!startDate || !memberData?.completions) return 0;
       const dayNum = Math.max(1, Math.min(
@@ -4364,7 +4519,17 @@
       return total;
     }
 
-    // ── Load all campaigns into admin list ──
+    function daysRemaining(startDateStr) {
+      if (!startDateStr) return '—';
+      const start = new Date(startDateStr + 'T00:00:00');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const dayNum = Math.floor((today - start) / 86400000) + 1;
+      const rem = 30 - dayNum;
+      if (rem <= 0) return 'Finished';
+      return `${rem} day${rem !== 1 ? 's' : ''} left`;
+    }
+
+    // ── Load campaigns ──
     async function loadAdminCampaigns() {
       const loadingEl = document.getElementById('admin-camps-loading');
       const emptyEl   = document.getElementById('admin-camps-empty');
@@ -4384,153 +4549,122 @@
             const ms = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
             memberCount = ms.size;
           } catch(e) { memberCount = '?'; }
-          const createdAt = data.createdAt?.toDate?.() || null;
-          const dateStr = createdAt ? createdAt.toLocaleDateString('en-AU') : '—';
-          // startDate stored as a plain string e.g. '2024-01-15'
           const startDateStr = data.startDate || null;
           const startDateDisplay = startDateStr
             ? new Date(startDateStr + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
             : '—';
-          return { id: cdoc.id, data, memberCount, dateStr, startDateStr, startDateDisplay };
+          return { id: cdoc.id, data, memberCount, startDateStr, startDateDisplay };
         }));
 
-        renderAdminCampaignList(items);
+        listEl.innerHTML = '';
+        items.forEach(({ id, data, memberCount, startDateStr, startDateDisplay }) => {
+          const wagerLabel = data.wagerAmount > 0 ? `💰 $${data.wagerAmount}/person` : 'No wager';
+          const rem = daysRemaining(startDateStr);
+          const card = document.createElement('div');
+          card.className = 'admin-camp-card';
+          card.dataset.campId = id;
+          card.innerHTML = `
+            <div class="admin-camp-card-name" id="adm-cname-${escHtml(id)}">${escHtml(data.name || 'Unnamed')}</div>
+            <div class="admin-camp-card-meta">
+              <span>📅 Started: ${startDateDisplay}</span>
+              <span>👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
+              <span>⏳ ${rem}</span>
+              <span>${wagerLabel}</span>
+            </div>
+            <div class="admin-camp-card-actions">
+              <button class="btn-adm btn-adm-edit" data-action="edit" data-camp-id="${escHtml(id)}">✏️ Edit</button>
+              <button class="btn-adm btn-adm-danger" data-action="delete" data-camp-id="${escHtml(id)}">🗑️ Delete</button>
+            </div>
+            <div id="adm-edit-${escHtml(id)}" class="admin-edit-form hidden" style="margin-top:12px">
+              <div class="admin-edit-field">
+                <label class="admin-edit-label">Campaign Name</label>
+                <input class="admin-edit-input" id="adm-en-${escHtml(id)}" value="${escHtml(data.name||'')}" maxlength="60" placeholder="Campaign name">
+              </div>
+              <div class="admin-edit-field">
+                <label class="admin-edit-label">Start Date</label>
+                <input class="admin-edit-input" type="date" id="adm-ed-${escHtml(id)}" value="${escHtml(startDateStr||'')}">
+              </div>
+              <div class="admin-edit-field">
+                <label class="admin-edit-label">Wager Amount (per person)</label>
+                <div class="admin-wager-wrap">
+                  <span class="admin-wager-prefix">$</span>
+                  <input class="admin-edit-input" type="number" min="0" step="1" id="adm-ew-${escHtml(id)}" value="${escHtml(String(data.wagerAmount||0))}" placeholder="0">
+                </div>
+              </div>
+              <div class="admin-edit-actions">
+                <button class="btn-edit-save" data-action="edit-save" data-camp-id="${escHtml(id)}">💾 Save Changes</button>
+                <button class="btn-edit-cancel" data-action="edit-cancel" data-camp-id="${escHtml(id)}">Cancel</button>
+              </div>
+            </div>`;
+          listEl.appendChild(card);
+        });
+
+        // Event delegation
+        listEl.addEventListener('click', async e => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          const action = btn.dataset.action;
+          const campId = btn.dataset.campId;
+
+          if (action === 'edit') {
+            const form = document.getElementById(`adm-edit-${campId}`);
+            if (!form) return;
+            const isHidden = form.classList.contains('hidden');
+            listEl.querySelectorAll('.admin-edit-form').forEach(f => f.classList.add('hidden'));
+            if (isHidden) { form.classList.remove('hidden'); document.getElementById(`adm-en-${campId}`)?.focus(); }
+
+          } else if (action === 'edit-cancel') {
+            document.getElementById(`adm-edit-${campId}`)?.classList.add('hidden');
+
+          } else if (action === 'edit-save') {
+            const nameInp  = document.getElementById(`adm-en-${campId}`);
+            const dateInp  = document.getElementById(`adm-ed-${campId}`);
+            const wagerInp = document.getElementById(`adm-ew-${campId}`);
+            const newName  = nameInp?.value?.trim();
+            const newDate  = dateInp?.value;
+            const newWager = parseFloat(wagerInp?.value) || 0;
+            if (!newName) { nameInp.style.borderColor = '#F85149'; nameInp.focus(); return; }
+            if (!newDate) { dateInp.style.borderColor = '#F85149'; dateInp.focus(); return; }
+            btn.textContent = '…'; btn.disabled = true;
+            try {
+              await updateDoc(doc(db, 'campaigns', campId), { name: newName, startDate: newDate, wagerAmount: newWager });
+              const nameEl = document.getElementById(`adm-cname-${campId}`);
+              if (nameEl) nameEl.textContent = newName;
+              document.getElementById(`adm-edit-${campId}`)?.classList.add('hidden');
+              toast('✅ Campaign updated');
+            } catch(err) { toast('Error: ' + err.message, 3500); }
+            btn.textContent = '💾 Save Changes'; btn.disabled = false;
+
+          } else if (action === 'delete') {
+            const card = btn.closest('.admin-camp-card');
+            const campName = document.getElementById(`adm-cname-${campId}`)?.textContent || 'this campaign';
+            if (!confirm(`Delete "${campName}"? This cannot be undone.`)) return;
+            btn.textContent = '…'; btn.disabled = true;
+            try {
+              await deleteCampaign(campId);
+              card?.remove();
+              toast('🗑️ Campaign deleted');
+            } catch(err) {
+              toast('Error: ' + err.message, 3500);
+              btn.textContent = '🗑️ Delete'; btn.disabled = false;
+            }
+          }
+        });
+
       } catch(e) {
         loadingEl.classList.add('hidden');
         listEl.innerHTML = `<div class="admin-empty">Error: ${escHtml(e.message)}</div>`;
       }
     }
 
-    function renderAdminCampaignList(items) {
-      const listEl = document.getElementById('admin-camps-list');
-      if (!items.length) {
-        document.getElementById('admin-camps-empty').classList.remove('hidden');
-        return;
-      }
-      listEl.innerHTML = items.map(({ id, data, memberCount, dateStr, startDateStr, startDateDisplay }) => {
-        const wager = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}` : '';
-        const startLabel = startDateDisplay !== '—' ? `📅 Started: ${startDateDisplay} · ` : '';
-        const startDateInputVal = startDateStr || '';
-        return `
-        <div class="admin-camp-row" data-camp-id="${escHtml(id)}">
-          <div class="admin-camp-main">
-            <div style="flex:1;min-width:0">
-              <div class="admin-camp-name" id="admin-camp-name-${escHtml(id)}">${escHtml(data.name || 'Unnamed')}</div>
-              <div class="admin-camp-meta" id="admin-camp-meta-${escHtml(id)}">${startLabel}👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wager} · 🗓️ Created ${dateStr}</div>
-            </div>
-            <div class="admin-camp-actions">
-              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">👥</button>
-              <button class="btn-camp-action" data-action="edit" data-camp-id="${escHtml(id)}">✏️ Edit</button>
-              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">🗑️</button>
-            </div>
-          </div>
-          <div id="admin-edit-form-${escHtml(id)}" class="admin-edit-form hidden">
-            <div class="admin-edit-field">
-              <label class="admin-edit-label">Campaign Name</label>
-              <input class="admin-edit-input" id="admin-edit-name-${escHtml(id)}" value="${escHtml(data.name||'')}" maxlength="60" placeholder="Campaign name">
-            </div>
-            <div class="admin-edit-field">
-              <label class="admin-edit-label">Start Date <span style="color:#8B949E;font-weight:400;text-transform:none;font-size:10px">(Day 1 of 30 for all members)</span></label>
-              <input class="admin-edit-input" type="date" id="admin-edit-startdate-${escHtml(id)}" value="${escHtml(startDateInputVal)}">
-            </div>
-            <div class="admin-edit-field">
-              <label class="admin-edit-label">Wager Amount (per person)</label>
-              <div class="admin-wager-wrap">
-                <span class="admin-wager-prefix">$</span>
-                <input class="admin-edit-input" type="number" min="0" step="1" id="admin-edit-wager-${escHtml(id)}" value="${escHtml(String(data.wagerAmount||0))}" placeholder="0">
-              </div>
-            </div>
-            <div class="admin-edit-actions">
-              <button class="btn-edit-save" data-action="edit-save" data-camp-id="${escHtml(id)}">💾 Save Changes</button>
-              <button class="btn-edit-cancel" data-action="edit-cancel" data-camp-id="${escHtml(id)}">Cancel</button>
-            </div>
-          </div>
-          <div id="admin-members-${escHtml(id)}" class="admin-members-list hidden"></div>
-        </div>`;
-      }).join('');
-
-      // Event delegation
-      listEl.addEventListener('click', async e => {
-        const btn = e.target.closest('[data-action]');
-        if (!btn) return;
-        const action = btn.dataset.action;
-        const campId = btn.dataset.campId;
-
-        if (action === 'edit') {
-          const form = document.getElementById(`admin-edit-form-${campId}`);
-          if (!form) return;
-          const isHidden = form.classList.contains('hidden');
-          // Close any other open edit forms first
-          listEl.querySelectorAll('.admin-edit-form').forEach(f => f.classList.add('hidden'));
-          if (isHidden) {
-            form.classList.remove('hidden');
-            document.getElementById(`admin-edit-name-${campId}`)?.focus();
-          }
-
-        } else if (action === 'edit-cancel') {
-          document.getElementById(`admin-edit-form-${campId}`)?.classList.add('hidden');
-
-        } else if (action === 'edit-save') {
-          const nameInp  = document.getElementById(`admin-edit-name-${campId}`);
-          const dateInp  = document.getElementById(`admin-edit-startdate-${campId}`);
-          const wagerInp = document.getElementById(`admin-edit-wager-${campId}`);
-          const newName  = nameInp?.value?.trim();
-          const newDate  = dateInp?.value;   // "YYYY-MM-DD" string
-          const newWager = parseFloat(wagerInp?.value) || 0;
-          if (!newName) { nameInp.style.borderColor = '#F85149'; nameInp.focus(); return; }
-          if (!newDate) { dateInp.style.borderColor = '#F85149'; dateInp.focus(); return; }
-          const saveBtn = btn;
-          saveBtn.textContent = '\u2026'; saveBtn.disabled = true;
-          try {
-            await updateDoc(doc(db, 'campaigns', campId), {
-              name: newName,
-              startDate: newDate,
-              wagerAmount: newWager,
-            });
-            // Refresh display name
-            const nameEl = document.getElementById(`admin-camp-name-${campId}`);
-            if (nameEl) nameEl.textContent = newName;
-            // Refresh meta line
-            const metaEl = document.getElementById(`admin-camp-meta-${campId}`);
-            if (metaEl) {
-              const sd = new Date(newDate + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-              const wagerPart = newWager > 0 ? ` · 💰 $${newWager}` : '';
-              const membersMatch = metaEl.textContent.match(/👥\s*(\d+\+?\s*members?)/);
-              const membersPart = membersMatch ? membersMatch[0] : '👥 ? members';
-              const createdMatch = metaEl.textContent.match(/Created .+/);
-              const createdPart = createdMatch ? createdMatch[0] : '';
-              metaEl.textContent = `📅 Started: ${sd} · ${membersPart}${wagerPart}${createdPart ? ' · 🗓️ ' + createdPart : ''}`;
-            }
-            document.getElementById(`admin-edit-form-${campId}`)?.classList.add('hidden');
-            toast('✅ Campaign updated');
-          } catch(err) {
-            toast('Error: ' + err.message, 3500);
-          }
-          saveBtn.textContent = '💾 Save Changes'; saveBtn.disabled = false;
-
-        } else if (action === 'delete') {
-          const rowEl = btn.closest('.admin-camp-row');
-          const campName = document.getElementById(`admin-camp-name-${campId}`)?.textContent || 'this campaign';
-          if (!confirm(`Delete "${campName}"? This cannot be undone.`)) return;
-          btn.textContent = '…'; btn.disabled = true;
-          try {
-            await deleteCampaign(campId);
-            rowEl?.remove();
-            toast('🗑️ Campaign deleted');
-          } catch(err) {
-            toast('Error: ' + err.message, 3500);
-            btn.textContent = '🗑️'; btn.disabled = false;
-          }
-        }
-      }); // end event delegation
-    } // end renderAdminCampaignList
-
-    // ── Admin create campaign ──
+    // ── Create campaign ──
     document.getElementById('btn-admin-create-camp').addEventListener('click', async () => {
       const nameInp  = document.getElementById('admin-create-name');
+      const dateInp  = document.getElementById('admin-create-startdate');
       const wagerInp = document.getElementById('admin-create-wager');
       const errEl    = document.getElementById('admin-create-err');
       const name     = nameInp.value.trim();
+      const startDate = dateInp?.value || '';
       const wager    = parseFloat(wagerInp.value) || 0;
 
       errEl.textContent = '';
@@ -4539,22 +4673,184 @@
       const btn = document.getElementById('btn-admin-create-camp');
       btn.textContent = 'Creating…'; btn.disabled = true;
       try {
-        const newRef = await addDoc(collection(db, 'campaigns'), {
-          name,
-          wagerAmount: wager || 0,
-          createdAt: serverTimestamp(),
-          createdBy: 'admin',
+        await addDoc(collection(db, 'campaigns'), {
+          name, wagerAmount: wager || 0,
+          startDate: startDate || null,
+          createdAt: serverTimestamp(), createdBy: 'admin',
         });
-        nameInp.value = '';
-        wagerInp.value = '';
+        nameInp.value = ''; if(dateInp) dateInp.value = ''; wagerInp.value = '';
         toast(`✅ Campaign "${name}" created!`);
-        // Refresh list
         await loadAdminCampaigns();
-      } catch(err) {
-        errEl.textContent = 'Error: ' + err.message;
-      }
+      } catch(err) { errEl.textContent = 'Error: ' + err.message; }
       btn.textContent = 'Create Campaign'; btn.disabled = false;
     });
+
+    // ── Clans ──
+    async function populateAdminClanCampSelect() {
+      const sel = document.getElementById('admin-clan-camp-select');
+      if (!sel) return;
+      while (sel.options.length > 1) sel.remove(1);
+      try {
+        const snap = await getDocs(query(collection(db, 'campaigns'), orderBy('createdAt', 'desc')));
+        snap.docs.forEach(cdoc => {
+          const opt = document.createElement('option');
+          opt.value = cdoc.id;
+          opt.textContent = cdoc.data().name || cdoc.id;
+          sel.appendChild(opt);
+        });
+      } catch(e) {}
+    }
+
+    document.getElementById('admin-clan-camp-select').addEventListener('change', async (e) => {
+      const campId = e.target.value;
+      const panel = document.getElementById('admin-clan-panel');
+      if (!campId) { panel.classList.add('hidden'); return; }
+      panel.classList.remove('hidden');
+      await loadAdminClans(campId);
+    });
+
+    async function loadAdminClans(campId) {
+      const listEl = document.getElementById('admin-clan-list');
+      listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">⏳ Loading clans…</div>';
+      try {
+        const snap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
+        if (snap.empty) {
+          listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px;padding:8px 0">No clans yet — add one below.</div>';
+          return;
+        }
+        listEl.innerHTML = '';
+        snap.docs.forEach(cdoc => {
+          const clan = cdoc.data();
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;margin-bottom:8px';
+          row.innerHTML = `
+            <span style="font-size:22px">${clan.crest || '🏰'}</span>
+            <span style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${escHtml(clan.name || 'Unnamed')}</span>
+            <button type="button" class="btn-adm btn-adm-danger" data-delete-clan="${cdoc.id}" data-camp-id="${campId}" style="font-size:12px;padding:6px 10px">🗑️ Remove</button>`;
+          row.querySelector('[data-delete-clan]').addEventListener('click', async (ev) => {
+            const cId = ev.currentTarget.dataset.deleteClan;
+            const cCamp = ev.currentTarget.dataset.campId;
+            if (!confirm(`Delete clan "${clan.name}"?`)) return;
+            ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
+            try {
+              await deleteDoc(doc(db, 'campaigns', cCamp, 'clans', cId));
+              row.remove();
+              toast('🗑️ Clan deleted');
+            } catch(err) {
+              toast('Error: ' + err.message, 3500);
+              ev.currentTarget.textContent = '🗑️ Remove'; ev.currentTarget.disabled = false;
+            }
+          });
+          listEl.appendChild(row);
+        });
+      } catch(e) {
+        listEl.innerHTML = `<div style="color:#F85149;font-size:13px">Error: ${escHtml(e.message)}</div>`;
+      }
+    }
+
+    document.getElementById('btn-admin-add-clan').addEventListener('click', async () => {
+      const campId   = document.getElementById('admin-clan-camp-select').value;
+      const nameInp  = document.getElementById('admin-clan-name-inp');
+      const crestInp = document.getElementById('admin-clan-crest-inp');
+      const tartanSel = document.getElementById('admin-clan-tartan-sel');
+      const errEl    = document.getElementById('admin-clan-err');
+      const name     = nameInp.value.trim();
+      const crest    = crestInp.value.trim() || '🏰';
+      const tartanId = tartanSel.value || 'highland';
+      errEl.textContent = '';
+      if (!campId) { errEl.textContent = 'Select a campaign first.'; return; }
+      if (!name) { errEl.textContent = 'Enter a clan name.'; nameInp.focus(); return; }
+      const btn = document.getElementById('btn-admin-add-clan');
+      btn.textContent = 'Adding…'; btn.disabled = true;
+      try {
+        const clanId = genId(8);
+        await setDoc(doc(db, 'campaigns', campId, 'clans', clanId), {
+          name, crest, tartanId, adminCreated: true, createdAt: serverTimestamp(),
+        });
+        nameInp.value = ''; crestInp.value = '';
+        toast(`✅ Clan "${name}" added!`);
+        await loadAdminClans(campId);
+      } catch(err) { errEl.textContent = 'Error: ' + err.message; }
+      btn.textContent = 'Add Clan ⚔️'; btn.disabled = false;
+    });
+
+    // ── Members ──
+    async function populateAdminMembersCampSelect() {
+      const sel = document.getElementById('admin-members-camp-select');
+      if (!sel) return;
+      while (sel.options.length > 1) sel.remove(1);
+      try {
+        const snap = await getDocs(query(collection(db, 'campaigns'), orderBy('createdAt', 'desc')));
+        snap.docs.forEach(cdoc => {
+          const opt = document.createElement('option');
+          opt.value = cdoc.id;
+          opt.textContent = cdoc.data().name || cdoc.id;
+          sel.appendChild(opt);
+        });
+      } catch(e) {}
+    }
+
+    document.getElementById('admin-members-camp-select').addEventListener('change', async (e) => {
+      const campId = e.target.value;
+      const panel = document.getElementById('admin-members-panel');
+      if (!campId) { panel.classList.add('hidden'); return; }
+      panel.classList.remove('hidden');
+      await loadAdminMembers(campId);
+    });
+
+    async function loadAdminMembers(campId) {
+      const listEl    = document.getElementById('admin-members-list');
+      const loadingEl = document.getElementById('admin-members-loading');
+      listEl.innerHTML = '';
+      loadingEl.classList.remove('hidden');
+      try {
+        const campSnap = await getDoc(doc(db, 'campaigns', campId));
+        const startDate = campSnap.exists() ? campSnap.data().startDate : null;
+        const clansSnap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
+        const clansMap = {};
+        clansSnap.docs.forEach(d => { clansMap[d.id] = d.data(); });
+        const snap = await getDocs(collection(db, 'campaigns', campId, 'members'));
+        loadingEl.classList.add('hidden');
+        if (snap.empty) {
+          listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px;padding:8px 0">No members yet.</div>';
+          return;
+        }
+        const members = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => calcMemberPoints(b, startDate) - calcMemberPoints(a, startDate));
+        members.forEach(m => {
+          const pts = calcMemberPoints(m, startDate);
+          const clanName = m.clanId && clansMap[m.clanId] ? clansMap[m.clanId].name : 'No clan';
+          const row = document.createElement('div');
+          row.className = 'admin-member-row-v2';
+          row.innerHTML = `
+            <span style="font-size:18px">${escHtml(m.avatar || '⚔️')}</span>
+            <div style="flex:1;min-width:0">
+              <div class="admin-member-name-v2">${escHtml(m.name || 'Unknown')}</div>
+              <div class="admin-member-clan-v2">${escHtml(clanName)}</div>
+            </div>
+            <span class="admin-member-pts-v2">${pts} pts</span>
+            <button type="button" class="btn-adm btn-adm-danger" style="font-size:12px;padding:6px 10px" data-remove-member="${m.id}" data-camp-id="${campId}">Remove</button>`;
+          row.querySelector('[data-remove-member]').addEventListener('click', async ev => {
+            const mId = ev.currentTarget.dataset.removeMember;
+            const cId = ev.currentTarget.dataset.campId;
+            if (!confirm(`Remove "${m.name}" from this campaign?`)) return;
+            ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
+            try {
+              await deleteDoc(doc(db, 'campaigns', cId, 'members', mId));
+              row.remove();
+              toast(`🗑️ Removed ${m.name}`);
+            } catch(err) {
+              toast('Error: ' + err.message, 3500);
+              ev.currentTarget.textContent = 'Remove'; ev.currentTarget.disabled = false;
+            }
+          });
+          listEl.appendChild(row);
+        });
+      } catch(e) {
+        loadingEl.classList.add('hidden');
+        listEl.innerHTML = `<div style="color:#F85149;font-size:13px">Error: ${escHtml(e.message)}</div>`;
+      }
+    }
 
   })(); // end admin IIFE
 
