@@ -4262,8 +4262,13 @@
             memberCount = ms.size;
           } catch(e) { memberCount = '?'; }
           const createdAt = data.createdAt?.toDate?.() || null;
-          const dateStr = createdAt ? createdAt.toLocaleDateString() : '—';
-          return { id: cdoc.id, data, memberCount, dateStr };
+          const dateStr = createdAt ? createdAt.toLocaleDateString('en-AU') : '—';
+          // startDate stored as a plain string e.g. '2024-01-15'
+          const startDateStr = data.startDate || null;
+          const startDateDisplay = startDateStr
+            ? new Date(startDateStr + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '—';
+          return { id: cdoc.id, data, memberCount, dateStr, startDateStr, startDateDisplay };
         }));
 
         renderAdminCampaignList(items);
@@ -4279,25 +4284,43 @@
         document.getElementById('admin-camps-empty').classList.remove('hidden');
         return;
       }
-      listEl.innerHTML = items.map(({ id, data, memberCount, dateStr }) => {
-        const wager = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}` : '';
+      listEl.innerHTML = items.map(({ id, data, memberCount, dateStr, startDateStr, startDateDisplay }) => {
+        const wager = data.wagerAmount > 0 ? ` \u00b7 \U0001f4b0 $${data.wagerAmount}` : '';
+        const startLabel = startDateDisplay !== '\u2014' ? `\U0001f4c5 Started: ${startDateDisplay} \u00b7 ` : '';
+        const startDateInputVal = startDateStr || '';
         return `
         <div class="admin-camp-row" data-camp-id="${escHtml(id)}">
           <div class="admin-camp-main">
             <div style="flex:1;min-width:0">
               <div class="admin-camp-name" id="admin-camp-name-${escHtml(id)}">${escHtml(data.name || 'Unnamed')}</div>
-              <div class="admin-camp-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''} · 📅 ${dateStr}${wager}</div>
+              <div class="admin-camp-meta" id="admin-camp-meta-${escHtml(id)}">${startLabel}\U0001f465 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wager} \u00b7 \U0001f5d3\ufe0f Created ${dateStr}</div>
             </div>
             <div class="admin-camp-actions">
-              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">👥</button>
-              <button class="btn-camp-action" data-action="rename" data-camp-id="${escHtml(id)}">✏️ Rename</button>
-              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">🗑️</button>
+              <button class="btn-camp-action gold" data-action="expand" data-camp-id="${escHtml(id)}">\U0001f465</button>
+              <button class="btn-camp-action" data-action="edit" data-camp-id="${escHtml(id)}">\u270f\ufe0f Edit</button>
+              <button class="btn-camp-action danger" data-action="delete" data-camp-id="${escHtml(id)}" data-camp-name="${escHtml(data.name||'Unnamed')}">\U0001f5d1\ufe0f</button>
             </div>
           </div>
-          <div id="admin-rename-row-${escHtml(id)}" class="admin-rename-row hidden">
-            <input class="admin-rename-input" id="admin-rename-input-${escHtml(id)}" value="${escHtml(data.name||'')}" maxlength="30">
-            <button class="btn-rename-save" data-action="rename-save" data-camp-id="${escHtml(id)}">Save</button>
-            <button class="btn-rename-cancel" data-action="rename-cancel" data-camp-id="${escHtml(id)}">✕</button>
+          <div id="admin-edit-form-${escHtml(id)}" class="admin-edit-form hidden">
+            <div class="admin-edit-field">
+              <label class="admin-edit-label">Campaign Name</label>
+              <input class="admin-edit-input" id="admin-edit-name-${escHtml(id)}" value="${escHtml(data.name||'')}" maxlength="60" placeholder="Campaign name">
+            </div>
+            <div class="admin-edit-field">
+              <label class="admin-edit-label">Start Date <span style="color:#8B949E;font-weight:400;text-transform:none;font-size:10px">(Day 1 of 30 for all members)</span></label>
+              <input class="admin-edit-input" type="date" id="admin-edit-startdate-${escHtml(id)}" value="${escHtml(startDateInputVal)}">
+            </div>
+            <div class="admin-edit-field">
+              <label class="admin-edit-label">Wager Amount (per person)</label>
+              <div class="admin-wager-wrap">
+                <span class="admin-wager-prefix">$</span>
+                <input class="admin-edit-input" type="number" min="0" step="1" id="admin-edit-wager-${escHtml(id)}" value="${escHtml(String(data.wagerAmount||0))}" placeholder="0">
+              </div>
+            </div>
+            <div class="admin-edit-actions">
+              <button class="btn-edit-save" data-action="edit-save" data-camp-id="${escHtml(id)}">\U0001f4be Save Changes</button>
+              <button class="btn-edit-cancel" data-action="edit-cancel" data-camp-id="${escHtml(id)}">Cancel</button>
+            </div>
           </div>
           <div id="admin-members-${escHtml(id)}" class="admin-members-list hidden"></div>
         </div>`;
@@ -4310,92 +4333,59 @@
         const action = btn.dataset.action;
         const campId = btn.dataset.campId;
 
-        if (action === 'rename') {
-          document.getElementById(`admin-rename-row-${campId}`)?.classList.toggle('hidden');
-          document.getElementById(`admin-rename-input-${campId}`)?.focus();
+        if (action === 'edit') {
+          const form = document.getElementById(`admin-edit-form-${campId}`);
+          if (!form) return;
+          const isHidden = form.classList.contains('hidden');
+          // Close any other open edit forms first
+          listEl.querySelectorAll('.admin-edit-form').forEach(f => f.classList.add('hidden'));
+          if (isHidden) {
+            form.classList.remove('hidden');
+            document.getElementById(`admin-edit-name-${campId}`)?.focus();
+          }
 
-        } else if (action === 'rename-cancel') {
-          document.getElementById(`admin-rename-row-${campId}`)?.classList.add('hidden');
+        } else if (action === 'edit-cancel') {
+          document.getElementById(`admin-edit-form-${campId}`)?.classList.add('hidden');
 
-        } else if (action === 'rename-save') {
-          const inp = document.getElementById(`admin-rename-input-${campId}`);
-          const newName = inp?.value?.trim();
-          if (!newName) { inp.style.borderColor='#F85149'; return; }
-          btn.textContent = '…'; btn.disabled = true;
+        } else if (action === 'edit-save') {
+          const nameInp  = document.getElementById(`admin-edit-name-${campId}`);
+          const dateInp  = document.getElementById(`admin-edit-startdate-${campId}`);
+          const wagerInp = document.getElementById(`admin-edit-wager-${campId}`);
+          const newName  = nameInp?.value?.trim();
+          const newDate  = dateInp?.value;   // "YYYY-MM-DD" string
+          const newWager = parseFloat(wagerInp?.value) || 0;
+          if (!newName) { nameInp.style.borderColor = '#F85149'; nameInp.focus(); return; }
+          if (!newDate) { dateInp.style.borderColor = '#F85149'; dateInp.focus(); return; }
+          const saveBtn = btn;
+          saveBtn.textContent = '\u2026'; saveBtn.disabled = true;
           try {
-            await updateDoc(doc(db, 'campaigns', campId), { name: newName });
-            document.getElementById(`admin-camp-name-${campId}`).textContent = newName;
-            document.getElementById(`admin-rename-row-${campId}`)?.classList.add('hidden');
-            toast('✅ Campaign renamed');
+            await updateDoc(doc(db, 'campaigns', campId), {
+              name: newName,
+              startDate: newDate,
+              wagerAmount: newWager,
+            });
+            // Refresh display name
+            const nameEl = document.getElementById(`admin-camp-name-${campId}`);
+            if (nameEl) nameEl.textContent = newName;
+            // Refresh meta line
+            const metaEl = document.getElementById(`admin-camp-meta-${campId}`);
+            if (metaEl) {
+              const sd = new Date(newDate + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+              const wagerPart = newWager > 0 ? ` \u00b7 \U0001f4b0 $${newWager}` : '';
+              const membersMatch = metaEl.textContent.match(/\U0001f465\s*(\d+\+?\s*members?)/);
+              const membersPart = membersMatch ? membersMatch[0] : '\U0001f465 ? members';
+              const createdMatch = metaEl.textContent.match(/Created .+/);
+              const createdPart = createdMatch ? createdMatch[0] : '';
+              metaEl.textContent = `\U0001f4c5 Started: ${sd} \u00b7 ${membersPart}${wagerPart}${createdPart ? ' \u00b7 \U0001f5d3\ufe0f ' + createdPart : ''}`;
+            }
+            document.getElementById(`admin-edit-form-${campId}`)?.classList.add('hidden');
+            toast('\u2705 Campaign updated');
           } catch(err) {
             toast('Error: ' + err.message, 3500);
           }
-          btn.textContent = 'Save'; btn.disabled = false;
+          saveBtn.textContent = '\U0001f4be Save Changes'; saveBtn.disabled = false;
 
         } else if (action === 'delete') {
-          const name = btn.dataset.campName;
-          if (!confirm(`Delete campaign "${name}"?\n\nThis will permanently remove all members, messages, and clan data. This cannot be undone.`)) return;
-          btn.textContent = '…'; btn.disabled = true;
-          try {
-            // Delete subcollections: members, messages, clans
-            const subcols = ['members', 'messages', 'clans'];
-            for (const sub of subcols) {
-              const subSnap = await getDocs(collection(db, 'campaigns', campId, sub));
-              for (const sdoc of subSnap.docs) {
-                await deleteDoc(sdoc.ref);
-              }
-            }
-            await deleteDoc(doc(db, 'campaigns', campId));
-            const row = listEl.querySelector(`.admin-camp-row[data-camp-id="${campId}"]`);
-            if (row) row.remove();
-            toast('🗑️ Campaign deleted');
-            if (!listEl.querySelector('.admin-camp-row')) {
-              document.getElementById('admin-camps-empty').classList.remove('hidden');
-            }
-          } catch(err) {
-            toast('Error: ' + err.message, 3500);
-            btn.textContent = '🗑️'; btn.disabled = false;
-          }
-
-        } else if (action === 'expand') {
-          const membersDiv = document.getElementById(`admin-members-${campId}`);
-          if (!membersDiv) return;
-          if (!membersDiv.classList.contains('hidden')) {
-            membersDiv.classList.add('hidden');
-            btn.textContent = '👥';
-            return;
-          }
-          btn.textContent = '…'; btn.disabled = true;
-          try {
-            const msSnap = await getDocs(collection(db, 'campaigns', campId, 'members'));
-            // Find campaign start date from rendered data
-            const row = listEl.querySelector(`.admin-camp-row[data-camp-id="${campId}"]`);
-            // We don't have startDate easily here; just show names + raw completion count
-            if (msSnap.empty) {
-              membersDiv.innerHTML = '<div style="color:#484F58;font-size:12px;padding:6px 0">No members yet.</div>';
-            } else {
-              const memberRows = msSnap.docs.map(md => {
-                const mdata = md.data();
-                const compCount = mdata.completions ? Object.values(mdata.completions).filter(Boolean).length : 0;
-                return `<div class="admin-member-item">
-                  <span class="admin-member-avatar">${escHtml(mdata.avatar||'⚔️')}</span>
-                  <span class="admin-member-name">${escHtml(mdata.name||'Unknown')}</span>
-                  <span class="admin-member-pts">✅ ${compCount} completions</span>
-                </div>`;
-              }).join('');
-              membersDiv.innerHTML = memberRows;
-            }
-            membersDiv.classList.remove('hidden');
-            btn.textContent = '🙈';
-          } catch(err) {
-            toast('Error loading members: ' + err.message, 3500);
-            btn.textContent = '👥';
-          }
-          btn.disabled = false;
-        }
-      });
-    }
-
     // ── Admin create campaign ──
     document.getElementById('btn-admin-create-camp').addEventListener('click', async () => {
       const nameInp  = document.getElementById('admin-create-name');
