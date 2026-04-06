@@ -654,87 +654,23 @@
     }
     .btn-warrior-edit:active { transform: scale(0.95); opacity: 0.9; }
 
-    /* ── Campaign Management Panel ── */
-    #campaign-mgmt-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 1100;
-      display: flex; align-items: flex-end; justify-content: center;
-      backdrop-filter: blur(4px);
-    }
-    #campaign-mgmt-overlay.hidden { display: none !important; }
-    .mgmt-panel {
-      width: 100%; max-width: 480px; max-height: 85vh;
-      background: var(--bg-alt); border-radius: var(--radius) var(--radius) 0 0;
-      border: 1px solid rgba(201,162,39,0.35); border-bottom: none;
-      display: flex; flex-direction: column;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
-      animation: slideUpMgmt 0.28s ease;
-    }
-    @keyframes slideUpMgmt { from { transform: translateY(100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
-    .mgmt-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 18px 14px;
-      border-bottom: 1px solid rgba(201,162,39,0.2); flex-shrink: 0;
-    }
-    .mgmt-title { font-size: 17px; font-weight: 900; color: #C9A227; }
-    .mgmt-close {
-      background: none; border: none; color: var(--text-2); font-size: 22px;
-      cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s;
-    }
-    .mgmt-close:hover { color: var(--text); }
-    .mgmt-body { flex: 1; overflow-y: auto; padding: 12px 16px 32px; }
-    .mgmt-body::-webkit-scrollbar { width: 3px; }
-    .mgmt-body::-webkit-scrollbar-track { background: transparent; }
-    .mgmt-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
-    .mgmt-empty { text-align: center; padding: 32px 16px; color: var(--text-2); font-size: 14px; line-height: 1.6; }
-    .mgmt-empty-icon { font-size: 36px; margin-bottom: 8px; }
-    .mgmt-campaign-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 10px;
-    }
-    .mgmt-campaign-card.is-current { border-color: rgba(201,162,39,0.45); }
-    .mgmt-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
-    .mgmt-campaign-name { flex: 1; font-size: 15px; font-weight: 800; color: var(--text); }
-    .mgmt-campaign-name-input {
-      flex: 1; background: var(--bg-alt); border: 1.5px solid var(--primary);
-      border-radius: 8px; padding: 5px 10px; font-size: 15px; font-weight: 800;
-      color: var(--text); outline: none;
-    }
-    .mgmt-edit-btn {
-      background: none; border: none; font-size: 15px; cursor: pointer;
-      padding: 3px 5px; color: var(--text-2); transition: color 0.15s; line-height: 1; flex-shrink: 0;
-    }
-    .mgmt-edit-btn:hover { color: #C9A227; }
-    .mgmt-current-badge {
-      font-size: 10px; font-weight: 800; padding: 2px 8px; flex-shrink: 0;
-      background: rgba(201,162,39,0.12); color: #C9A227;
-      border: 1px solid rgba(201,162,39,0.3); border-radius: 999px;
-    }
-    .mgmt-campaign-meta {
-      font-size: 11px; color: var(--text-2); display: flex; gap: 10px;
-      flex-wrap: wrap; margin-bottom: 10px;
-    }
-    .mgmt-actions { display: flex; gap: 8px; justify-content: flex-end; }
-    .mgmt-delete-btn {
-      padding: 7px 13px; border-radius: 999px;
-      background: rgba(248,81,73,0.10); color: #F85149;
-      border: 1px solid rgba(248,81,73,0.25); font-size: 12px; font-weight: 700;
-      cursor: pointer; transition: background 0.15s;
-    }
-    .mgmt-delete-btn:active { background: rgba(248,81,73,0.25); }
-    .mgmt-save-btn {
-      padding: 7px 13px; border-radius: 999px;
-      background: rgba(201,162,39,0.12); color: #C9A227;
-      border: 1px solid rgba(201,162,39,0.3); font-size: 12px; font-weight: 700;
-      cursor: pointer; transition: background 0.15s;
-    }
-    .mgmt-save-btn:active { background: rgba(201,162,39,0.3); }
-    .btn-manage-campaigns {
+    /* ── Admin Panel button (Profile tab) ── */
+    .btn-admin-panel {
       width: 100%; padding: 12px; border-radius: var(--radius-sm);
       background: rgba(201,162,39,0.08); color: #C9A227;
       border: 1px solid rgba(201,162,39,0.3); font-size: 14px; font-weight: 700;
-      cursor: pointer; margin-top: 6px; transition: background 0.15s;
+      cursor: pointer; margin: 10px 0 6px; transition: background 0.15s;
     }
-    .btn-manage-campaigns:active { background: rgba(201,162,39,0.2); }
+    .btn-admin-panel:active { background: rgba(201,162,39,0.2); }
+
+    /* ── Admin badge (shown in profile when admin is unlocked) ── */
+    .admin-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 800; padding: 2px 9px;
+      background: rgba(201,162,39,0.15); color: #C9A227;
+      border: 1px solid rgba(201,162,39,0.45); border-radius: 999px;
+      margin-top: 6px; letter-spacing: 0.03em;
+    }
 
     /* ─── Day Theme (warm parchment) ─────────────────── */
     html.theme-day {
@@ -1226,6 +1162,7 @@
         <div class="profile-top">
           <div class="profile-info">
             <div class="profile-name" id="profile-name">—</div>
+            <div id="profile-admin-badge" class="admin-badge" style="display:none">🔑 Admin</div>
             <div id="profile-title-badge" style="margin-top:5px"></div>
           </div>
         </div>
@@ -1241,17 +1178,17 @@
         <div id="profile-clan-section"></div>
         <div class="section-header">🏅 Badges</div>
         <div class="badges-grid" id="badges-grid"></div>
-        <div class="section-header">Campaign Info</div>
-        <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
-        <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
-        <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
-        <button class="btn-manage-campaigns" id="btn-manage-campaigns">⚙️ Manage Campaigns</button>
         <div class="section-header">Appearance</div>
         <div class="theme-toggle-pill" id="theme-toggle">
           <button class="theme-btn" data-theme="day">☀️ Day</button>
           <button class="theme-btn" data-theme="night">🌙 Night</button>
           <button class="theme-btn" data-theme="auto">🔄 Auto</button>
         </div>
+        <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
+        <div class="section-header">Campaign Info</div>
+        <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
+        <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
+        <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
         <div class="section-header">My Challenges</div>
         <div id="challenge-progress-list"></div>
         <button class="btn-danger" id="btn-leave">Leave Campaign</button>
@@ -1379,18 +1316,6 @@
   <div class="badge-popup-name" id="badge-popup-name">—</div>
 </div></div>
 
-<!-- Campaign Management Panel -->
-<div id="campaign-mgmt-overlay" class="hidden">
-  <div class="mgmt-panel">
-    <div class="mgmt-header">
-      <div class="mgmt-title">⚙️ Manage Campaigns</div>
-      <button class="mgmt-close" id="mgmt-close-btn">✕</button>
-    </div>
-    <div class="mgmt-body" id="mgmt-body">
-      <div class="mgmt-empty"><div class="mgmt-empty-icon">⏳</div>Loading...</div>
-    </div>
-  </div>
-</div>
 
 <canvas id="confetti-canvas"></canvas>
 <div id="toast"></div>
@@ -2107,6 +2032,9 @@
   function renderProfile(day) {
     const me=state.members[state.userId]; if(!me) return;
     document.getElementById('profile-name').textContent=me.name;
+    // Show/hide admin badge
+    const adminBadge=document.getElementById('profile-admin-badge');
+    if(adminBadge) adminBadge.style.display=sessionStorage.getItem('cardioAdminUnlocked')==='true'?'inline-flex':'none';
     // Show title badge in profile header if current user is clan top scorer
     const myTitle=getClanTitleForUser(state.userId);
     const ptBadge=document.getElementById('profile-title-badge');
@@ -4175,156 +4103,6 @@
     await deleteDoc(doc(db, 'campaigns', campaignId));
   }
 
-  function renderMgmtList(campaigns) {
-    const body = document.getElementById('mgmt-body');
-    if (!campaigns.length) {
-      body.innerHTML = `<div class="mgmt-empty"><div class="mgmt-empty-icon">🏆</div>You haven't created any campaigns.<br><span style="font-size:12px;color:var(--text-3)">Only campaigns you created can be managed here.</span></div>`;
-      return;
-    }
-    body.innerHTML = '';
-    campaigns.forEach(({ id, data, memberCount }) => {
-      const isCurrent = id === state.campaignId;
-      const createdDate = data.createdAt?.toDate
-        ? data.createdAt.toDate().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
-        : '—';
-      const card = document.createElement('div');
-      card.className = 'mgmt-campaign-card' + (isCurrent ? ' is-current' : '');
-      card.innerHTML = `
-        <div class="mgmt-name-row">
-          <div class="mgmt-campaign-name" id="mgmt-name-disp-${id}">${escHtml(data.name || 'Unnamed')}</div>
-          <input class="mgmt-campaign-name-input hidden" id="mgmt-name-inp-${id}" value="${escHtml(data.name || '')}" maxlength="30" autocomplete="off">
-          <button class="mgmt-edit-btn" id="mgmt-edit-btn-${id}" title="Rename">✏️</button>
-          ${isCurrent ? '<span class="mgmt-current-badge">Current</span>' : ''}
-        </div>
-        <div class="mgmt-campaign-meta">
-          <span>👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
-          <span>📅 ${createdDate}</span>
-          ${data.wagerAmount > 0 ? `<span>💰 $${data.wagerAmount}/person</span>` : ''}
-        </div>
-        <div class="mgmt-actions">
-          <button class="mgmt-save-btn hidden" id="mgmt-save-btn-${id}">💾 Save</button>
-          <button class="mgmt-delete-btn" id="mgmt-del-btn-${id}">🗑️ Delete</button>
-        </div>`;
-
-      const nameDisp  = card.querySelector(`#mgmt-name-disp-${id}`);
-      const nameInp   = card.querySelector(`#mgmt-name-inp-${id}`);
-      const editBtn   = card.querySelector(`#mgmt-edit-btn-${id}`);
-      const saveBtn   = card.querySelector(`#mgmt-save-btn-${id}`);
-      const deleteBtn = card.querySelector(`#mgmt-del-btn-${id}`);
-
-      function enterEditMode() {
-        nameDisp.classList.add('hidden');
-        nameInp.classList.remove('hidden');
-        saveBtn.classList.remove('hidden');
-        editBtn.textContent = '✕'; editBtn.title = 'Cancel';
-        nameInp.focus(); nameInp.select();
-      }
-      function exitEditMode() {
-        nameDisp.classList.remove('hidden');
-        nameInp.classList.add('hidden');
-        saveBtn.classList.add('hidden');
-        editBtn.textContent = '✏️'; editBtn.title = 'Rename';
-        nameInp.value = nameDisp.textContent;
-      }
-
-      editBtn.addEventListener('click', () => {
-        if (nameInp.classList.contains('hidden')) enterEditMode(); else exitEditMode();
-      });
-      nameInp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
-        if (e.key === 'Escape') exitEditMode();
-      });
-      saveBtn.addEventListener('click', async () => {
-        const newName = nameInp.value.trim();
-        if (!newName) { toast('Campaign name cannot be empty', 2000); return; }
-        const orig = saveBtn.textContent;
-        saveBtn.textContent = '…'; saveBtn.disabled = true;
-        try {
-          await updateDoc(doc(db, 'campaigns', id), { name: newName });
-          nameDisp.textContent = newName;
-          if (isCurrent) {
-            state.campaignData.name = newName;
-            const profName = document.getElementById('prof-campaign-name');
-            if (profName) profName.textContent = newName;
-          }
-          exitEditMode();
-          toast('Campaign renamed ✓');
-        } catch(e) {
-          toast('Rename failed: ' + e.message, 3000);
-          saveBtn.textContent = orig; saveBtn.disabled = false;
-        }
-      });
-      deleteBtn.addEventListener('click', async () => {
-        const campaignName = nameDisp.textContent || data.name || 'this campaign';
-        if (!confirm(`Delete '${campaignName}'? This cannot be undone.`)) return;
-        deleteBtn.textContent = '…'; deleteBtn.disabled = true;
-        try {
-          await deleteCampaign(id);
-          card.remove();
-          toast('Campaign deleted');
-          // Show empty state if no cards remain
-          if (!document.getElementById('mgmt-body').querySelector('.mgmt-campaign-card')) {
-            document.getElementById('mgmt-body').innerHTML = `<div class="mgmt-empty"><div class="mgmt-empty-icon">🏆</div>You haven't created any campaigns.</div>`;
-          }
-          // If the user is IN this campaign, log them out
-          if (isCurrent) {
-            document.getElementById('campaign-mgmt-overlay').classList.add('hidden');
-            state.unsubscribers.forEach(u => u());
-            state.userId = null; state.campaignId = null; state.campaignData = null;
-            state.members = {}; state.messages = [];
-            localStorage.removeItem('cc_user');
-            showScreen('screen-welcome');
-          }
-        } catch(e) {
-          toast('Error: ' + e.message, 3500);
-          deleteBtn.textContent = '🗑️ Delete'; deleteBtn.disabled = false;
-        }
-      });
-      body.appendChild(card);
-    });
-  }
-
-  async function openManageCampaigns() {
-    const overlay = document.getElementById('campaign-mgmt-overlay');
-    const body    = document.getElementById('mgmt-body');
-    overlay.classList.remove('hidden');
-    body.innerHTML = `<div class="mgmt-empty"><div class="mgmt-empty-icon">⏳</div>Loading your campaigns...</div>`;
-    try {
-      const q    = query(collection(db, 'campaigns'), where('createdBy', '==', state.userId));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        body.innerHTML = `<div class="mgmt-empty"><div class="mgmt-empty-icon">🏆</div>You haven't created any campaigns.<br><span style="font-size:12px;color:var(--text-3)">Only campaigns you created can be managed here.</span></div>`;
-        return;
-      }
-      const campaigns = await Promise.all(snap.docs.map(async (cdoc) => {
-        const data = cdoc.data();
-        let memberCount = 0;
-        try {
-          const ms = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
-          memberCount = ms.size;
-        } catch(e) { memberCount = '?'; }
-        return { id: cdoc.id, data, memberCount };
-      }));
-      // Sort newest first
-      campaigns.sort((a, b) => (b.data.createdAt?.seconds||0) - (a.data.createdAt?.seconds||0));
-      renderMgmtList(campaigns);
-    } catch(e) {
-      body.innerHTML = `<div class="mgmt-empty" style="color:#F85149">Error loading campaigns: ${escHtml(e.message)}</div>`;
-    }
-  }
-
-  // Manage Campaigns button
-  document.getElementById('btn-manage-campaigns').addEventListener('click', () => openManageCampaigns());
-  // Close overlay
-  document.getElementById('mgmt-close-btn').addEventListener('click', () => {
-    document.getElementById('campaign-mgmt-overlay').classList.add('hidden');
-  });
-  // Tap-outside to close
-  document.getElementById('campaign-mgmt-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('campaign-mgmt-overlay')) {
-      document.getElementById('campaign-mgmt-overlay').classList.add('hidden');
-    }
-  });
 
   // ─── Day / Night / Auto theme toggle ─────────────────
   (function(){
@@ -4376,8 +4154,8 @@
     function isUnlocked() { return sessionStorage.getItem('cardioAdminUnlocked') === 'true'; }
     function setUnlocked() { sessionStorage.setItem('cardioAdminUnlocked', 'true'); }
 
-    // ── Password modal ──
-    document.getElementById('btn-open-admin').addEventListener('click', () => {
+    // ── Helper: open panel or show password modal ──
+    function openAdminOrPrompt() {
       if (isUnlocked()) { openAdminPanel(); return; }
       const modal = document.getElementById('admin-pw-modal');
       modal.classList.remove('hidden');
@@ -4385,7 +4163,13 @@
       inp.value = '';
       document.getElementById('admin-pw-err').textContent = '';
       setTimeout(() => inp.focus(), 80);
-    });
+    }
+
+    // ── Password modal — welcome screen button ──
+    document.getElementById('btn-open-admin').addEventListener('click', openAdminOrPrompt);
+
+    // ── Password modal — Profile tab button ──
+    document.getElementById('btn-profile-admin').addEventListener('click', openAdminOrPrompt);
 
     function closePasswordModal() {
       document.getElementById('admin-pw-modal').classList.add('hidden');
@@ -4423,6 +4207,9 @@
     function openAdminPanel() {
       document.getElementById('admin-panel').classList.remove('hidden');
       loadAdminCampaigns();
+      // Reveal admin badge in Profile if it's rendered
+      const badge = document.getElementById('profile-admin-badge');
+      if (badge) badge.style.display = 'inline-flex';
     }
 
     function closeAdminPanel() {
