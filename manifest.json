@@ -1,14 +1,14 @@
 {
-  "name": "CardioCrew — 30-Day Challenge",
+  "name": "CardioCrew",
   "short_name": "CardioCrew",
-  "description": "Track your 30-day fitness challenge with your crew",
-  "start_url": "/",
+  "description": "30-Day Highland Warrior Challenge",
+  "start_url": "/CardioCrew/",
   "display": "standalone",
-  "background_color": "#0D1117",
-  "theme_color": "#0D1117",
+  "background_color": "#0d0806",
+  "theme_color": "#C9A227",
   "orientation": "portrait",
   "icons": [
-    { "src": "icons/icon-192.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any maskable" },
-    { "src": "icons/icon-512.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any maskable" }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
