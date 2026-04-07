@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/me-tab-notifications]
   workflow_dispatch:
 
 permissions:
