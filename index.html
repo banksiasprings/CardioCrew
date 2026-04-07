@@ -6439,21 +6439,21 @@
   })(); // end admin IIFE
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/CardioCrew/sw.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newSW = reg.installing;
-        newSW.addEventListener('statechange', () => {
-          if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
-            // New version activated — silently reload to pick up latest app
-            window.location.reload();
-          }
-        });
-      });
-    });
-    // Also reload when the controlling SW changes (covers skipWaiting path)
+    // Derive SW path dynamically so this works on /CardioCrew/, /CardioCrew-DEV/, or any host
+    const swPath = new URL('sw.js', location.href).pathname;
+    // Only reload on controller *change* (update), not on first install
+    const hadController = !!navigator.serviceWorker.controller;
+    let _reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
+      if (hadController && !_reloading) {
+        _reloading = true;
+        // Brief toast so the reload isn't jarring, then refresh
+        const t = document.getElementById('toast');
+        if (t) { t.textContent = '🔄 New version — reloading…'; t.classList.add('show'); }
+        setTimeout(() => window.location.reload(), 1200);
+      }
     });
+    navigator.serviceWorker.register(swPath);
   }
 </script>
 </body>
