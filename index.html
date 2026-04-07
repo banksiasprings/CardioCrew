@@ -415,6 +415,12 @@
     .stat-val { font-size: 28px; font-weight: 900; color: #C9A227; text-shadow: 0 0 12px rgba(201,162,39,0.4); }
     .stat-lbl { font-size: 11px; color: rgba(201,162,39,0.6); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .section-header { font-size: 11px; color: #C9A227; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 8px; opacity: 0.85; }
+    /* Profile collapsible sections */
+    .psec-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; user-select:none; border-top:1px solid var(--border); background:var(--bg); margin:0 -16px; }
+    .psec-hdr:active { background:var(--surface); }
+    .psec-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#C9A227; opacity:0.85; }
+    .psec-arrow { font-size:14px; color:var(--text-3); line-height:1; }
+    .psec-body.hidden { display:none; }
     .setting-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
     .setting-row span { font-size: 14px; }
     .setting-row .setting-val { font-size: 13px; color: var(--text-2); }
@@ -1556,9 +1562,10 @@
       <div class="hist-list" id="hist-list"></div>
     </div>
 
-    <!-- PROFILE TAB -->
+    <!-- PROFILE TAB (merged with Personal Tracking) -->
     <div id="tab-profile" class="tab-page">
       <div class="profile-wrap">
+        <!-- Always-visible header -->
         <div class="profile-top">
           <div class="profile-info">
             <div class="profile-name" id="profile-name">—</div>
@@ -1572,300 +1579,336 @@
           <div class="stat-card"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">Streak 🔥</div></div>
           <div class="stat-card"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completion</div></div>
         </div>
-        <div class="section-header">🗡️ ⚔️ My Warrior 🛡️</div>
-        <div id="profile-warrior-section"></div>
-        <div class="section-header">🦅 My Clan 🏰</div>
-        <div id="profile-clan-section"></div>
-        <div class="section-header">🏅 Badges</div>
-        <div class="badges-grid" id="badges-grid"></div>
-        <div class="section-header">Appearance</div>
-        <div class="theme-toggle-pill" id="theme-toggle">
-          <button class="theme-btn" data-theme="day">☀️ Day</button>
-          <button class="theme-btn" data-theme="night">🌙 Night</button>
-          <button class="theme-btn" data-theme="auto">🔄 Auto</button>
-        </div>
-        <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
-        <div class="section-header">Campaign Info</div>
-        <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
-        <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
-        <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
-        <button class="btn-browse-campaigns-profile" id="btn-browse-campaigns">📋 Browse &amp; Switch Campaigns</button>
-        <div class="section-header">My Challenges</div>
-        <div id="challenge-progress-list"></div>
-        <div class="section-header">🔐 Login &amp; Security</div>
-        <div id="profile-account-section"></div>
-        <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
-        <button class="btn-danger" id="btn-leave">Leave Campaign &amp; Delete Progress</button>
 
-        <!-- Community: Chat + Feedback merged into Profile -->
-        <div class="section-header" style="margin-top:24px">Community</div>
-        <div class="profile-comm-toggle">
-          <button class="profile-comm-btn active" data-comm="chat">&#x1F4AC; Clan Chat</button>
-          <button class="profile-comm-btn" data-comm="appfeedback">&#x1F4E3; Feedback</button>
+        <!-- ── Warrior ── -->
+        <div class="psec-hdr" data-sec="warrior">
+          <span class="psec-label">⚔️ My Warrior</span>
+          <span class="psec-arrow">▾</span>
+        </div>
+        <div class="psec-body" id="psec-warrior">
+          <div id="profile-warrior-section"></div>
         </div>
 
-        <!-- Clan Chat section -->
-        <div class="profile-comm-section active" id="comm-chat">
-          <div class="feed-header">
-            <div class="feed-subtitle" id="feed-subtitle">Cheer each other on!</div>
-          </div>
-          <div class="feed-messages" id="feed-messages">
-            <div class="feed-empty"><div class="feed-empty-icon">&#x1F4AC;</div>No messages yet &#8212; be the first to shout out your crew!</div>
-          </div>
-          <div class="feed-input-wrap">
-            <textarea class="feed-input" id="feed-input" placeholder="Say something to the crew..." rows="1" maxlength="200"></textarea>
-            <button class="feed-send" id="feed-send-btn">
-              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-            </button>
-          </div>
+        <!-- ── Clan ── -->
+        <div class="psec-hdr" data-sec="clan">
+          <span class="psec-label">🦅 My Clan</span>
+          <span class="psec-arrow">▾</span>
+        </div>
+        <div class="psec-body" id="psec-clan">
+          <div id="profile-clan-section"></div>
         </div>
 
-        <!-- App Feedback section -->
-        <div class="profile-comm-section" id="comm-appfeedback">
-          <div class="fbk-wrap">
-            <div id="fbk-form-wrap">
-              <div class="fbk-card">
-                <label class="fbk-label">Rate your experience</label>
-                <div class="fbk-stars" id="fbk-stars">
-                  <span class="fbk-star" data-star="1">&#9733;</span>
-                  <span class="fbk-star" data-star="2">&#9733;</span>
-                  <span class="fbk-star" data-star="3">&#9733;</span>
-                  <span class="fbk-star" data-star="4">&#9733;</span>
-                  <span class="fbk-star" data-star="5">&#9733;</span>
-                </div>
-                <div class="fbk-star-lbl" id="fbk-star-lbl">Tap to rate</div>
-                <label class="fbk-label">What kind of feedback?</label>
-                <div class="fbk-type-row">
-                  <button class="fbk-type-btn active" data-fbtype="bug">&#x1F41B; Bug</button>
-                  <button class="fbk-type-btn" data-fbtype="suggestion">&#x1F4A1; Suggestion</button>
-                  <button class="fbk-type-btn" data-fbtype="general">&#x1F44D; General</button>
-                </div>
-                <label class="fbk-label" for="fbk-message">Describe the issue or idea</label>
-                <textarea class="fbk-textarea" id="fbk-message" placeholder="Describe the issue or idea..." rows="4"></textarea>
-                <span class="fbk-char-hint" id="fbk-char-hint">Minimum 20 characters</span>
-                <label class="fbk-label" for="fbk-name">Your name <span style="font-weight:400;color:var(--text-2);font-size:10px">(optional)</span></label>
-                <input type="text" class="input" id="fbk-name" placeholder="e.g. Jane Smith" style="margin-bottom:14px">
-                <button class="btn btn-primary" id="fbk-submit">Send Feedback &#x1F4EC;</button>
-                <div class="fbk-error hidden" id="fbk-error">Couldn't send &#8212; please try again.</div>
+        <!-- ── Badges ── -->
+        <div class="psec-hdr" data-sec="badges">
+          <span class="psec-label">🏅 Badges</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-badges">
+          <div class="badges-grid" id="badges-grid"></div>
+          <div style="height:8px"></div>
+        </div>
+
+        <!-- ── Campaign ── -->
+        <div class="psec-hdr" data-sec="campaign">
+          <span class="psec-label">🗓 Campaign</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-campaign">
+          <div id="profile-wager-badge" style="display:none"></div>
+          <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
+          <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
+          <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
+          <button class="btn-browse-campaigns-profile" id="btn-browse-campaigns">📋 Browse &amp; Switch Campaigns</button>
+          <div style="height:8px"></div>
+        </div>
+
+        <!-- ── My Challenges ── -->
+        <div class="psec-hdr" data-sec="challenges">
+          <span class="psec-label">💪 My Challenges</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-challenges">
+          <div id="challenge-progress-list"></div>
+          <div style="height:8px"></div>
+        </div>
+
+        <!-- ── Personal Tracking (formerly Me tab) ── -->
+        <div class="psec-hdr" data-sec="personal">
+          <span class="psec-label">📊 Personal Tracking</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-personal">
+          <!-- Weight Progress card -->
+          <div class="me-section-header">⚖️ Weight Progress</div>
+          <div class="me-card" id="me-weight-card">
+            <div class="me-weight-row">
+              <div class="me-weight-col">
+                <div class="me-weight-val" id="me-w-start">—</div>
+                <div class="me-weight-lbl">Starting</div>
+              </div>
+              <div class="me-weight-arrow">→</div>
+              <div class="me-weight-col me-weight-col-current">
+                <div class="me-weight-val current" id="me-w-current">—</div>
+                <div class="me-weight-lbl">Current</div>
+              </div>
+              <div class="me-weight-arrow">→</div>
+              <div class="me-weight-col">
+                <div class="me-weight-val" id="me-w-goal">—</div>
+                <div class="me-weight-lbl">Goal</div>
               </div>
             </div>
-            <div id="fbk-success" class="fbk-success hidden">
-              <div class="fbk-success-stars" id="fbk-success-stars"></div>
-              <div style="font-size:48px;margin-bottom:10px">&#x2705;</div>
-              <div style="font-size:18px;font-weight:800;margin-bottom:6px">Thanks!</div>
-              <div style="font-size:13px;color:var(--text-2);margin-bottom:24px">We'll review your feedback soon.</div>
-              <button class="btn btn-secondary" id="fbk-send-another" style="max-width:200px">Send Another</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- ── Me Tab ─────────────────────────────────────────── -->
-    <div id="tab-me" class="tab-page">
-      <div class="me-wrap">
-
-        <!-- Header: warrior + name -->
-        <div class="me-header">
-          <div class="me-warrior-portrait" id="me-warrior-portrait"></div>
-          <div class="me-header-info">
-            <div class="me-header-name" id="me-header-name">—</div>
-            <div class="me-header-clan" id="me-header-clan"></div>
-          </div>
-        </div>
-
-        <!-- Weight Progress card -->
-        <div class="me-section-header">⚖️ Weight Progress</div>
-        <div class="me-card" id="me-weight-card">
-          <div class="me-weight-row">
-            <div class="me-weight-col">
-              <div class="me-weight-val" id="me-w-start">—</div>
-              <div class="me-weight-lbl">Starting</div>
-            </div>
-            <div class="me-weight-arrow">→</div>
-            <div class="me-weight-col me-weight-col-current">
-              <div class="me-weight-val current" id="me-w-current">—</div>
-              <div class="me-weight-lbl">Current</div>
-            </div>
-            <div class="me-weight-arrow">→</div>
-            <div class="me-weight-col">
-              <div class="me-weight-val" id="me-w-goal">—</div>
-              <div class="me-weight-lbl">Goal</div>
-            </div>
-          </div>
-          <div class="me-progress-bar-wrap" id="me-weight-progress-wrap" style="display:none">
-            <div class="me-progress-bar-track">
-              <div class="me-progress-bar-fill" id="me-weight-bar"></div>
-            </div>
-            <div class="me-progress-label" id="me-weight-progress-label"></div>
-          </div>
-          <!-- Sparkline chart -->
-          <canvas id="me-weight-chart" class="me-weight-chart" style="display:none"></canvas>
-          <button class="me-log-btn" id="btn-me-log-weight">＋ Log Weight Today</button>
-          <!-- Inline log form -->
-          <div id="me-log-form" class="hidden" style="margin-top:12px;gap:8px;align-items:center">
-            <input class="input me-inline-input" id="me-log-weight-val" type="number" step="0.1" min="20" max="300" placeholder="kg" style="width:90px">
-            <button class="btn btn-primary" id="btn-me-log-save" style="padding:9px 16px;font-size:13px">Save</button>
-            <button class="btn" id="btn-me-log-cancel" style="padding:9px 12px;font-size:13px;background:var(--surface-2);color:var(--text-2)">✕</button>
-          </div>
-        </div>
-
-        <!-- Body Stats card -->
-        <div class="me-section-header">📋 Body Stats</div>
-        <div class="me-card">
-          <div class="me-form-grid">
-            <div class="me-field">
-              <label class="me-label">Age</label>
-              <input class="input me-input" id="me-age" type="number" min="10" max="100" placeholder="years">
-            </div>
-            <div class="me-field">
-              <label class="me-label">Height</label>
-              <input class="input me-input" id="me-height" type="number" step="0.5" min="100" max="250" placeholder="cm">
-            </div>
-            <div class="me-field">
-              <label class="me-label">Starting Weight</label>
-              <input class="input me-input" id="me-start-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
-            </div>
-            <div class="me-field">
-              <label class="me-label">Goal Weight</label>
-              <input class="input me-input" id="me-goal-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
-            </div>
-            <div class="me-field me-field-full">
-              <label class="me-label">Fitness Level</label>
-              <div class="me-fitness-btns" id="me-fitness-btns">
-                <button class="me-fit-btn" data-level="beginner">🌱 Beginner</button>
-                <button class="me-fit-btn" data-level="intermediate">💪 Intermediate</button>
-                <button class="me-fit-btn" data-level="advanced">🔥 Advanced</button>
-                <button class="me-fit-btn" data-level="athlete">⚡ Athlete</button>
+            <div class="me-progress-bar-wrap" id="me-weight-progress-wrap" style="display:none">
+              <div class="me-progress-bar-track">
+                <div class="me-progress-bar-fill" id="me-weight-bar"></div>
               </div>
+              <div class="me-progress-label" id="me-weight-progress-label"></div>
             </div>
-            <div class="me-field me-field-full">
-              <label class="me-label">Gym Membership</label>
-              <div class="me-toggle-row">
-                <span class="me-toggle-lbl">I have access to a gym</span>
-                <label class="me-switch">
-                  <input type="checkbox" id="me-gym-toggle">
-                  <span class="me-slider"></span>
-                </label>
-              </div>
+            <canvas id="me-weight-chart" class="me-weight-chart" style="display:none"></canvas>
+            <button class="me-log-btn" id="btn-me-log-weight">＋ Log Weight Today</button>
+            <div id="me-log-form" class="hidden" style="margin-top:12px;gap:8px;align-items:center">
+              <input class="input me-inline-input" id="me-log-weight-val" type="number" step="0.1" min="20" max="300" placeholder="kg" style="width:90px">
+              <button class="btn btn-primary" id="btn-me-log-save" style="padding:9px 16px;font-size:13px">Save</button>
+              <button class="btn" id="btn-me-log-cancel" style="padding:9px 12px;font-size:13px;background:var(--surface-2);color:var(--text-2)">✕</button>
             </div>
           </div>
-          <button class="me-save-btn" id="btn-me-save-stats">Save Stats ✓</button>
-          <div id="me-stats-saved" class="me-save-confirm hidden">✅ Saved!</div>
-        </div>
-
-        <!-- Measurements card (collapsible) -->
-        <div class="me-section-header me-collapsible-header" id="me-measurements-toggle">
-          📐 Measurements <span class="me-collapse-arrow" id="me-measurements-arrow">▸</span>
-          <span style="font-size:11px;font-weight:400;color:var(--text-3);margin-left:6px">optional</span>
-        </div>
-        <div id="me-measurements-body" class="hidden">
+          <!-- Body Stats card -->
+          <div class="me-section-header">📋 Body Stats</div>
           <div class="me-card">
             <div class="me-form-grid">
               <div class="me-field">
-                <label class="me-label">Waist (cm)</label>
-                <input class="input me-input" id="me-waist" type="number" step="0.5" placeholder="cm">
+                <label class="me-label">Age</label>
+                <input class="input me-input" id="me-age" type="number" min="10" max="100" placeholder="years">
               </div>
               <div class="me-field">
-                <label class="me-label">Hips (cm)</label>
-                <input class="input me-input" id="me-hips" type="number" step="0.5" placeholder="cm">
+                <label class="me-label">Height</label>
+                <input class="input me-input" id="me-height" type="number" step="0.5" min="100" max="250" placeholder="cm">
               </div>
               <div class="me-field">
-                <label class="me-label">Chest (cm)</label>
-                <input class="input me-input" id="me-chest" type="number" step="0.5" placeholder="cm">
+                <label class="me-label">Starting Weight</label>
+                <input class="input me-input" id="me-start-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
               </div>
               <div class="me-field">
-                <label class="me-label">Thigh (cm)</label>
-                <input class="input me-input" id="me-thigh" type="number" step="0.5" placeholder="cm">
+                <label class="me-label">Goal Weight</label>
+                <input class="input me-input" id="me-goal-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
               </div>
-              <div class="me-field">
-                <label class="me-label">Body Fat %</label>
-                <input class="input me-input" id="me-bodyfat" type="number" step="0.1" min="1" max="60" placeholder="%">
+              <div class="me-field me-field-full">
+                <label class="me-label">Fitness Level</label>
+                <div class="me-fitness-btns" id="me-fitness-btns">
+                  <button class="me-fit-btn" data-level="beginner">🌱 Beginner</button>
+                  <button class="me-fit-btn" data-level="intermediate">💪 Intermediate</button>
+                  <button class="me-fit-btn" data-level="advanced">🔥 Advanced</button>
+                  <button class="me-fit-btn" data-level="athlete">⚡ Athlete</button>
+                </div>
+              </div>
+              <div class="me-field me-field-full">
+                <label class="me-label">Gym Membership</label>
+                <div class="me-toggle-row">
+                  <span class="me-toggle-lbl">I have access to a gym</span>
+                  <label class="me-switch">
+                    <input type="checkbox" id="me-gym-toggle">
+                    <span class="me-slider"></span>
+                  </label>
+                </div>
               </div>
             </div>
-            <button class="me-save-btn" id="btn-me-save-measurements">Save Measurements ✓</button>
-            <div id="me-measurements-saved" class="me-save-confirm hidden">✅ Saved!</div>
+            <button class="me-save-btn" id="btn-me-save-stats">Save Stats ✓</button>
+            <div id="me-stats-saved" class="me-save-confirm hidden">✅ Saved!</div>
+          </div>
+          <!-- Measurements card -->
+          <div class="me-section-header me-collapsible-header" id="me-measurements-toggle">
+            📐 Measurements <span class="me-collapse-arrow" id="me-measurements-arrow">▸</span>
+            <span style="font-size:11px;font-weight:400;color:var(--text-3);margin-left:6px">optional</span>
+          </div>
+          <div id="me-measurements-body" class="hidden">
+            <div class="me-card">
+              <div class="me-form-grid">
+                <div class="me-field">
+                  <label class="me-label">Waist (cm)</label>
+                  <input class="input me-input" id="me-waist" type="number" step="0.5" placeholder="cm">
+                </div>
+                <div class="me-field">
+                  <label class="me-label">Hips (cm)</label>
+                  <input class="input me-input" id="me-hips" type="number" step="0.5" placeholder="cm">
+                </div>
+                <div class="me-field">
+                  <label class="me-label">Chest (cm)</label>
+                  <input class="input me-input" id="me-chest" type="number" step="0.5" placeholder="cm">
+                </div>
+                <div class="me-field">
+                  <label class="me-label">Thigh (cm)</label>
+                  <input class="input me-input" id="me-thigh" type="number" step="0.5" placeholder="cm">
+                </div>
+                <div class="me-field">
+                  <label class="me-label">Body Fat %</label>
+                  <input class="input me-input" id="me-bodyfat" type="number" step="0.1" min="1" max="60" placeholder="%">
+                </div>
+              </div>
+              <button class="me-save-btn" id="btn-me-save-measurements">Save Measurements ✓</button>
+              <div id="me-measurements-saved" class="me-save-confirm hidden">✅ Saved!</div>
+            </div>
+          </div>
+          <!-- Reminders card -->
+          <div class="me-section-header">🔔 Reminders</div>
+          <div class="me-card" id="me-notif-card">
+            <div id="me-notif-blocked" class="hidden" style="font-size:13px;color:var(--text-2);padding:4px 0 8px">
+              Notifications are blocked. Enable them in your device settings to use reminders.
+            </div>
+            <div class="me-notif-row">
+              <div class="me-notif-info">
+                <div class="me-notif-title">💪 Daily Workout Reminder</div>
+                <div class="me-notif-sub">Remind me to complete today's challenges</div>
+              </div>
+              <label class="me-switch">
+                <input type="checkbox" id="me-notif-workout-toggle">
+                <span class="me-slider"></span>
+              </label>
+            </div>
+            <div id="me-notif-workout-time-row" class="me-notif-time-row hidden">
+              <label class="me-label" style="margin:0">Time</label>
+              <input type="time" class="input me-time-input" id="me-notif-workout-time" value="07:00">
+            </div>
+            <div class="me-divider"></div>
+            <div class="me-notif-row">
+              <div class="me-notif-info">
+                <div class="me-notif-title">⚖️ Weigh-in Reminder</div>
+                <div class="me-notif-sub">Remind me to log my weight</div>
+              </div>
+              <label class="me-switch">
+                <input type="checkbox" id="me-notif-weighin-toggle">
+                <span class="me-slider"></span>
+              </label>
+            </div>
+            <div id="me-notif-weighin-time-row" class="me-notif-time-row hidden">
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <div>
+                  <label class="me-label" style="margin:0 0 4px">Day</label>
+                  <select class="input me-time-input" id="me-notif-weighin-day" style="width:130px">
+                    <option value="1">Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                    <option value="0">Sunday</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="me-label" style="margin:0 0 4px">Time</label>
+                  <input type="time" class="input me-time-input" id="me-notif-weighin-time" value="08:00">
+                </div>
+              </div>
+            </div>
+            <div class="me-divider"></div>
+            <div class="me-notif-row">
+              <div class="me-notif-info">
+                <div class="me-notif-title">🔥 Streak Saver</div>
+                <div class="me-notif-sub">Evening nudge if today's challenges aren't done</div>
+              </div>
+              <label class="me-switch">
+                <input type="checkbox" id="me-notif-streak-toggle">
+                <span class="me-slider"></span>
+              </label>
+            </div>
+            <div id="me-notif-streak-time-row" class="me-notif-time-row hidden">
+              <label class="me-label" style="margin:0">Time</label>
+              <input type="time" class="input me-time-input" id="me-notif-streak-time" value="20:00">
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">
+              For best results, add CardioCrew to your Home Screen so reminders arrive even when the app is closed.
+            </div>
           </div>
         </div>
 
-        <!-- Notifications card -->
-        <div class="me-section-header">🔔 Reminders</div>
-        <div class="me-card" id="me-notif-card">
-          <div id="me-notif-blocked" class="hidden" style="font-size:13px;color:var(--text-2);padding:4px 0 8px">
-            Notifications are blocked. Enable them in your device settings to use reminders.
+        <!-- ── Settings ── -->
+        <div class="psec-hdr" data-sec="settings">
+          <span class="psec-label">⚙️ Settings</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-settings">
+          <div style="margin:10px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">Appearance</div>
+          <div class="theme-toggle-pill" id="theme-toggle">
+            <button class="theme-btn" data-theme="day">☀️ Day</button>
+            <button class="theme-btn" data-theme="night">🌙 Night</button>
+            <button class="theme-btn" data-theme="auto">🔄 Auto</button>
           </div>
-          <!-- Workout reminder -->
-          <div class="me-notif-row">
-            <div class="me-notif-info">
-              <div class="me-notif-title">💪 Daily Workout Reminder</div>
-              <div class="me-notif-sub">Remind me to complete today's challenges</div>
+          <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
+          <div style="margin:14px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">🔐 Login &amp; Security</div>
+          <div id="profile-account-section"></div>
+          <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
+          <button class="btn-danger" id="btn-leave">Leave Campaign &amp; Delete Progress</button>
+          <div style="height:8px"></div>
+        </div>
+
+        <!-- ── Community ── -->
+        <div class="psec-hdr" data-sec="community">
+          <span class="psec-label">💬 Community</span>
+          <span class="psec-arrow">▾</span>
+        </div>
+        <div class="psec-body" id="psec-community">
+          <div class="profile-comm-toggle">
+            <button class="profile-comm-btn active" data-comm="chat">&#x1F4AC; Clan Chat</button>
+            <button class="profile-comm-btn" data-comm="appfeedback">&#x1F4E3; Feedback</button>
+          </div>
+          <!-- Clan Chat -->
+          <div class="profile-comm-section active" id="comm-chat">
+            <div class="feed-header">
+              <div class="feed-subtitle" id="feed-subtitle">Cheer each other on!</div>
             </div>
-            <label class="me-switch">
-              <input type="checkbox" id="me-notif-workout-toggle">
-              <span class="me-slider"></span>
-            </label>
-          </div>
-          <div id="me-notif-workout-time-row" class="me-notif-time-row hidden">
-            <label class="me-label" style="margin:0">Time</label>
-            <input type="time" class="input me-time-input" id="me-notif-workout-time" value="07:00">
-          </div>
-          <div class="me-divider"></div>
-          <!-- Weigh-in reminder -->
-          <div class="me-notif-row">
-            <div class="me-notif-info">
-              <div class="me-notif-title">⚖️ Weigh-in Reminder</div>
-              <div class="me-notif-sub">Remind me to log my weight</div>
+            <div class="feed-messages" id="feed-messages">
+              <div class="feed-empty"><div class="feed-empty-icon">&#x1F4AC;</div>No messages yet &#8212; be the first to shout out your crew!</div>
             </div>
-            <label class="me-switch">
-              <input type="checkbox" id="me-notif-weighin-toggle">
-              <span class="me-slider"></span>
-            </label>
+            <div class="feed-input-wrap">
+              <textarea class="feed-input" id="feed-input" placeholder="Say something to the crew..." rows="1" maxlength="200"></textarea>
+              <button class="feed-send" id="feed-send-btn">
+                <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+              </button>
+            </div>
           </div>
-          <div id="me-notif-weighin-time-row" class="me-notif-time-row hidden">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <div>
-                <label class="me-label" style="margin:0 0 4px">Day</label>
-                <select class="input me-time-input" id="me-notif-weighin-day" style="width:130px">
-                  <option value="1">Monday</option>
-                  <option value="2">Tuesday</option>
-                  <option value="3">Wednesday</option>
-                  <option value="4">Thursday</option>
-                  <option value="5">Friday</option>
-                  <option value="6">Saturday</option>
-                  <option value="0">Sunday</option>
-                </select>
+          <!-- App Feedback -->
+          <div class="profile-comm-section" id="comm-appfeedback">
+            <div class="fbk-wrap">
+              <div id="fbk-form-wrap">
+                <div class="fbk-card">
+                  <label class="fbk-label">Rate your experience</label>
+                  <div class="fbk-stars" id="fbk-stars">
+                    <span class="fbk-star" data-star="1">&#9733;</span>
+                    <span class="fbk-star" data-star="2">&#9733;</span>
+                    <span class="fbk-star" data-star="3">&#9733;</span>
+                    <span class="fbk-star" data-star="4">&#9733;</span>
+                    <span class="fbk-star" data-star="5">&#9733;</span>
+                  </div>
+                  <div class="fbk-star-lbl" id="fbk-star-lbl">Tap to rate</div>
+                  <label class="fbk-label">What kind of feedback?</label>
+                  <div class="fbk-type-row">
+                    <button class="fbk-type-btn active" data-fbtype="bug">&#x1F41B; Bug</button>
+                    <button class="fbk-type-btn" data-fbtype="suggestion">&#x1F4A1; Suggestion</button>
+                    <button class="fbk-type-btn" data-fbtype="general">&#x1F44D; General</button>
+                  </div>
+                  <label class="fbk-label" for="fbk-message">Describe the issue or idea</label>
+                  <textarea class="fbk-textarea" id="fbk-message" placeholder="Describe the issue or idea..." rows="4"></textarea>
+                  <span class="fbk-char-hint" id="fbk-char-hint">Minimum 20 characters</span>
+                  <label class="fbk-label" for="fbk-name">Your name <span style="font-weight:400;color:var(--text-2);font-size:10px">(optional)</span></label>
+                  <input type="text" class="input" id="fbk-name" placeholder="e.g. Jane Smith" style="margin-bottom:14px">
+                  <button class="btn btn-primary" id="fbk-submit">Send Feedback &#x1F4EC;</button>
+                  <div class="fbk-error hidden" id="fbk-error">Couldn't send &#8212; please try again.</div>
+                </div>
               </div>
-              <div>
-                <label class="me-label" style="margin:0 0 4px">Time</label>
-                <input type="time" class="input me-time-input" id="me-notif-weighin-time" value="08:00">
+              <div id="fbk-success" class="fbk-success hidden">
+                <div class="fbk-success-stars" id="fbk-success-stars"></div>
+                <div style="font-size:48px;margin-bottom:10px">&#x2705;</div>
+                <div style="font-size:18px;font-weight:800;margin-bottom:6px">Thanks!</div>
+                <div style="font-size:13px;color:var(--text-2);margin-bottom:24px">We'll review your feedback soon.</div>
+                <button class="btn btn-secondary" id="fbk-send-another" style="max-width:200px">Send Another</button>
               </div>
             </div>
-          </div>
-          <div class="me-divider"></div>
-          <!-- Streak saver -->
-          <div class="me-notif-row">
-            <div class="me-notif-info">
-              <div class="me-notif-title">🔥 Streak Saver</div>
-              <div class="me-notif-sub">Evening nudge if today's challenges aren't done</div>
-            </div>
-            <label class="me-switch">
-              <input type="checkbox" id="me-notif-streak-toggle">
-              <span class="me-slider"></span>
-            </label>
-          </div>
-          <div id="me-notif-streak-time-row" class="me-notif-time-row hidden">
-            <label class="me-label" style="margin:0">Time</label>
-            <input type="time" class="input me-time-input" id="me-notif-streak-time" value="20:00">
-          </div>
-          <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">
-            For best results, add CardioCrew to your Home Screen so reminders arrive even when the app is closed.
           </div>
         </div>
 
-        <div style="height:24px"></div>
-      </div><!-- end .me-wrap -->
-    </div><!-- end #tab-me -->
+        <div style="height:32px"></div>
+      </div>
+    </div>
 
-  <!-- Bottom Nav (5 tabs) -->
+  <!-- Bottom Nav (4 tabs) -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="today">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -1879,9 +1922,6 @@
     <button class="nav-btn" data-tab="profile">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile    </button>
-    <button class="nav-btn" data-tab="me">
-      <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      Me    </button>
   </nav>
 </div><!-- end .app-content -->
 </div><!-- end #screen-app -->
@@ -3312,15 +3352,10 @@
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
     const sorted=Object.keys(state.members).map(id=>({id,pts:getTotalPoints(id)})).sort((a,b)=>b.pts-a.pts);
     document.getElementById('prof-members').textContent=`${sorted.length} member${sorted.length!==1?'s':''}`;
-    // Wager badge — only show if this member opted in
+    // Wager card — static element in Campaign section
     const profWager=state.campaignData?.wagerAmount||0;
     const myOptIn=state.members[state.userId]?.wagerOptIn===true;
-    let wagerBadgeEl=document.getElementById('profile-wager-badge');
-    if(!wagerBadgeEl){
-      wagerBadgeEl=document.createElement('div');
-      wagerBadgeEl.id='profile-wager-badge';
-      document.getElementById('profile-warrior-section').before(wagerBadgeEl);
-    }
+    const wagerBadgeEl=document.getElementById('profile-wager-badge');
     if(profWager>0){
       const WAGER_LOCK_DAY = 23;
       const wagerLocked = day > WAGER_LOCK_DAY || isCampaignOver();
@@ -4448,16 +4483,43 @@
       }
     });
   });
-  // Patch switchTab to auto-init feedback + Me tab on switch
+  // initProfileSections — collapsible section toggle with localStorage persistence
+  function initProfileSections() {
+    const DEFAULT_OPEN = new Set(['warrior', 'clan', 'community']);
+    document.querySelectorAll('.psec-hdr').forEach(hdr => {
+      if (hdr._psecInited) return;
+      hdr._psecInited = true;
+      const key = hdr.dataset.sec;
+      const body = document.getElementById('psec-' + key);
+      const arrow = hdr.querySelector('.psec-arrow');
+      if (!body || !arrow) return;
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem('cc_profile_open') || '{}'); } catch {}
+      const isOpen = key in saved ? saved[key] : DEFAULT_OPEN.has(key);
+      body.classList.toggle('hidden', !isOpen);
+      arrow.textContent = isOpen ? '▾' : '▸';
+      hdr.addEventListener('click', () => {
+        const nowOpen = !body.classList.contains('hidden');
+        body.classList.toggle('hidden', nowOpen);
+        arrow.textContent = nowOpen ? '▸' : '▾';
+        try {
+          const s = JSON.parse(localStorage.getItem('cc_profile_open') || '{}');
+          s[key] = !nowOpen;
+          localStorage.setItem('cc_profile_open', JSON.stringify(s));
+        } catch {}
+      });
+    });
+  }
+
+  // Patch switchTab — init feedback / profile sections / Me tab data on switch
   const _origSwitchTab = switchTab;
   switchTab = function(tabId) {
     _origSwitchTab(tabId);
     if (tabId === 'profile') {
+      initProfileSections();
+      setTimeout(initMeTab, 50);
       const activeComm = document.querySelector('.profile-comm-section.active');
       if (activeComm && activeComm.id === 'comm-appfeedback') setTimeout(initFeedbackTab, 50);
-    }
-    if (tabId === 'me') {
-      setTimeout(initMeTab, 50);
     }
   };
 
@@ -4475,23 +4537,27 @@
   }
 
   async function initMeTab() {
-    // Header: warrior portrait + name + clan
+    // Me tab is now embedded in Profile tab — header elements removed from DOM
     const me = state.members[state.userId];
     if (!me) return;
-    document.getElementById('me-header-name').textContent = me.name || '—';
+    // Guard: these elements exist if still in DOM (kept for compatibility)
+    const nameEl = document.getElementById('me-header-name');
+    if (nameEl) nameEl.textContent = me.name || '—';
     const clan = me.clanId ? state.clans[me.clanId] : null;
-    document.getElementById('me-header-clan').textContent = clan
-      ? `${clan.crest || '🏰'} ${clan.name}` : 'No clan yet';
+    const clanEl = document.getElementById('me-header-clan');
+    if (clanEl) clanEl.textContent = clan ? `${clan.crest || '🏰'} ${clan.name}` : 'No clan yet';
 
-    // Warrior portrait thumbnail
+    // Warrior portrait thumbnail (guard: element removed in merged profile tab)
     const portrait = document.getElementById('me-warrior-portrait');
-    portrait.innerHTML = '';
-    try {
-      const dpr = Math.min(window.devicePixelRatio || 1, 3);
-      const wc = makeWarriorCanvas(state.userId, Math.round(64*dpr), Math.round(84*dpr), false);
-      wc.style.width = '64px'; wc.style.height = '84px';
-      portrait.appendChild(wc);
-    } catch(e) { portrait.textContent = '⚔️'; }
+    if (portrait) {
+      portrait.innerHTML = '';
+      try {
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
+        const wc = makeWarriorCanvas(state.userId, Math.round(64*dpr), Math.round(84*dpr), false);
+        wc.style.width = '64px'; wc.style.height = '84px';
+        portrait.appendChild(wc);
+      } catch(e) { portrait.textContent = '⚔️'; }
+    }
 
     // Load profile data from Firestore users doc
     try {
