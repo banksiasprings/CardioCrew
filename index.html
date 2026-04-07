@@ -201,6 +201,20 @@
     .tpl-classic .tpl-card-emoji { font-size:18px; margin:0; }
     .tpl-classic .tpl-card-name { font-size:11px; }
 
+    /* ── Template Preview (admin) ── */
+    .tpl-preview { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; display:none; }
+    .tpl-preview.visible { display:block; }
+    .tpl-preview-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .tpl-preview-emoji { font-size:28px; line-height:1; }
+    .tpl-preview-title { font-size:14px; font-weight:800; color:#C9A227; }
+    .tpl-preview-desc { font-size:12px; color:var(--text-2); line-height:1.5; margin-bottom:10px; }
+    .tpl-preview-days { display:flex; flex-direction:column; gap:5px; }
+    .tpl-preview-day { display:flex; align-items:center; gap:8px; font-size:11px; }
+    .tpl-preview-day-num { font-weight:800; color:var(--text-3); width:38px; flex-shrink:0; }
+    .tpl-preview-day-task { color:var(--text-2); flex:1; }
+    .tpl-preview-day-pts { color:#C9A227; font-weight:700; flex-shrink:0; }
+    .tpl-preview-ellipsis { text-align:center; color:var(--text-3); font-size:14px; letter-spacing:3px; padding:2px 0; }
+
     /* ── Avatar Picker ── */
     .avatar-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
     .avatar-sub { font-size: 14px; color: var(--text-2); margin-bottom: 24px; text-align: center; }
@@ -1314,6 +1328,8 @@
               <div class="tpl-card-name">Classic Highland Warrior (4 exercises/day)</div>
             </div>
           </div>
+          <!-- Live preview of selected template -->
+          <div class="tpl-preview" id="admin-tpl-preview"></div>
           <label class="admin-field-label">Campaign Name</label>
           <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
           <label class="admin-field-label">Start Date <span style="color:#F85149">*</span></label>
@@ -6218,7 +6234,9 @@
     // ── Populate template picker ──
     (function populateTemplatePicker() {
       const grid = document.getElementById('admin-tpl-grid');
+      const preview = document.getElementById('admin-tpl-preview');
       if (!grid) return;
+
       CAMPAIGN_TEMPLATES.forEach(tpl => {
         const card = document.createElement('div');
         card.className = 'tpl-card';
@@ -6226,17 +6244,61 @@
         card.innerHTML = `<div class="tpl-card-emoji">${tpl.emoji}</div><div class="tpl-card-name">${tpl.name}</div>`;
         grid.appendChild(card);
       });
+
+      function showPreview(tplId) {
+        if (!preview) return;
+        if (!tplId) { preview.classList.remove('visible'); preview.innerHTML = ''; return; }
+        const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === tplId);
+        if (!tpl) { preview.classList.remove('visible'); return; }
+        // Show day 1, 7, 14, 20, 30 as a sampler
+        const sampleIndices = [0, 6, 13, 19, 29];
+        const totalPts = tpl.days.reduce((s, d) => s + d.pts, 0);
+        const daysHtml = sampleIndices.map((i, pos) => {
+          const d = tpl.days[i];
+          if (!d) return '';
+          const gap = pos > 0 && sampleIndices[pos] - sampleIndices[pos-1] > 1
+            ? `<div class="tpl-preview-ellipsis">· · ·</div>` : '';
+          return `${gap}<div class="tpl-preview-day">
+            <div class="tpl-preview-day-num">Day ${i+1}</div>
+            <div class="tpl-preview-day-task">${escHtml(d.task)}</div>
+            <div class="tpl-preview-day-pts">+${d.pts}pts</div>
+          </div>`;
+        }).join('');
+        preview.innerHTML = `
+          <div class="tpl-preview-header">
+            <div class="tpl-preview-emoji">${tpl.emoji}</div>
+            <div><div class="tpl-preview-title">${escHtml(tpl.name)}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px">30 days · ${totalPts} max pts</div></div>
+          </div>
+          <div class="tpl-preview-desc">${escHtml(tpl.desc)}</div>
+          <div class="tpl-preview-days">${daysHtml}</div>`;
+        preview.classList.add('visible');
+      }
+
       grid.addEventListener('click', e => {
         const card = e.target.closest('.tpl-card');
         if (!card) return;
         grid.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
-        // Auto-fill name with template name if field is empty
+        const tplId = card.dataset.tplId;
+        // Always update the name field to match the selected template
+        // (unless user has manually edited it to something other than a template name)
         const nameInp = document.getElementById('admin-create-name');
-        if (nameInp && !nameInp.value.trim() && card.dataset.tplId) {
-          const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === card.dataset.tplId);
-          if (tpl) nameInp.value = tpl.name;
+        if (nameInp) {
+          const currentVal = nameInp.value.trim();
+          const isAutoFilled = !currentVal
+            || currentVal === 'Classic Highland Warrior'
+            || CAMPAIGN_TEMPLATES.some(t => t.name === currentVal);
+          if (isAutoFilled) {
+            if (tplId) {
+              const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === tplId);
+              if (tpl) nameInp.value = tpl.name;
+            } else {
+              nameInp.value = 'Classic Highland Warrior';
+            }
+          }
         }
+        showPreview(tplId);
       });
     })();
 
