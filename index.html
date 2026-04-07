@@ -2787,19 +2787,32 @@
   }
 
   async function joinPresetClan(pc) {
-    // Check if clan already exists for this campaign
-    const existing = Object.entries(state.clans).find(([,c]) => c.presetId === pc.id);
     let clanId;
-    if (existing) {
-      clanId = existing[0];
+
+    // 1. Fast path: check local state (already loaded clans)
+    const localExisting = Object.entries(state.clans).find(([,c]) => c.presetId === pc.id);
+    if (localExisting) {
+      clanId = localExisting[0];
     } else {
-      // Create it
-      clanId = genId(8);
-      await setDoc(doc(db,'campaigns',state.campaignId,'clans',clanId), {
-        name: pc.name, crest: pc.crest, tartanId: pc.tartanId,
-        code: genCode(), createdBy: state.userId, createdAt: serverTimestamp(),
-        presetId: pc.id, motto: pc.motto, mottoEn: pc.mottoEn,
-      });
+      // 2. Always verify against Firestore directly — local state can be stale for new users
+      const firestoreSnap = await getDocs(
+        query(collection(db, 'campaigns', state.campaignId, 'clans'),
+              where('presetId', '==', pc.id))
+      );
+      if (!firestoreSnap.empty) {
+        // Found the canonical clan — use it
+        clanId = firestoreSnap.docs[0].id;
+      } else {
+        // 3. Truly first time this preset clan is needed — create it with a stable,
+        //    deterministic ID (presetId itself) so concurrent first-joins don't
+        //    produce duplicates. merge:true means a race-condition double-write is harmless.
+        clanId = `preset_${pc.id}`;
+        await setDoc(doc(db, 'campaigns', state.campaignId, 'clans', clanId), {
+          name: pc.name, crest: pc.crest, tartanId: pc.tartanId,
+          code: genCode(), createdBy: state.userId, createdAt: serverTimestamp(),
+          presetId: pc.id, motto: pc.motto, mottoEn: pc.mottoEn,
+        }, { merge: true });
+      }
     }
     await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), { clanId });
   }
