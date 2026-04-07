@@ -965,6 +965,126 @@
     .admin-member-name-v2 { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
     .admin-member-clan-v2 { font-size: 12px; color: var(--text-2); }
     .admin-member-pts-v2 { font-size: 13px; font-weight: 700; color: #C9A227; margin-right: 4px; }
+
+    /* ── Me Tab ───────────────────────────────────────────── */
+    .me-wrap { padding: 0 0 80px; }
+
+    /* Header */
+    .me-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 20px 16px 16px;
+      background: linear-gradient(135deg, var(--surface), var(--bg));
+      border-bottom: 1px solid var(--border);
+    }
+    .me-warrior-portrait {
+      width: 64px; height: 84px; border-radius: 10px; overflow: hidden;
+      border: 2px solid var(--gold); flex-shrink: 0;
+      background: var(--surface-2);
+      box-shadow: 0 0 12px rgba(201,162,39,0.25);
+    }
+    .me-warrior-portrait canvas { display: block; width: 64px; height: 84px; }
+    .me-header-name { font-size: 20px; font-weight: 800; color: var(--text); }
+    .me-header-clan { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+    /* Section headers */
+    .me-section-header {
+      font-size: 12px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-2);
+      padding: 18px 16px 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .me-collapsible-header { cursor: pointer; user-select: none; }
+    .me-collapsible-header:hover { color: var(--text); }
+    .me-collapse-arrow { font-size: 14px; transition: transform 0.2s; }
+    .me-collapse-arrow.open { transform: rotate(90deg); }
+
+    /* Cards */
+    .me-card {
+      margin: 0 12px 4px;
+      background: var(--surface); border-radius: var(--radius);
+      border: 1px solid var(--border); padding: 16px;
+    }
+
+    /* Weight progress */
+    .me-weight-row { display: flex; align-items: center; justify-content: space-around; gap: 4px; margin-bottom: 14px; }
+    .me-weight-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .me-weight-col-current .me-weight-val { font-size: 26px; color: var(--gold); }
+    .me-weight-val { font-size: 22px; font-weight: 800; color: var(--text); }
+    .me-weight-lbl { font-size: 11px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .me-weight-arrow { font-size: 18px; color: var(--text-3); margin-top: -10px; }
+    .me-progress-bar-wrap { margin-bottom: 10px; }
+    .me-progress-bar-track { height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+    .me-progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #F5E6B3); border-radius: 4px; transition: width 0.6s ease; }
+    .me-progress-label { font-size: 12px; color: var(--text-2); text-align: center; }
+    .me-weight-chart { display: block; width: 100%; height: 70px; margin: 8px 0 12px; border-radius: 6px; }
+    .me-log-btn {
+      width: 100%; padding: 11px; border-radius: var(--radius-sm);
+      background: rgba(201,162,39,0.12); color: var(--gold);
+      border: 1px solid rgba(201,162,39,0.35); font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .me-log-btn:active { background: rgba(201,162,39,0.22); }
+    .me-inline-input { background: var(--bg) !important; color: var(--text) !important; border: 1.5px solid var(--border) !important; }
+
+    /* Form grid */
+    .me-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .me-field { display: flex; flex-direction: column; gap: 5px; }
+    .me-field-full { grid-column: 1 / -1; }
+    .me-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+    .me-input { font-size: 15px !important; padding: 10px 12px !important; }
+
+    /* Fitness level buttons */
+    .me-fitness-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .me-fit-btn {
+      flex: 1; min-width: 120px; padding: 10px 8px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--bg);
+      color: var(--text-2); font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .me-fit-btn.active {
+      border-color: var(--gold); background: rgba(201,162,39,0.12);
+      color: var(--gold); font-weight: 700;
+    }
+
+    /* Toggle switch */
+    .me-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .me-toggle-lbl { font-size: 14px; color: var(--text); }
+    .me-switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+    .me-switch input { opacity: 0; width: 0; height: 0; }
+    .me-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: var(--surface-2); border-radius: 26px;
+      border: 1.5px solid var(--border); transition: 0.25s;
+    }
+    .me-slider::before {
+      content: ''; position: absolute; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background: var(--text-3);
+      border-radius: 50%; transition: 0.25s;
+    }
+    .me-switch input:checked + .me-slider { background: rgba(201,162,39,0.2); border-color: var(--gold); }
+    .me-switch input:checked + .me-slider::before { transform: translateX(20px); background: var(--gold); }
+
+    /* Save button */
+    .me-save-btn {
+      width: 100%; padding: 12px; border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--gold), #8B6914);
+      color: #000; font-size: 14px; font-weight: 800; border: none; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .me-save-btn:active { opacity: 0.85; transform: scale(0.98); }
+    .me-save-confirm { font-size: 13px; color: #3fb950; text-align: center; padding-top: 8px; }
+
+    /* Notification rows */
+    .me-notif-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 10px; }
+    .me-notif-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .me-notif-sub { font-size: 12px; color: var(--text-2); }
+    .me-notif-time-row { padding: 0 0 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .me-time-input { font-size: 14px !important; padding: 8px 10px !important; width: auto !important; }
+    .me-divider { height: 1px; background: var(--border); margin: 4px 0 12px; }
+
+    /* Day theme overrides */
+    html.theme-day .me-header { background: linear-gradient(135deg, var(--surface), var(--bg-alt, var(--surface))); }
+    html.theme-day .me-card { background: var(--surface); }
+    html.theme-day .me-fit-btn { background: var(--bg); }
   </style>
 
   <!-- Apply saved theme before first paint to avoid flash -->
@@ -1412,7 +1532,212 @@
         </div>
       </div>
     </div>
-  <!-- Bottom Nav (4 tabs) -->
+    <!-- ── Me Tab ─────────────────────────────────────────── -->
+    <div id="tab-me" class="tab-page">
+      <div class="me-wrap">
+
+        <!-- Header: warrior + name -->
+        <div class="me-header">
+          <div class="me-warrior-portrait" id="me-warrior-portrait"></div>
+          <div class="me-header-info">
+            <div class="me-header-name" id="me-header-name">—</div>
+            <div class="me-header-clan" id="me-header-clan"></div>
+          </div>
+        </div>
+
+        <!-- Weight Progress card -->
+        <div class="me-section-header">⚖️ Weight Progress</div>
+        <div class="me-card" id="me-weight-card">
+          <div class="me-weight-row">
+            <div class="me-weight-col">
+              <div class="me-weight-val" id="me-w-start">—</div>
+              <div class="me-weight-lbl">Starting</div>
+            </div>
+            <div class="me-weight-arrow">→</div>
+            <div class="me-weight-col me-weight-col-current">
+              <div class="me-weight-val current" id="me-w-current">—</div>
+              <div class="me-weight-lbl">Current</div>
+            </div>
+            <div class="me-weight-arrow">→</div>
+            <div class="me-weight-col">
+              <div class="me-weight-val" id="me-w-goal">—</div>
+              <div class="me-weight-lbl">Goal</div>
+            </div>
+          </div>
+          <div class="me-progress-bar-wrap" id="me-weight-progress-wrap" style="display:none">
+            <div class="me-progress-bar-track">
+              <div class="me-progress-bar-fill" id="me-weight-bar"></div>
+            </div>
+            <div class="me-progress-label" id="me-weight-progress-label"></div>
+          </div>
+          <!-- Sparkline chart -->
+          <canvas id="me-weight-chart" class="me-weight-chart" style="display:none"></canvas>
+          <button class="me-log-btn" id="btn-me-log-weight">＋ Log Weight Today</button>
+          <!-- Inline log form -->
+          <div id="me-log-form" class="hidden" style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <input class="input me-inline-input" id="me-log-weight-val" type="number" step="0.1" min="20" max="300" placeholder="kg" style="width:90px">
+            <button class="btn btn-primary" id="btn-me-log-save" style="padding:9px 16px;font-size:13px">Save</button>
+            <button class="btn" id="btn-me-log-cancel" style="padding:9px 12px;font-size:13px;background:var(--surface-2);color:var(--text-2)">✕</button>
+          </div>
+        </div>
+
+        <!-- Body Stats card -->
+        <div class="me-section-header">📋 Body Stats</div>
+        <div class="me-card">
+          <div class="me-form-grid">
+            <div class="me-field">
+              <label class="me-label">Age</label>
+              <input class="input me-input" id="me-age" type="number" min="10" max="100" placeholder="years">
+            </div>
+            <div class="me-field">
+              <label class="me-label">Height</label>
+              <input class="input me-input" id="me-height" type="number" step="0.5" min="100" max="250" placeholder="cm">
+            </div>
+            <div class="me-field">
+              <label class="me-label">Starting Weight</label>
+              <input class="input me-input" id="me-start-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
+            </div>
+            <div class="me-field">
+              <label class="me-label">Goal Weight</label>
+              <input class="input me-input" id="me-goal-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
+            </div>
+            <div class="me-field me-field-full">
+              <label class="me-label">Fitness Level</label>
+              <div class="me-fitness-btns" id="me-fitness-btns">
+                <button class="me-fit-btn" data-level="beginner">🌱 Beginner</button>
+                <button class="me-fit-btn" data-level="intermediate">💪 Intermediate</button>
+                <button class="me-fit-btn" data-level="advanced">🔥 Advanced</button>
+                <button class="me-fit-btn" data-level="athlete">⚡ Athlete</button>
+              </div>
+            </div>
+            <div class="me-field me-field-full">
+              <label class="me-label">Gym Membership</label>
+              <div class="me-toggle-row">
+                <span class="me-toggle-lbl">I have access to a gym</span>
+                <label class="me-switch">
+                  <input type="checkbox" id="me-gym-toggle">
+                  <span class="me-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <button class="me-save-btn" id="btn-me-save-stats">Save Stats ✓</button>
+          <div id="me-stats-saved" class="me-save-confirm hidden">✅ Saved!</div>
+        </div>
+
+        <!-- Measurements card (collapsible) -->
+        <div class="me-section-header me-collapsible-header" id="me-measurements-toggle">
+          📐 Measurements <span class="me-collapse-arrow" id="me-measurements-arrow">▸</span>
+          <span style="font-size:11px;font-weight:400;color:var(--text-3);margin-left:6px">optional</span>
+        </div>
+        <div id="me-measurements-body" class="hidden">
+          <div class="me-card">
+            <div class="me-form-grid">
+              <div class="me-field">
+                <label class="me-label">Waist (cm)</label>
+                <input class="input me-input" id="me-waist" type="number" step="0.5" placeholder="cm">
+              </div>
+              <div class="me-field">
+                <label class="me-label">Hips (cm)</label>
+                <input class="input me-input" id="me-hips" type="number" step="0.5" placeholder="cm">
+              </div>
+              <div class="me-field">
+                <label class="me-label">Chest (cm)</label>
+                <input class="input me-input" id="me-chest" type="number" step="0.5" placeholder="cm">
+              </div>
+              <div class="me-field">
+                <label class="me-label">Thigh (cm)</label>
+                <input class="input me-input" id="me-thigh" type="number" step="0.5" placeholder="cm">
+              </div>
+              <div class="me-field">
+                <label class="me-label">Body Fat %</label>
+                <input class="input me-input" id="me-bodyfat" type="number" step="0.1" min="1" max="60" placeholder="%">
+              </div>
+            </div>
+            <button class="me-save-btn" id="btn-me-save-measurements">Save Measurements ✓</button>
+            <div id="me-measurements-saved" class="me-save-confirm hidden">✅ Saved!</div>
+          </div>
+        </div>
+
+        <!-- Notifications card -->
+        <div class="me-section-header">🔔 Reminders</div>
+        <div class="me-card" id="me-notif-card">
+          <div id="me-notif-blocked" class="hidden" style="font-size:13px;color:var(--text-2);padding:4px 0 8px">
+            Notifications are blocked. Enable them in your device settings to use reminders.
+          </div>
+          <!-- Workout reminder -->
+          <div class="me-notif-row">
+            <div class="me-notif-info">
+              <div class="me-notif-title">💪 Daily Workout Reminder</div>
+              <div class="me-notif-sub">Remind me to complete today's challenges</div>
+            </div>
+            <label class="me-switch">
+              <input type="checkbox" id="me-notif-workout-toggle">
+              <span class="me-slider"></span>
+            </label>
+          </div>
+          <div id="me-notif-workout-time-row" class="me-notif-time-row hidden">
+            <label class="me-label" style="margin:0">Time</label>
+            <input type="time" class="input me-time-input" id="me-notif-workout-time" value="07:00">
+          </div>
+          <div class="me-divider"></div>
+          <!-- Weigh-in reminder -->
+          <div class="me-notif-row">
+            <div class="me-notif-info">
+              <div class="me-notif-title">⚖️ Weigh-in Reminder</div>
+              <div class="me-notif-sub">Remind me to log my weight</div>
+            </div>
+            <label class="me-switch">
+              <input type="checkbox" id="me-notif-weighin-toggle">
+              <span class="me-slider"></span>
+            </label>
+          </div>
+          <div id="me-notif-weighin-time-row" class="me-notif-time-row hidden">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <div>
+                <label class="me-label" style="margin:0 0 4px">Day</label>
+                <select class="input me-time-input" id="me-notif-weighin-day" style="width:130px">
+                  <option value="1">Monday</option>
+                  <option value="2">Tuesday</option>
+                  <option value="3">Wednesday</option>
+                  <option value="4">Thursday</option>
+                  <option value="5">Friday</option>
+                  <option value="6">Saturday</option>
+                  <option value="0">Sunday</option>
+                </select>
+              </div>
+              <div>
+                <label class="me-label" style="margin:0 0 4px">Time</label>
+                <input type="time" class="input me-time-input" id="me-notif-weighin-time" value="08:00">
+              </div>
+            </div>
+          </div>
+          <div class="me-divider"></div>
+          <!-- Streak saver -->
+          <div class="me-notif-row">
+            <div class="me-notif-info">
+              <div class="me-notif-title">🔥 Streak Saver</div>
+              <div class="me-notif-sub">Evening nudge if today's challenges aren't done</div>
+            </div>
+            <label class="me-switch">
+              <input type="checkbox" id="me-notif-streak-toggle">
+              <span class="me-slider"></span>
+            </label>
+          </div>
+          <div id="me-notif-streak-time-row" class="me-notif-time-row hidden">
+            <label class="me-label" style="margin:0">Time</label>
+            <input type="time" class="input me-time-input" id="me-notif-streak-time" value="20:00">
+          </div>
+          <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">
+            For best results, add CardioCrew to your Home Screen so reminders arrive even when the app is closed.
+          </div>
+        </div>
+
+        <div style="height:24px"></div>
+      </div><!-- end .me-wrap -->
+    </div><!-- end #tab-me -->
+
+  <!-- Bottom Nav (5 tabs) -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="today">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -1426,6 +1751,9 @@
     <button class="nav-btn" data-tab="profile">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile    </button>
+    <button class="nav-btn" data-tab="me">
+      <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      Me    </button>
   </nav>
 </div><!-- end .app-content -->
 </div><!-- end #screen-app -->
@@ -3054,7 +3382,7 @@
       }
     });
   });
-  // Patch switchTab to auto-init feedback when profile is opened with feedback section active
+  // Patch switchTab to auto-init feedback + Me tab on switch
   const _origSwitchTab = switchTab;
   switchTab = function(tabId) {
     _origSwitchTab(tabId);
@@ -3062,7 +3390,340 @@
       const activeComm = document.querySelector('.profile-comm-section.active');
       if (activeComm && activeComm.id === 'comm-appfeedback') setTimeout(initFeedbackTab, 50);
     }
+    if (tabId === 'me') {
+      setTimeout(initMeTab, 50);
+    }
   };
+
+  // ═══════════════════════════════════════════════════════
+  // ─── Me Tab ──────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+
+  const ME_NOTIF_KEY = 'cc_notif_prefs';
+
+  function getMeNotifPrefs() {
+    try { return JSON.parse(localStorage.getItem(ME_NOTIF_KEY) || '{}'); } catch { return {}; }
+  }
+  function saveMeNotifPrefs(prefs) {
+    localStorage.setItem(ME_NOTIF_KEY, JSON.stringify(prefs));
+  }
+
+  async function initMeTab() {
+    // Header: warrior portrait + name + clan
+    const me = state.members[state.userId];
+    if (!me) return;
+    document.getElementById('me-header-name').textContent = me.name || '—';
+    const clan = me.clanId ? state.clans[me.clanId] : null;
+    document.getElementById('me-header-clan').textContent = clan
+      ? `${clan.crest || '🏰'} ${clan.name}` : 'No clan yet';
+
+    // Warrior portrait thumbnail
+    const portrait = document.getElementById('me-warrior-portrait');
+    portrait.innerHTML = '';
+    try {
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const wc = makeWarriorCanvas(state.userId, Math.round(64*dpr), Math.round(84*dpr), false);
+      wc.style.width = '64px'; wc.style.height = '84px';
+      portrait.appendChild(wc);
+    } catch(e) { portrait.textContent = '⚔️'; }
+
+    // Load profile data from Firestore users doc
+    try {
+      const userSnap = await getDoc(doc(db, 'users', state.userId));
+      const profile = userSnap.exists() ? (userSnap.data().profile || {}) : {};
+      const meas    = userSnap.exists() ? (userSnap.data().measurements || {}) : {};
+
+      // Body stats fields
+      document.getElementById('me-age').value         = profile.age         || '';
+      document.getElementById('me-height').value      = profile.height      || '';
+      document.getElementById('me-start-weight').value= profile.startWeight || '';
+      document.getElementById('me-goal-weight').value = profile.goalWeight  || '';
+      document.getElementById('me-gym-toggle').checked= !!profile.gym;
+
+      // Fitness level buttons
+      document.querySelectorAll('.me-fit-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.level === (profile.fitnessLevel || ''));
+      });
+
+      // Measurements
+      document.getElementById('me-waist').value   = meas.waist   || '';
+      document.getElementById('me-hips').value    = meas.hips    || '';
+      document.getElementById('me-chest').value   = meas.chest   || '';
+      document.getElementById('me-thigh').value   = meas.thigh   || '';
+      document.getElementById('me-bodyfat').value = meas.bodyfat || '';
+
+      // Weight progress
+      await renderMeWeightProgress(profile);
+
+    } catch(e) { console.warn('Me tab profile load error:', e); }
+
+    // Notification prefs
+    renderMeNotifPrefs();
+  }
+
+  async function renderMeWeightProgress(profile) {
+    const startW   = parseFloat(profile?.startWeight) || null;
+    const goalW    = parseFloat(profile?.goalWeight)  || null;
+
+    // Load weight log
+    let weightLog = [];
+    try {
+      const logSnap = await getDocs(
+        query(collection(db, 'users', state.userId, 'weightLog'), orderBy('date', 'asc'))
+      );
+      logSnap.forEach(d => weightLog.push({ date: d.id, kg: d.data().kg }));
+    } catch(e) {}
+
+    const currentW = weightLog.length ? weightLog[weightLog.length - 1].kg : null;
+
+    document.getElementById('me-w-start').textContent   = startW   ? `${startW}kg`   : '—';
+    document.getElementById('me-w-current').textContent = currentW ? `${currentW}kg` : '—';
+    document.getElementById('me-w-goal').textContent    = goalW    ? `${goalW}kg`    : '—';
+
+    // Progress bar
+    const progressWrap = document.getElementById('me-weight-progress-wrap');
+    if (startW && goalW && currentW) {
+      progressWrap.style.display = 'block';
+      const totalChange  = Math.abs(goalW - startW);
+      const achieved     = Math.abs(currentW - startW);
+      const pct          = totalChange > 0 ? Math.min(100, Math.round((achieved / totalChange) * 100)) : 0;
+      document.getElementById('me-weight-bar').style.width = pct + '%';
+      const lost = (startW - currentW).toFixed(1);
+      const toGo = (currentW - goalW).toFixed(1);
+      document.getElementById('me-weight-progress-label').textContent =
+        lost > 0 ? `${lost}kg lost · ${Math.max(0, toGo)}kg to go · ${pct}% there`
+                 : `${Math.abs(lost)}kg gained · ${Math.abs(toGo)}kg to go`;
+    } else {
+      progressWrap.style.display = 'none';
+    }
+
+    // Sparkline
+    const chartEl = document.getElementById('me-weight-chart');
+    if (weightLog.length >= 2) {
+      chartEl.style.display = 'block';
+      drawWeightSparkline(chartEl, weightLog);
+    } else {
+      chartEl.style.display = 'none';
+    }
+  }
+
+  function drawWeightSparkline(canvas, log) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = canvas.offsetWidth  * dpr || 300 * dpr;
+    canvas.height = 70 * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = canvas.offsetWidth || 300;
+    const H = 70;
+    const pad = { top: 8, bottom: 18, left: 8, right: 8 };
+
+    const vals = log.map(e => e.kg);
+    const minV = Math.min(...vals) - 1;
+    const maxV = Math.max(...vals) + 1;
+    const range = maxV - minV || 1;
+    const toY = v => pad.top + (H - pad.top - pad.bottom) * (1 - (v - minV) / range);
+    const toX = i => pad.left + i * (W - pad.left - pad.right) / Math.max(1, vals.length - 1);
+
+    // Fill area under line
+    ctx.beginPath();
+    ctx.moveTo(toX(0), H - pad.bottom);
+    vals.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+    ctx.lineTo(toX(vals.length - 1), H - pad.bottom);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, 'rgba(201,162,39,0.3)');
+    grad.addColorStop(1, 'rgba(201,162,39,0.02)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    vals.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+    ctx.strokeStyle = '#C9A227';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Latest point dot
+    const lx = toX(vals.length - 1), ly = toY(vals[vals.length - 1]);
+    ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#C9A227'; ctx.fill();
+
+    // Latest value label
+    ctx.fillStyle = '#F5E6B3';
+    ctx.font = `bold ${11 * dpr / dpr}px sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(vals[vals.length - 1] + 'kg', W - pad.right, ly - 7);
+  }
+
+  // ── Body stats save ───────────────────────────────────────
+  let _meSelectedFitnessLevel = '';
+
+  document.querySelectorAll('.me-fit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _meSelectedFitnessLevel = btn.dataset.level;
+      document.querySelectorAll('.me-fit-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  document.getElementById('btn-me-save-stats').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-me-save-stats');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      const profile = {
+        age:          parseFloat(document.getElementById('me-age').value)          || null,
+        height:       parseFloat(document.getElementById('me-height').value)       || null,
+        startWeight:  parseFloat(document.getElementById('me-start-weight').value) || null,
+        goalWeight:   parseFloat(document.getElementById('me-goal-weight').value)  || null,
+        fitnessLevel: document.querySelector('.me-fit-btn.active')?.dataset.level  || '',
+        gym:          document.getElementById('me-gym-toggle').checked,
+      };
+      // Remove nulls
+      Object.keys(profile).forEach(k => profile[k] === null && delete profile[k]);
+      await setDoc(doc(db, 'users', state.userId), { profile }, { merge: true });
+      const confirmEl = document.getElementById('me-stats-saved');
+      confirmEl.classList.remove('hidden');
+      setTimeout(() => confirmEl.classList.add('hidden'), 2500);
+      // Refresh weight progress in case startWeight/goalWeight changed
+      await renderMeWeightProgress(profile);
+    } catch(e) { toast('Error: ' + e.message, 3000); }
+    finally { btn.textContent = 'Save Stats ✓'; btn.disabled = false; }
+  });
+
+  // ── Measurements save ─────────────────────────────────────
+  document.getElementById('btn-me-save-measurements').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-me-save-measurements');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      const measurements = {
+        waist:   parseFloat(document.getElementById('me-waist').value)   || null,
+        hips:    parseFloat(document.getElementById('me-hips').value)    || null,
+        chest:   parseFloat(document.getElementById('me-chest').value)   || null,
+        thigh:   parseFloat(document.getElementById('me-thigh').value)   || null,
+        bodyfat: parseFloat(document.getElementById('me-bodyfat').value) || null,
+      };
+      Object.keys(measurements).forEach(k => measurements[k] === null && delete measurements[k]);
+      await setDoc(doc(db, 'users', state.userId), { measurements }, { merge: true });
+      const confirmEl = document.getElementById('me-measurements-saved');
+      confirmEl.classList.remove('hidden');
+      setTimeout(() => confirmEl.classList.add('hidden'), 2500);
+    } catch(e) { toast('Error: ' + e.message, 3000); }
+    finally { btn.textContent = 'Save Measurements ✓'; btn.disabled = false; }
+  });
+
+  // ── Measurements collapsible ──────────────────────────────
+  document.getElementById('me-measurements-toggle').addEventListener('click', () => {
+    const body  = document.getElementById('me-measurements-body');
+    const arrow = document.getElementById('me-measurements-arrow');
+    const open  = body.classList.toggle('hidden') === false;
+    arrow.classList.toggle('open', open);
+  });
+
+  // ── Log weight ────────────────────────────────────────────
+  document.getElementById('btn-me-log-weight').addEventListener('click', () => {
+    const form = document.getElementById('me-log-form');
+    form.classList.toggle('hidden');
+    form.style.display = form.classList.contains('hidden') ? 'none' : 'flex';
+    if (!form.classList.contains('hidden')) {
+      document.getElementById('me-log-weight-val').focus();
+    }
+  });
+  document.getElementById('btn-me-log-cancel').addEventListener('click', () => {
+    document.getElementById('me-log-form').classList.add('hidden');
+    document.getElementById('me-log-form').style.display = 'none';
+  });
+  document.getElementById('btn-me-log-save').addEventListener('click', async () => {
+    const val = parseFloat(document.getElementById('me-log-weight-val').value);
+    if (!val || val < 20 || val > 300) {
+      toast('Enter a valid weight (20–300 kg)', 2000); return;
+    }
+    const btn = document.getElementById('btn-me-log-save');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      await setDoc(doc(db, 'users', state.userId, 'weightLog', today), {
+        kg: val, loggedAt: serverTimestamp()
+      });
+      // Also update currentWeight on the profile for quick access
+      await setDoc(doc(db, 'users', state.userId), { currentWeight: val }, { merge: true });
+      document.getElementById('me-log-form').classList.add('hidden');
+      document.getElementById('me-log-form').style.display = 'none';
+      document.getElementById('me-log-weight-val').value = '';
+      toast(`⚖️ Logged ${val}kg`, 2000);
+      // Refresh chart + progress
+      const userSnap = await getDoc(doc(db, 'users', state.userId));
+      const profile  = userSnap.exists() ? (userSnap.data().profile || {}) : {};
+      await renderMeWeightProgress(profile);
+    } catch(e) { toast('Error: ' + e.message, 3000); }
+    finally { btn.textContent = 'Save'; btn.disabled = false; }
+  });
+
+  // ── Notifications ─────────────────────────────────────────
+  function renderMeNotifPrefs() {
+    const prefs = getMeNotifPrefs();
+    const supported = 'Notification' in window;
+    const blocked   = supported && Notification.permission === 'denied';
+    document.getElementById('me-notif-blocked').classList.toggle('hidden', !blocked);
+
+    const applyToggle = (toggleId, timeRowId, prefKey) => {
+      const toggle  = document.getElementById(toggleId);
+      const timeRow = document.getElementById(timeRowId);
+      toggle.checked = !!prefs[prefKey]?.enabled;
+      timeRow.classList.toggle('hidden', !toggle.checked);
+      toggle.addEventListener('change', async () => {
+        if (toggle.checked && Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') { toggle.checked = false; return; }
+        }
+        const p = getMeNotifPrefs();
+        p[prefKey] = { ...(p[prefKey] || {}), enabled: toggle.checked };
+        saveMeNotifPrefs(p);
+        timeRow.classList.toggle('hidden', !toggle.checked);
+        scheduleLocalNotifications();
+        toast(toggle.checked ? '🔔 Reminder on' : '🔕 Reminder off', 1800);
+      });
+    };
+
+    applyToggle('me-notif-workout-toggle',  'me-notif-workout-time-row',  'workout');
+    applyToggle('me-notif-weighin-toggle',  'me-notif-weighin-time-row',  'weighin');
+    applyToggle('me-notif-streak-toggle',   'me-notif-streak-time-row',   'streak');
+
+    // Time inputs — save on change
+    const timeInputs = [
+      ['me-notif-workout-time',   'workout', 'time'],
+      ['me-notif-weighin-time',   'weighin', 'time'],
+      ['me-notif-weighin-day',    'weighin', 'day'],
+      ['me-notif-streak-time',    'streak',  'time'],
+    ];
+    timeInputs.forEach(([inputId, prefKey, field]) => {
+      const inp = document.getElementById(inputId);
+      if (prefs[prefKey]?.[field]) inp.value = prefs[prefKey][field];
+      inp.addEventListener('change', () => {
+        const p = getMeNotifPrefs();
+        p[prefKey] = { ...(p[prefKey] || {}), [field]: inp.value };
+        saveMeNotifPrefs(p);
+        scheduleLocalNotifications();
+      });
+    });
+  }
+
+  function scheduleLocalNotifications() {
+    // Schedule via service worker message (best-effort local notifications)
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.ready.then(reg => {
+      const prefs = getMeNotifPrefs();
+      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs });
+    });
+  }
+
+  // On page load, send current prefs to SW
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(reg => {
+      const prefs = getMeNotifPrefs();
+      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs });
+    });
+  }
   // ═══════════════════════════════════════════════════════
   // ─── Highland Warrior Avatar Creator ─────────────────
   // ═══════════════════════════════════════════════════════
