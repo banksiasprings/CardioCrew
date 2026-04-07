@@ -144,6 +144,37 @@
     .campaign-browse-card:active { opacity:0.75; }
     .btn-browse-join { touch-action:manipulation; }
 
+    /* ── In-app Campaign Browse Sheet ── */
+    .camp-browse-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9100; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+    .camp-browse-overlay.show { opacity:1; pointer-events:auto; }
+    .camp-browse-sheet { position:fixed; bottom:0; left:0; right:0; max-height:88vh; background:var(--bg-alt); border-radius:20px 20px 0 0; z-index:9101; transform:translateY(100%); transition:transform 0.32s cubic-bezier(0.32,0.72,0,1); overflow:hidden; display:flex; flex-direction:column; }
+    .camp-browse-sheet.show { transform:translateY(0); }
+    .camp-browse-hdr { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .camp-browse-hdr-title { font-size:17px; font-weight:800; }
+    .camp-browse-hdr-close { width:32px; height:32px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text-2); font-size:16px; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center; }
+    .camp-browse-body { flex:1; overflow-y:auto; padding:16px; }
+
+    /* ── Campaign Complete state (Today tab) ── */
+    .camp-complete-wrap { padding:4px 0 16px; }
+    .camp-complete-hero { text-align:center; padding:20px 16px 12px; }
+    .camp-complete-trophy { font-size:56px; line-height:1; margin-bottom:10px; }
+    .camp-complete-title { font-size:22px; font-weight:900; margin-bottom:4px; }
+    .camp-complete-sub { font-size:13px; color:var(--text-2); }
+    .camp-complete-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0; }
+    .camp-complete-stat { background:var(--surface); border-radius:10px; padding:12px 6px; text-align:center; }
+    .camp-complete-stat-val { font-size:20px; font-weight:900; color:#C9A227; }
+    .camp-complete-stat-lbl { font-size:11px; color:var(--text-2); margin-top:3px; }
+    .camp-complete-rank-row { background:var(--surface); border-radius:10px; padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+    .camp-complete-rank-badge { font-size:32px; line-height:1; flex-shrink:0; }
+    .camp-complete-rank-val { font-size:15px; font-weight:800; line-height:1.3; }
+    .camp-complete-rank-lbl { font-size:11px; color:var(--text-2); margin-top:3px; }
+    .btn-camp-next { width:100%; padding:15px; border-radius:var(--radius); border:none; background:linear-gradient(135deg,#C9A227,#9B7A1A); color:#000; font-size:15px; font-weight:800; cursor:pointer; touch-action:manipulation; }
+    .btn-camp-next:active { opacity:0.85; transform:scale(0.98); }
+
+    /* ── Profile: Browse Campaigns button ── */
+    .btn-browse-campaigns-profile { display:flex; align-items:center; gap:8px; width:calc(100% - 32px); margin:8px 16px 4px; padding:12px 16px; border-radius:var(--radius); border:1.5px solid var(--border); background:var(--surface); color:var(--text-2); font-size:13px; font-weight:700; cursor:pointer; touch-action:manipulation; }
+    .btn-browse-campaigns-profile:active { opacity:0.7; background:var(--surface-2); }
+
     /* ── Campaign Detail Sheet ── */
     .camp-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9200; opacity:0; pointer-events:none; transition:opacity 0.25s; }
     .camp-detail-overlay.show { opacity:1; pointer-events:auto; }
@@ -1548,6 +1579,7 @@
         <div class="setting-row"><span>Campaign</span><span class="setting-val" id="prof-campaign-name">—</span></div>
         <div class="setting-row"><span>Start Date</span><span class="setting-val" id="prof-start">—</span></div>
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
+        <button class="btn-browse-campaigns-profile" id="btn-browse-campaigns">📋 Browse &amp; Switch Campaigns</button>
         <div class="section-header">My Challenges</div>
         <div id="challenge-progress-list"></div>
         <div class="section-header">🔐 Login &amp; Security</div>
@@ -1898,6 +1930,18 @@
   <div class="camp-detail-handle"></div>
   <div class="camp-detail-scroll" id="camp-detail-scroll">
     <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- In-app Campaign Browse Sheet (lower z-index so detail sheet sits on top) -->
+<div class="camp-browse-overlay" id="camp-browse-overlay"></div>
+<div class="camp-browse-sheet" id="camp-browse-sheet">
+  <div class="camp-browse-hdr">
+    <div class="camp-browse-hdr-title">🗓 Campaigns</div>
+    <button class="camp-browse-hdr-close" id="camp-browse-close">✕</button>
+  </div>
+  <div class="camp-browse-body">
+    <div id="camp-browse-inner"></div>
   </div>
 </div>
 
@@ -2415,6 +2459,7 @@
   // ─── State ────────────────────────────────────────────
   let state = { userId:null, userName:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
   let viewDay = null; // null = use current campaign day
+  let _completionConfettiShown = false; // fire once per session when campaign finishes
 
   // ─── Utilities ────────────────────────────────────────
   const genId   = (n=8) => Math.random().toString(36).slice(2,2+n).toUpperCase();
@@ -2426,6 +2471,15 @@
     if (isNaN(start.getTime())) return 1;
     const today = new Date(); today.setHours(0,0,0,0);
     return Math.max(1, Math.min(Math.floor((today-start)/86400000)+1, 30));
+  }
+
+  // Returns true when 30+ days have elapsed since campaign start (i.e. day 31+)
+  function isCampaignOver() {
+    if (!state.campaignData?.startDate) return false;
+    const start = new Date(state.campaignData.startDate + 'T00:00:00');
+    if (isNaN(start.getTime())) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.floor((today - start) / 86400000) >= 30;
   }
 
   function formatTarget(ch, dayIndex) {
@@ -2844,7 +2898,78 @@
     renderProfile(day);
   }
 
+  // ─── Campaign Complete screen ─────────────────────────
+  function renderCampaignComplete() {
+    if (!_completionConfettiShown) { launchConfetti(); _completionConfettiShown = true; }
+
+    const myPts   = getTotalPoints(state.userId);
+    const sorted  = Object.keys(state.members).map(id => ({ id, pts: getTotalPoints(id) })).sort((a,b) => b.pts - a.pts);
+    const rank    = sorted.findIndex(m => m.id === state.userId) + 1;
+    const total   = sorted.length;
+    const perfect = getPerfectDays(state.userId);
+    const streak  = getStreak(state.userId);
+    const earned  = getEarnedBadges(state.userId);
+
+    const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+    const rankLabel = rank === 1
+      ? 'Champion! You topped the leaderboard! 🎖️'
+      : `You finished ${rankEmoji} out of ${total} warrior${total !== 1 ? 's' : ''}`;
+
+    // Update header elements
+    document.getElementById('progress-bar').style.width = '100%';
+    document.getElementById('progress-text').textContent = 'Day 30 of 30';
+    document.getElementById('progress-pct').textContent  = '100%';
+    document.getElementById('today-day-num').textContent = '🏆 Complete!';
+    document.getElementById('today-date-str').textContent = state.campaignData?.name || '30-Day Challenge';
+    document.getElementById('today-catchup-badge').style.display = 'none';
+    document.getElementById('today-locked-badge').style.display  = 'none';
+    const prevBtn = document.getElementById('btn-day-prev');
+    const nextBtn = document.getElementById('btn-day-next');
+    if (prevBtn) { prevBtn.style.opacity = '0.2'; prevBtn.style.pointerEvents = 'none'; }
+    if (nextBtn) { nextBtn.style.opacity = '0.2'; nextBtn.style.pointerEvents = 'none'; }
+    // Summary score line (repurpose the dots/pts area)
+    for (let i = 0; i < 4; i++) { const d = document.getElementById(`dot-${i}`); if (d) d.classList.remove('done'); }
+    document.getElementById('daily-pts').innerHTML = `${myPts} <span>total pts</span>`;
+    document.getElementById('completed-banner')?.classList.add('hidden');
+
+    const list = document.getElementById('challenges-list');
+    list.innerHTML = `
+      <div class="camp-complete-wrap">
+        <div class="camp-complete-hero">
+          <div class="camp-complete-trophy">🏆</div>
+          <div class="camp-complete-title">Challenge Complete!</div>
+          <div class="camp-complete-sub">${escHtml(state.campaignData?.name || '30-Day Challenge')}</div>
+        </div>
+        <div class="camp-complete-stats">
+          <div class="camp-complete-stat">
+            <div class="camp-complete-stat-val">${myPts}</div>
+            <div class="camp-complete-stat-lbl">Total Points</div>
+          </div>
+          <div class="camp-complete-stat">
+            <div class="camp-complete-stat-val">${perfect}</div>
+            <div class="camp-complete-stat-lbl">Perfect Days</div>
+          </div>
+          <div class="camp-complete-stat">
+            <div class="camp-complete-stat-val">${streak}</div>
+            <div class="camp-complete-stat-lbl">Best Streak</div>
+          </div>
+        </div>
+        <div class="camp-complete-rank-row">
+          <div class="camp-complete-rank-badge">${rankEmoji}</div>
+          <div>
+            <div class="camp-complete-rank-val">${rankLabel}</div>
+            <div class="camp-complete-rank-lbl">${earned.size} badge${earned.size !== 1 ? 's' : ''} earned · ${total} warrior${total !== 1 ? 's' : ''} competed</div>
+          </div>
+        </div>
+        <button class="btn-camp-next" id="btn-camp-join-next">Join Your Next Campaign ⚔️</button>
+      </div>`;
+    document.getElementById('btn-camp-join-next')?.addEventListener('click', openCampaignBrowseSheet);
+  }
+
   function renderToday(currentDay) {
+    // If the 30-day window has fully elapsed, show completion screen instead
+    if (viewDay === null && isCampaignOver()) { renderCampaignComplete(); return; }
+
     const day = viewDay !== null ? viewDay : currentDay;
     const isCurrent  = day === currentDay;
     const isCatchup  = !isCurrent && isEditableDay(day, currentDay);
@@ -3545,32 +3670,142 @@
           });
         }
       });
+
+      // Also refresh in-app browse sheet if it's currently open
+      const browseInner = document.getElementById('camp-browse-inner');
+      if (browseInner && document.getElementById('camp-browse-sheet')?.classList.contains('show')) {
+        renderCampaignBrowseList(browseInner);
+      }
     });
+  }
+
+  // ─── In-app Campaign Browse Sheet ────────────────────
+  function renderCampaignBrowseList(containerEl) {
+    if (!containerEl) return;
+    const entries = Object.entries(_campaignDataMap);
+    if (entries.length === 0) {
+      containerEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-2)">⏳ Loading campaigns…</div>';
+      if (!_campaignsBrowserStarted) startCampaignsBrowser();
+      return;
+    }
+    containerEl.innerHTML = entries.map(([id, data]) => {
+      const isActive = id === state.campaignId;
+      const tpl = data.templateId ? CAMPAIGN_TEMPLATES.find(t => t.id === data.templateId) : null;
+      const wagerLabel = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}/person` : '';
+      const tplBadge = tpl ? `<span class="camp-tpl-badge">${tpl.emoji} ${escHtml(tpl.name)}</span>` : '';
+      const activeBadge = isActive
+        ? `<span style="font-size:10px;background:rgba(63,185,80,0.15);color:#3FB950;border:1px solid rgba(63,185,80,0.3);border-radius:4px;padding:2px 6px;font-weight:700;margin-left:4px">✓ Active</span>`
+        : '';
+      const startLabel = data.startDate
+        ? new Date(data.startDate + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})
+        : 'Date TBC';
+      return `
+        <div class="campaign-browse-card" data-campaign-id="${escHtml(id)}" style="margin-bottom:10px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;margin-bottom:3px">
+              <div class="campaign-browse-name">${escHtml(data.name || 'Unnamed Campaign')}</div>${activeBadge}
+            </div>
+            ${tplBadge}
+            <div class="campaign-browse-meta">📅 ${escHtml(startLabel)}${wagerLabel}</div>
+          </div>
+          <button class="btn-browse-join" data-campaign-id="${escHtml(id)}">${isActive ? 'Active ✓' : 'Info →'}</button>
+        </div>`;
+    }).join('');
+
+    containerEl.querySelectorAll('.campaign-browse-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e._detailHandled) return;
+        openCampaignDetail(card.dataset.campaignId);
+      });
+      const btn = card.querySelector('.btn-browse-join');
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e._detailHandled = true;
+          openCampaignDetail(card.dataset.campaignId);
+        });
+      }
+    });
+  }
+
+  function openCampaignBrowseSheet() {
+    const inner = document.getElementById('camp-browse-inner');
+    if (!inner) return;
+    // Ensure the Firestore listener is running
+    if (!_campaignsBrowserStarted) startCampaignsBrowser();
+    renderCampaignBrowseList(inner);
+    document.getElementById('camp-browse-overlay').classList.add('show');
+    document.getElementById('camp-browse-sheet').classList.add('show');
+  }
+
+  function closeCampaignBrowseSheet() {
+    document.getElementById('camp-browse-overlay')?.classList.remove('show');
+    document.getElementById('camp-browse-sheet')?.classList.remove('show');
   }
 
   // ─── Campaign Detail Sheet ────────────────────────────
   async function joinCampaignById(campaignId) {
     const campaignData = _campaignDataMap[campaignId] || {};
     const name = state.userName || '';
+    // Allow join-error to be null (doesn't exist when browsing from inside app)
     const err = document.getElementById('join-error');
-    if (!name) { closeCampaignDetail(); err.textContent = 'Please log in first'; return; }
-    err.textContent = '';
+    if (!name) {
+      closeCampaignDetail();
+      if (err) err.textContent = 'Please log in first';
+      toast('Please log in first to join a campaign', 2500);
+      return;
+    }
+    if (err) err.textContent = '';
+
+    // Already in this exact campaign?
+    if (state.campaignId === campaignId) {
+      closeCampaignDetail();
+      closeCampaignBrowseSheet();
+      toast('You\'re already in this campaign ✓', 2000);
+      return;
+    }
+
+    // Confirm if switching from an active (not-yet-finished) campaign
+    if (state.campaignId) {
+      const currentName = state.campaignData?.name || 'your current campaign';
+      if (!isCampaignOver()) {
+        if (!confirm(`Switch from "${currentName}"?\n\nYour completions are saved, but you'll leave this leaderboard.`)) return;
+      }
+    }
+
     const joinBtn = document.getElementById('camp-detail-join-btn');
     if (joinBtn) { joinBtn.textContent = 'Joining…'; joinBtn.disabled = true; }
     try {
       const userId = state.userId || genId(8);
+      // Carry over existing avatar so warrior appearance is preserved on the new campaign
+      const currentAvatar = state.members[state.userId]?.avatar || '⚔️';
       const wager = campaignData.wagerAmount || 0;
       let wagerOptIn = false;
       if (wager > 0) {
         wagerOptIn = confirm(`💰 This campaign has a $${wager}/person wager!\n\nDo you want to opt in to the prize pool?\n\nOK = Yes, I'm in!\nCancel = No thanks, just train`);
       }
-      await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name, avatar:'⚔️', joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
+      await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name, avatar: currentAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
+
+      const isSwitching = !!state.campaignId;
       state.userId = userId; state.campaignId = campaignId;
       state.campaignData = campaignData;
       saveLocal();
       closeCampaignDetail();
-      initClanScreen(); showScreen('screen-clan');
-      toast(wagerOptIn ? `Welcome to the crew, ${name}! 💰 You're in for $${wager}!` : wager > 0 ? `Welcome to the crew, ${name}! (Wager skipped) ⚔️` : `Welcome to the crew, ${name}! ⚔️`, 3500);
+      closeCampaignBrowseSheet();
+
+      if (isSwitching) {
+        // Already in the app — clear old data, re-subscribe, stay in app
+        state.members = {}; state.clans = {}; state.messages = [];
+        _completionConfettiShown = false; viewDay = null;
+        const toastMsg = wagerOptIn
+          ? `Switched! Welcome to ${campaignData.name || 'the campaign'}! 💰 You're in for $${wager}!`
+          : `Switched to ${campaignData.name || 'the campaign'} ⚔️`;
+        await startApp();
+        toast(toastMsg, 3500);
+      } else {
+        // First-time join — go through clan picker as usual
+        initClanScreen(); showScreen('screen-clan');
+        toast(wagerOptIn ? `Welcome to the crew, ${name}! 💰 You're in for $${wager}!` : wager > 0 ? `Welcome to the crew, ${name}! (Wager skipped) ⚔️` : `Welcome to the crew, ${name}! ⚔️`, 3500);
+      }
     } catch(e2) {
       if (err) err.textContent = e2.message;
       if (joinBtn) { joinBtn.textContent = 'Join Campaign'; joinBtn.disabled = false; }
@@ -3676,10 +3911,15 @@
         ${rules.map(r => `<div class="camp-detail-rule"><div class="camp-detail-rule-icon">${r.icon}</div><div>${r.text}</div></div>`).join('')}
       </div>
       ${dayPreviewHtml}
-      <button class="btn-camp-detail-join" id="camp-detail-join-btn">Join Campaign ⚔️</button>
+      ${campaignId === state.campaignId
+        ? `<button class="btn-camp-detail-join" id="camp-detail-join-btn" disabled style="background:var(--surface-2);color:#3FB950;border:1px solid rgba(63,185,80,0.3);cursor:default">✓ Currently Active</button>`
+        : `<button class="btn-camp-detail-join" id="camp-detail-join-btn">Join Campaign ⚔️</button>`
+      }
     `;
 
-    document.getElementById('camp-detail-join-btn').addEventListener('click', () => joinCampaignById(campaignId));
+    if (campaignId !== state.campaignId) {
+      document.getElementById('camp-detail-join-btn').addEventListener('click', () => joinCampaignById(campaignId));
+    }
 
     document.getElementById('camp-detail-overlay').classList.add('show');
     document.getElementById('camp-detail-sheet').classList.add('show');
@@ -3687,6 +3927,11 @@
 
   // Close detail sheet on overlay tap
   document.getElementById('camp-detail-overlay').addEventListener('click', closeCampaignDetail);
+
+  // ─── In-app Campaign Browse Sheet ────────────────────
+  document.getElementById('camp-browse-close').addEventListener('click', closeCampaignBrowseSheet);
+  document.getElementById('camp-browse-overlay').addEventListener('click', closeCampaignBrowseSheet);
+  document.getElementById('btn-browse-campaigns').addEventListener('click', openCampaignBrowseSheet);
 
   // ─── Welcome screen ───────────────────────────────────
   document.getElementById('btn-show-create').addEventListener('click',()=>{
