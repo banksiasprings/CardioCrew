@@ -1836,7 +1836,10 @@
           <div id="profile-account-section"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <button class="btn-danger" id="btn-leave">Leave Campaign &amp; Delete Progress</button>
-          <div id="app-version-tag" style="text-align:center;padding:14px 0 2px;font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v15</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v15</div>
+            <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
+          </div>
           <div style="height:8px"></div>
         </div>
 
@@ -4495,6 +4498,47 @@
     const el = document.getElementById('app-version-tag');
     if (el) el.textContent = 'CardioCrew ' + APP_VERSION;
   }
+  async function forceAppUpdate() {
+    const btn = document.getElementById('update-btn');
+    if (btn) { btn.textContent = 'Updating…'; btn.disabled = true; }
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      window.location.reload(true);
+    } catch(e) {
+      if (btn) { btn.textContent = 'Check for Update'; btn.disabled = false; }
+    }
+  }
+  function showUpdateBanner() {
+    if (document.getElementById('cc-update-banner')) return;
+    const b = document.createElement('div');
+    b.id = 'cc-update-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#1a2e1a;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.4)';
+    b.innerHTML = '<span>🔄 New update available</span><button onclick="forceAppUpdate()" style="background:#4A9C6E;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Update Now</button>';
+    document.body.prepend(b);
+  }
+  async function checkForUpdateOnLaunch() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) return;
+      if (reg.waiting) { showUpdateBanner(); return; }
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner();
+        });
+      });
+      reg.update();
+    } catch(e) {}
+  }
+  window.addEventListener('load', checkForUpdateOnLaunch);
   function initProfileSections() {
     const DEFAULT_OPEN = new Set(['warrior', 'clan', 'community']);
     document.querySelectorAll('.psec-hdr').forEach(hdr => {
