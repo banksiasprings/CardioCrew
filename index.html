@@ -2009,7 +2009,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, deleteField, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, deleteField, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey:            "AIzaSyARd79y3L8Bfew1ubdJVaY7zsIULJUf4Bs",
@@ -2022,7 +2022,11 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
 
   // ─── Challenge data ───────────────────────────────────
   const CHALLENGES = [
@@ -3119,13 +3123,14 @@
       // ── Classic campaign rendering ──
       const comps = getCompletionsForDay(state.userId, day);
       const pts   = Object.values(comps).filter(Boolean).length;
-      const maxPts = isCurrent ? 5 : 4;
-      const score  = isCurrent && pts >= 4 ? 5 : pts;
+      const bonusEarned = pts >= 4;
+      const maxPts = bonusEarned ? 5 : 4;
+      const score  = bonusEarned ? 5 : pts;
       document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
       for (let i = 0; i < 4; i++) document.getElementById(`dot-${i}`).classList.toggle('done', i < pts);
       const bonusDot = document.getElementById('dot-bonus');
-      bonusDot.style.opacity = (isCurrent && pts >= 4) ? '1' : '0';
-      bonusDot.style.boxShadow = (isCurrent && pts >= 4) ? '0 0 8px rgba(255,215,0,0.7)' : 'none';
+      bonusDot.style.opacity = bonusEarned ? '1' : '0';
+      bonusDot.style.boxShadow = bonusEarned ? '0 0 8px rgba(255,215,0,0.7)' : 'none';
 
       const isPerfect = pts >= 4;
       const banner = document.getElementById('completed-banner');
