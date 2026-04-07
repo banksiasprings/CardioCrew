@@ -1,4 +1,4 @@
-const CACHE = 'cardio-crew-v14';
+const CACHE = 'cardio-crew-v15';
 
 // Detect base path dynamically — works for /CardioCrew/, /CardioCrew-DEV/, or any deployment
 const BASE = self.location.pathname.replace(/\/sw\.js$/, '') + '/';

@@ -1836,6 +1836,7 @@
           <div id="profile-account-section"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <button class="btn-danger" id="btn-leave">Leave Campaign &amp; Delete Progress</button>
+          <div id="app-version-tag" style="text-align:center;padding:14px 0 2px;font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v15</div>
           <div style="height:8px"></div>
         </div>
 
@@ -2497,6 +2498,7 @@
       badge: 'Red Whortleberry', origin: 'Scotland',
     },
   ];
+  const APP_VERSION = 'v15';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4484,6 +4486,10 @@
     });
   });
   // initProfileSections — collapsible section toggle with localStorage persistence
+  function renderAppVersion() {
+    const el = document.getElementById('app-version-tag');
+    if (el) el.textContent = 'CardioCrew ' + APP_VERSION;
+  }
   function initProfileSections() {
     const DEFAULT_OPEN = new Set(['warrior', 'clan', 'community']);
     document.querySelectorAll('.psec-hdr').forEach(hdr => {
