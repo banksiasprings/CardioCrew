@@ -1504,7 +1504,8 @@
         <div id="challenge-progress-list"></div>
         <div class="section-header">🔐 Login &amp; Security</div>
         <div id="profile-account-section"></div>
-        <button class="btn-danger" id="btn-leave">Leave Campaign</button>
+        <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
+        <button class="btn-danger" id="btn-leave">Leave Campaign &amp; Delete Progress</button>
 
         <!-- Community: Chat + Feedback merged into Profile -->
         <div class="section-header" style="margin-top:24px">Community</div>
@@ -3580,6 +3581,27 @@
       if (btoa(pin) !== userDoc.data().pinHash) { errEl.textContent = 'Incorrect PIN'; pinEl.value = ''; pinEl.focus(); return; }
       state.userId = userDoc.id;
       state.userName = userDoc.data().name;
+
+      // Auto-detect existing campaign membership so login restores progress
+      try {
+        const campSnap = await getDocs(collection(db, 'campaigns'));
+        let foundCampaignId = null;
+        for (const cdoc of campSnap.docs) {
+          const memberSnap = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
+          if (memberSnap.docs.some(m => m.id === state.userId)) {
+            foundCampaignId = cdoc.id;
+            break;
+          }
+        }
+        if (foundCampaignId) {
+          state.campaignId = foundCampaignId;
+          saveLocal();
+          btn.textContent = 'Log In'; btn.disabled = false;
+          await startApp();
+          return;
+        }
+      } catch(e3) { /* fall through to campaigns view if lookup fails */ }
+
       saveLocal();
       enterCampaignsView();
     } catch(e2) { errEl.textContent = e2.message; }
@@ -3642,9 +3664,25 @@
   });
 
   // Leave
+  // Log Out — keeps campaign membership in Firestore, just clears local session
+  document.getElementById('btn-logout-app').addEventListener('click', () => {
+    if (!confirm('Log out? You can log back in with your name and PIN to rejoin your campaign.')) return;
+    state.unsubscribers.forEach(u => u());
+    state.userId = null; state.userName = null; state.campaignId = null;
+    state.campaignData = null; state.members = {}; state.messages = [];
+    localStorage.removeItem('cc_user');
+    showScreen('screen-welcome');
+    // Reset to Log In tab so they know how to get back in
+    document.getElementById('auth-tab-login')?.click();
+  });
+
   document.getElementById('btn-leave').addEventListener('click',()=>{
-    if(!confirm('Leave this campaign? Your progress will be lost.')) return;
+    if(!confirm('Leave this campaign permanently? This removes you from the leaderboard. Your account stays — you can join another campaign.')) return;
     state.unsubscribers.forEach(u=>u());
+    // Remove from Firestore campaign members
+    if (state.campaignId && state.userId) {
+      deleteDoc(doc(db, 'campaigns', state.campaignId, 'members', state.userId)).catch(()=>{});
+    }
     state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
     saveLocal();
     showScreen('screen-welcome');
