@@ -27,7 +27,7 @@ jobs:
           sed -i "s/const CACHE = 'cardio-crew-[^']*'/const CACHE = 'cardio-crew-${SHORT_SHA}'/" sw.js
           sed -i "s/const APP_VERSION = '[^']*'/const APP_VERSION = '${SHORT_SHA}'/" index.html
           echo "Cache and version set to ${SHORT_SHA}"
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
       - id: deployment
