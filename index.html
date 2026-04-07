@@ -1316,8 +1316,8 @@
           </div>
           <label class="admin-field-label">Campaign Name</label>
           <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
-          <label class="admin-field-label">Start Date</label>
-          <input class="admin-input" id="admin-create-startdate" type="date">
+          <label class="admin-field-label">Start Date <span style="color:#F85149">*</span></label>
+          <input class="admin-input" id="admin-create-startdate" type="date" required>
           <label class="admin-field-label">Wager Amount (optional)</label>
           <div class="admin-wager-wrap">
             <span class="admin-wager-prefix">$</span>
@@ -2405,7 +2405,9 @@
   const genCode = ()    => Math.random().toString(36).slice(2,8).toUpperCase();
 
   function getDayNumber(startDateStr) {
+    if (!startDateStr || startDateStr === 'null') return 1;
     const start = new Date(startDateStr + 'T00:00:00');
+    if (isNaN(start.getTime())) return 1;
     const today = new Date(); today.setHours(0,0,0,0);
     return Math.max(1, Math.min(Math.floor((today-start)/86400000)+1, 30));
   }
@@ -2835,9 +2837,13 @@
     document.getElementById('today-day-num').textContent = `Day ${day}`;
 
     // Date label: for past days, show the actual date
-    const start = new Date(state.campaignData.startDate + 'T00:00:00');
-    const dayDate = new Date(start); dayDate.setDate(dayDate.getDate() + day - 1);
-    const dateStr = isCurrent ? new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : dayDate.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    const startRaw = state.campaignData.startDate;
+    const start = startRaw ? new Date(startRaw + 'T00:00:00') : null;
+    const dayDate = start ? new Date(start) : null;
+    if (dayDate) dayDate.setDate(dayDate.getDate() + day - 1);
+    const dateStr = isCurrent
+      ? new Date().toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})
+      : (dayDate && !isNaN(dayDate) ? dayDate.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'}) : '—');
     document.getElementById('today-date-str').textContent = dateStr;
 
     // Status badges
@@ -6026,6 +6032,9 @@
       // Reset to campaigns tab
       document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.adminTab === 'campaigns'));
       document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.toggle('active', p.id === 'admin-tab-campaigns'));
+      // Auto-fill today's date if start date is empty
+      const sdInput = document.getElementById('admin-create-startdate');
+      if (sdInput && !sdInput.value) sdInput.value = new Date().toISOString().slice(0, 10);
       loadAdminCampaigns();
       // Populate tartan select in clan form
       const tartanSel = document.getElementById('admin-clan-tartan-sel');
@@ -6247,6 +6256,7 @@
 
       errEl.textContent = '';
       if (!name) { errEl.textContent = 'Campaign name is required.'; nameInp.focus(); return; }
+      if (!startDate) { errEl.textContent = 'Start date is required.'; dateInp?.focus(); return; }
 
       const btn = document.getElementById('btn-admin-create-camp');
       btn.textContent = 'Creating…'; btn.disabled = true;
