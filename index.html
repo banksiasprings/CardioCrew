@@ -1345,6 +1345,8 @@
         <div class="setting-row"><span>Members</span><span class="setting-val" id="prof-members">—</span></div>
         <div class="section-header">My Challenges</div>
         <div id="challenge-progress-list"></div>
+        <div class="section-header">🔐 Login &amp; Security</div>
+        <div id="profile-account-section"></div>
         <button class="btn-danger" id="btn-leave">Leave Campaign</button>
 
         <!-- Community: Chat + Feedback merged into Profile -->
@@ -2343,6 +2345,114 @@
         </span>`;
       cpList.appendChild(row);
     });
+
+    // Account security section (async — checks Firestore for PIN setup status)
+    renderAccountSection();
+  }
+
+  async function renderAccountSection() {
+    const sec = document.getElementById('profile-account-section');
+    if (!sec) return;
+    sec.innerHTML = '<div style="padding:0 16px 12px;color:var(--text-2);font-size:12px">Checking account…</div>';
+    try {
+      const userDocRef = doc(db, 'users', state.userId);
+      const userDocSnap = await getDoc(userDocRef);
+      const hasPin = userDocSnap.exists() && !!userDocSnap.data().pinHash;
+      const savedName = userDocSnap.exists() ? userDocSnap.data().name : (state.members[state.userId]?.name || '');
+
+      if (hasPin) {
+        // Already secured — show "change PIN" option
+        sec.innerHTML = `
+          <div style="margin:0 16px 12px;padding:12px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">✅ Login PIN is set</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Logged in as <strong>${escHtml(savedName)}</strong> — you can sign in from any device.</div>
+            <button class="btn" id="btn-show-change-pin" style="font-size:13px;padding:8px 14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer">🔑 Change PIN</button>
+          </div>
+          <div id="change-pin-form" class="hidden" style="margin:0 16px 12px;padding:14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+            <div style="margin-bottom:10px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">New 4-digit PIN</label>
+              <input class="input" id="profile-pin-new" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="New PIN" style="max-width:160px">
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Confirm PIN</label>
+              <input class="input" id="profile-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Confirm" style="max-width:160px">
+            </div>
+            <div id="profile-pin-error" style="font-size:12px;color:#F85149;min-height:16px;margin-bottom:8px"></div>
+            <button class="btn btn-primary" id="btn-save-new-pin" style="font-size:13px;padding:8px 18px">Save New PIN</button>
+          </div>`;
+        document.getElementById('btn-show-change-pin').addEventListener('click', () => {
+          document.getElementById('change-pin-form').classList.toggle('hidden');
+        });
+        document.getElementById('btn-save-new-pin').addEventListener('click', async () => {
+          const newPin     = document.getElementById('profile-pin-new').value.trim();
+          const confirmPin = document.getElementById('profile-pin-confirm').value.trim();
+          const errEl      = document.getElementById('profile-pin-error');
+          errEl.textContent = '';
+          if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN must be exactly 4 digits'; return; }
+          if (newPin !== confirmPin)    { errEl.textContent = 'PINs do not match'; return; }
+          const btn = document.getElementById('btn-save-new-pin');
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            await updateDoc(userDocRef, { pinHash: btoa(newPin) });
+            toast('✅ PIN updated', 2500);
+            document.getElementById('change-pin-form').classList.add('hidden');
+            document.getElementById('profile-pin-new').value = '';
+            document.getElementById('profile-pin-confirm').value = '';
+          } catch(e) { errEl.textContent = e.message; }
+          finally { btn.textContent = 'Save New PIN'; btn.disabled = false; }
+        });
+
+      } else {
+        // No PIN yet — show setup form (pre-filled with their existing name)
+        sec.innerHTML = `
+          <div style="margin:0 16px 12px;padding:14px;background:linear-gradient(135deg,var(--surface),var(--bg-alt,var(--surface)));border-radius:var(--radius);border:1px solid rgba(201,162,39,0.4)">
+            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">🔐 Secure your account</div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:14px;line-height:1.5">Set a PIN so you can log in on any device and never lose your progress.</div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Your display name</label>
+              <input class="input" id="profile-setup-name" value="${escHtml(savedName)}" maxlength="20" autocomplete="off">
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Choose a 4-digit PIN</label>
+              <input class="input" id="profile-setup-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 1234">
+            </div>
+            <div id="profile-setup-error" style="font-size:12px;color:#F85149;min-height:16px;margin-bottom:8px"></div>
+            <button class="btn btn-primary" id="btn-setup-pin" style="width:100%">Set Up Login PIN 🔐</button>
+          </div>`;
+        document.getElementById('btn-setup-pin').addEventListener('click', async () => {
+          const nameEl = document.getElementById('profile-setup-name');
+          const pinEl  = document.getElementById('profile-setup-pin');
+          const errEl  = document.getElementById('profile-setup-error');
+          const name   = nameEl.value.trim();
+          const pin    = pinEl.value.trim();
+          errEl.textContent = '';
+          if (!name) { errEl.textContent = 'Enter your display name'; nameEl.focus(); return; }
+          if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN must be exactly 4 digits'; pinEl.focus(); return; }
+          const btn = document.getElementById('btn-setup-pin');
+          btn.textContent = '…'; btn.disabled = true;
+          try {
+            // Check name uniqueness — allow their own name, block others
+            const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
+            const snap = await getDocs(q);
+            if (!snap.empty && snap.docs[0].id !== state.userId) {
+              errEl.textContent = 'That name is already taken — try a slightly different one';
+              nameEl.focus(); return;
+            }
+            // Write their users doc using their existing userId as the doc ID
+            await setDoc(doc(db, 'users', state.userId), {
+              name, nameLower: name.toLowerCase(), pinHash: btoa(pin), createdAt: serverTimestamp()
+            }, { merge: true });
+            state.userName = name;
+            saveLocal();
+            toast('✅ Login PIN set — you can now log in from any device!', 3500);
+            renderAccountSection(); // refresh to show "PIN is set" state
+          } catch(e2) { errEl.textContent = e2.message; }
+          finally { btn.textContent = 'Set Up Login PIN 🔐'; btn.disabled = false; }
+        });
+      }
+    } catch(e) {
+      sec.innerHTML = `<div style="padding:0 16px 12px;color:#F85149;font-size:12px">Could not load account info</div>`;
+    }
   }
 
   function renderFeedback() {
