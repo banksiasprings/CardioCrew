@@ -139,6 +139,35 @@
     .campaign-browse-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
     .btn-browse-join { flex-shrink: 0; padding: 7px 14px; border-radius: 999px; border: 1.5px solid #C9A227; background: rgba(201,162,39,0.1); color: #C9A227; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .btn-browse-join:active { background: rgba(201,162,39,0.3); transform: scale(0.96); }
+    .camp-tpl-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(88,166,255,0.12); color:var(--primary); border:1px solid rgba(88,166,255,0.3); margin-top:4px; white-space:nowrap; }
+
+    /* ── Mission Card (template campaigns) ── */
+    .mission-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 16px; display:flex; align-items:flex-start; gap:14px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+    .mission-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,162,39,0.06),transparent); opacity:0; transition:opacity 0.2s; }
+    .mission-card:active::before { opacity:1; }
+    .mission-card.completed { border-color:rgba(201,162,39,0.5); background:rgba(201,162,39,0.07); }
+    .mission-card.locked { opacity:0.5; cursor:default; }
+    .mission-icon { font-size:36px; line-height:1; flex-shrink:0; }
+    .mission-body { flex:1; min-width:0; }
+    .mission-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--primary); margin-bottom:4px; }
+    .mission-task { font-size:15px; font-weight:700; color:var(--text); line-height:1.35; }
+    .mission-pts { font-size:12px; color:var(--text-2); margin-top:5px; }
+    .mission-tick { width:32px; height:32px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; }
+    .mission-card.completed .mission-tick { background:#C9A227; border-color:#C9A227; }
+    .mission-tick svg { width:16px; height:16px; stroke:transparent; stroke-width:3; fill:none; transition:stroke 0.2s; }
+    .mission-card.completed .mission-tick svg { stroke:#000; }
+
+    /* ── Template Picker (admin create campaign) ── */
+    .tpl-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+    .tpl-card { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center; cursor:pointer; transition:all 0.18s; }
+    .tpl-card:active { transform:scale(0.95); }
+    .tpl-card.selected { border-color:#C9A227; background:rgba(201,162,39,0.1); }
+    .tpl-card-emoji { font-size:22px; margin-bottom:4px; }
+    .tpl-card-name { font-size:10px; font-weight:700; color:var(--text-2); line-height:1.2; text-transform:uppercase; letter-spacing:0.03em; }
+    .tpl-card.selected .tpl-card-name { color:#C9A227; }
+    .tpl-classic { grid-column:1/-1; display:flex; align-items:center; gap:8px; padding:10px 12px; text-align:left; }
+    .tpl-classic .tpl-card-emoji { font-size:18px; margin:0; }
+    .tpl-classic .tpl-card-name { font-size:11px; }
 
     /* ── Avatar Picker ── */
     .avatar-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
@@ -1245,6 +1274,14 @@
       <div class="admin-card">
         <div class="admin-card-header">➕ Create Campaign</div>
         <div class="admin-card-body">
+          <label class="admin-field-label">Challenge Type</label>
+          <div class="tpl-grid" id="admin-tpl-grid">
+            <!-- Classic always first -->
+            <div class="tpl-card tpl-classic selected" data-tpl-id="">
+              <div class="tpl-card-emoji">⚔️</div>
+              <div class="tpl-card-name">Classic Highland Warrior (4 exercises/day)</div>
+            </div>
+          </div>
           <label class="admin-field-label">Campaign Name</label>
           <input class="admin-input" id="admin-create-name" placeholder="e.g. Summer Shred Crew" maxlength="30" autocomplete="off">
           <label class="admin-field-label">Start Date</label>
@@ -1846,6 +1883,419 @@
       schedule:[25,30,35,40,45,45,null,55,60,65,70,75,null,80,90,null,100,105,110,115,115,120,120,null,125,130,135,140,145,150] },
   ];
 
+  // ─── Campaign Templates ───────────────────────────────
+  // 12 different 30-day challenge types. Each day has a task string and pts value.
+  const CAMPAIGN_TEMPLATES = [
+    { id:'cardio_blitz', emoji:'🔥', name:'Cardio Blitz',
+      desc:'Progressive cardio machines — treadmill, rowing, elliptical & stair climber.',
+      days:[
+        {task:'Treadmill 5-min run at moderate pace',pts:5},
+        {task:'Rowing machine 500m steady row',pts:7},
+        {task:'Elliptical 10min at moderate resistance',pts:8},
+        {task:'Treadmill 7-min run + 1 sprint burst',pts:10},
+        {task:'Stair climber 8min steady climb',pts:10},
+        {task:'Rowing machine 750m, pace each 250m',pts:12},
+        {task:'REST — light walking or stretching only',pts:5},
+        {task:'Treadmill 9-min + 2×1-min speed intervals',pts:12},
+        {task:'Elliptical 15min medium-high resistance',pts:12},
+        {task:'Rowing machine 1000m progressive',pts:15},
+        {task:'Stair climber 12min increasing pace',pts:15},
+        {task:'Treadmill 10-min + 3×1-min sprints',pts:15},
+        {task:'Cardio combo: 5min treadmill + 5min row + 5min elliptical',pts:15},
+        {task:'Recovery: 12min easy elliptical',pts:8},
+        {task:'Rowing machine 1200m with 30sec rest intervals',pts:18},
+        {task:'Treadmill 12-min + 4×90sec moderate intervals',pts:18},
+        {task:'Stair climber 15min steady hard pace',pts:18},
+        {task:'Elliptical 20min variable resistance intervals',pts:18},
+        {task:'Cardio circuit — rotate stations every 3min for 18min',pts:20},
+        {task:'Rowing machine 1500m (sprint final 200m)',pts:20},
+        {task:'REST — 10min walk active recovery',pts:5},
+        {task:'Treadmill 15-min + 5×1-min sprints',pts:20},
+        {task:'Stair climber 18min with tempo changes',pts:20},
+        {task:'Elliptical 25min high-resistance intervals',pts:22},
+        {task:'Rowing machine 1800m sustained hard effort',pts:22},
+        {task:'Fave cardio machine 20min all-out',pts:22},
+        {task:'Treadmill 17-min + 6×90sec hard intervals',pts:25},
+        {task:'Full cardio circuit 20min rotating stations',pts:25},
+        {task:'Rowing machine 2000m all-out (sprint final 300m)',pts:28},
+        {task:'Treadmill 20-min celebration run 🏁',pts:30},
+      ]},
+    { id:'distance_runner', emoji:'🏃', name:'Distance Runner',
+      desc:'Build from walk-run intervals to continuous 30-minute runs over 30 days.',
+      days:[
+        {task:'Walk-run 1.5km (3min run / 2min walk)',pts:5},
+        {task:'Walk-run 1.5km steady breathing focus',pts:5},
+        {task:'Walk-run 2km (4min run / 2min walk)',pts:7},
+        {task:'Walk-run 2km — build your rhythm',pts:7},
+        {task:'Continuous run 1.5km easy pace',pts:8},
+        {task:'Walk-run 2.5km with longer run intervals',pts:10},
+        {task:'REST — light walking only',pts:5},
+        {task:'Continuous run 2km conversational pace',pts:10},
+        {task:'Walk-run 2.5km — focus on form',pts:10},
+        {task:'Continuous run 2.5km building endurance',pts:12},
+        {task:'Run 2km fast + 2min walk + 1km easy',pts:12},
+        {task:'Continuous run 3km steady effort',pts:12},
+        {task:'Tempo run 2.5km with 1.5km at hard pace',pts:15},
+        {task:'Recovery run 2km very easy — active rest',pts:8},
+        {task:'Continuous run 3.5km steady state',pts:15},
+        {task:'Interval run 2km with 6×400m faster pace',pts:15},
+        {task:'Long steady run 4km easy-moderate',pts:15},
+        {task:'2km warm-up + 2km hard + 1km cool-down',pts:18},
+        {task:'Fartlek run 3km varying pace',pts:18},
+        {task:'Continuous run 5km steady pace',pts:20},
+        {task:'REST — walk or yoga for recovery',pts:5},
+        {task:'Hill repeats: jog to hill + 5×200m uphills + jog back',pts:20},
+        {task:'Continuous run 5km medium-hard effort',pts:20},
+        {task:'Tempo run: 3km easy + 2.5km tempo + 500m jog',pts:22},
+        {task:'Long run 6km conversational pace',pts:22},
+        {task:'Interval run: 8×400m repeats at strong pace',pts:22},
+        {task:'Continuous run 7km steady moderate',pts:25},
+        {task:'3km tempo + 500m recovery + 2km faster pace',pts:25},
+        {task:'Long run 8km easy conversational pace',pts:28},
+        {task:'Celebration run 10km comfortable pace 🏁',pts:30},
+      ]},
+    { id:'walking_warrior', emoji:'🚶', name:'Walking Warrior',
+      desc:'Build from 2,000 to 12,000+ steps daily — accessible for any fitness level.',
+      days:[
+        {task:'Walk 2,000 steps — foundation builder',pts:5},
+        {task:'Walk 2,000 steps steady moderate pace',pts:5},
+        {task:'Walk 2,500 steps with 3min brisk intervals',pts:7},
+        {task:'Walk 2,500 steps exploring a new route',pts:7},
+        {task:'Walk 3,000 steps building momentum',pts:8},
+        {task:'Walk 3,000 steps + one 5min fast-walk burst',pts:10},
+        {task:'REST — 1,000 light steps only',pts:5},
+        {task:'Walk 3,500 steps steady moderate',pts:10},
+        {task:'Walk 3,500 steps with 2×3min brisk intervals',pts:12},
+        {task:'Walk 4,000 steps continuous effort',pts:12},
+        {task:'Walk 4,000 steps including hills',pts:12},
+        {task:'Walk 4,500 steps building endurance',pts:15},
+        {task:'Walk 5,000 steps — halfway milestone!',pts:15},
+        {task:'Recovery walk 3,000 steps easy pace',pts:8},
+        {task:'Walk 5,500 steps steady progression',pts:15},
+        {task:'Walk 6,000 steps: fast 2min / easy 3min pattern',pts:18},
+        {task:'Walk 6,000 steps + 5min stair climbing',pts:18},
+        {task:'Walk 6,500 steps building consistency',pts:18},
+        {task:'Walk 7,000 steps varied terrain',pts:18},
+        {task:'Walk 7,500 steps major momentum builder',pts:20},
+        {task:'Recovery walk 4,000 steps easy pace',pts:8},
+        {task:'Walk 8,000 steps with 3×2min fast intervals',pts:20},
+        {task:'Walk 8,500 steps steady effort',pts:20},
+        {task:'Walk 9,000 steps + 10min brisk session',pts:22},
+        {task:'Walk 9,500 steps pushing higher',pts:22},
+        {task:'Walk 10,000 steps — classic 10k milestone!',pts:22},
+        {task:'Walk 10,500 steps beyond the norm',pts:25},
+        {task:'Walk 11,000 steps with intervals',pts:25},
+        {task:'Walk 11,500 steps near-maximum effort',pts:28},
+        {task:'Walk 12,000 steps — victory lap! 🏁',pts:30},
+      ]},
+    { id:'strength_fortress', emoji:'💪', name:'Strength Fortress',
+      desc:'Compound lifts and strength circuits building lean muscle and functional power.',
+      days:[
+        {task:'3×8 squats, 3×8 push-ups, 3×10 rows (light intro)',pts:8},
+        {task:'3×10 lunges, 3×12 leg presses, 3×15 calf raises',pts:8},
+        {task:'3×8 bench press, 3×10 bent rows, 3×10 lat pulldowns',pts:10},
+        {task:'Core: 3×45sec plank, 3×15 Russian twists, 3×12 leg raises',pts:10},
+        {task:'4×6 deadlifts, 3×8 pull-ups, 3×10 dumbbell thrusters',pts:12},
+        {task:'Active recovery: 20min full-body mobility + stretching',pts:5},
+        {task:'REST — complete rest day',pts:5},
+        {task:'4×6 barbell squats, 3×8 step-ups, 3×12 hamstring curls',pts:12},
+        {task:'4×8 incline bench, 3×10 shoulder press, 3×12 tricep dips',pts:12},
+        {task:'3 rounds: 12 KB swings / 10 burpees / 8 rows',pts:15},
+        {task:'4×8 weighted pull-ups, 4×10 barbell rows, 3×12 face pulls',pts:15},
+        {task:'4×8 front squats, 4×10 walking lunges, 3×8 sled push',pts:15},
+        {task:'4×6 barbell bench, 3×8 close-grip press, 3×12 skull crushers',pts:15},
+        {task:'Recovery: foam rolling + 30min yoga flexibility',pts:5},
+        {task:'5 rounds: 15 KB swings / 12 box jumps / 10 deadlifts',pts:18},
+        {task:'5×5 squats + 5×5 bench + 5×5 deadlifts (moderate weight)',pts:18},
+        {task:'100 reps each: squats, bench, rows — for time',pts:18},
+        {task:'4×5 heavy squats, 3×8 Bulgarian splits, 3×10 leg curls',pts:18},
+        {task:'5×5 bench, 4×6 weighted dips, 3×8 weighted pull-ups',pts:20},
+        {task:'6 sets × 6 reps: clean, press, squat',pts:20},
+        {task:'Active recovery: 25min walking + stretching',pts:5},
+        {task:'6×4 heavy deadlifts, 5×5 heavy rows, 4×8 lat pulldowns',pts:20},
+        {task:'5×3 heavy back squats, 4×5 Bulgarian splits, 3×8 leg press',pts:22},
+        {task:'5×3 bench press, 5×3 weighted pull-ups, 4×6 rows',pts:22},
+        {task:'3 rounds compound moves at heavier weights',pts:22},
+        {task:'4×5 all major compound lifts at challenging weight',pts:25},
+        {task:'5 rounds: 10 pull-ups / 20 push-ups / 30 squats',pts:25},
+        {task:'4×8–10 all major movements at moderate-heavy weight',pts:25},
+        {task:'Final strength push — PR attempt on your main lift',pts:28},
+        {task:'Celebration: 3×10 all your favourite movements 🏁',pts:30},
+      ]},
+    { id:'zen_flex', emoji:'🧘', name:'Zen Flexibility',
+      desc:'Progressive yoga and flexibility building range of motion and mental clarity.',
+      days:[
+        {task:"Child's pose — hold 60sec, focus on breath",pts:5},
+        {task:'Cat-cow stretches — 10 rounds slow movements',pts:5},
+        {task:'Downward dog — hold 60sec, press heels down',pts:7},
+        {task:'Pigeon pose left side — hold 45sec',pts:7},
+        {task:'Pigeon pose right side — hold 45sec',pts:8},
+        {task:'Seated forward fold — 60sec hamstring stretch',pts:8},
+        {task:'REST — 10min breathing meditation only',pts:5},
+        {task:'Butterfly pose — 90sec deep breathing',pts:10},
+        {task:'Standing quad stretch — 45sec each side',pts:10},
+        {task:'Doorway chest opener — 60sec each side',pts:10},
+        {task:'Supine spinal twist — 90sec each side',pts:12},
+        {task:'Dynamic shoulder rolls + arm circles — 15min flow',pts:12},
+        {task:'Full-body stretch — 20min yoga with major stretches',pts:12},
+        {task:'Yin yoga — restorative poses held 3+ min each',pts:8},
+        {task:'Splits progression — 3×60sec attempt (modify as needed)',pts:15},
+        {task:'Sun salutation 10 rounds building rhythm',pts:15},
+        {task:'Deep hip openers — 15min focused flow',pts:15},
+        {task:'Hamstring active + passive stretches 20min',pts:15},
+        {task:'Shoulder and back sequence — 20min stretch',pts:18},
+        {task:'Full-body yoga flow — 25min comprehensive',pts:18},
+        {task:'Recovery stretching — 15min easy restorative only',pts:5},
+        {task:'Leg lifts + splits work — 30min advanced flexibility',pts:18},
+        {task:'Inversion prep: wall-supported headstand work 10min',pts:18},
+        {task:'Advanced hip openers — 20min deep stretching',pts:20},
+        {task:'Full splits — work toward middle splits hold 2min',pts:20},
+        {task:'Total body flexibility flow — 30min comprehensive yoga',pts:22},
+        {task:'Deep stretching marathon — 25min all-body focused',pts:22},
+        {task:'Advanced yoga sequence — 30min challenging flow',pts:25},
+        {task:'Flexibility check — test your biggest improvements',pts:28},
+        {task:'Celebration flow — 30min your favourite practices 🏁',pts:30},
+      ]},
+    { id:'early_riser', emoji:'🌅', name:'Early Riser Elite',
+      desc:'4:30 AM wake-up challenge building discipline and morning routine mastery.',
+      days:[
+        {task:'Wake at 5:30 AM (1hr earlier than normal)',pts:8},
+        {task:'Wake at 5:30 AM + 10min meditation or stretching',pts:8},
+        {task:'Wake at 5:15 AM — step closer to target',pts:10},
+        {task:'Wake at 5:15 AM + 15min morning routine',pts:10},
+        {task:'Wake at 5:00 AM — halfway to 4:30 target',pts:12},
+        {task:'Wake at 5:00 AM + 20min sunrise activity',pts:12},
+        {task:'Recovery — normal wake time + reflect on progress',pts:5},
+        {task:'Wake at 4:45 AM — pushing closer to goal',pts:12},
+        {task:'Wake at 4:45 AM + 25min morning movement',pts:15},
+        {task:'Wake at 4:30 AM — TARGET UNLOCKED! 🏆',pts:15},
+        {task:'4:30 AM — 30min consistent morning routine',pts:15},
+        {task:'4:30 AM — add meditation or reading',pts:15},
+        {task:'4:30 AM — 35min full morning flow',pts:15},
+        {task:'Recovery morning — one sleep-in day allowed',pts:5},
+        {task:'4:30 AM — consistency streak past halfway',pts:15},
+        {task:'4:30 AM + 10min workout in morning routine',pts:18},
+        {task:'4:30 AM — full 45min morning routine established',pts:18},
+        {task:'4:30 AM — workout + meditation + journaling combo',pts:18},
+        {task:'4:30 AM — full morning optimisation day',pts:18},
+        {task:'4:30 AM — weekend consistency test',pts:20},
+        {task:'Recovery rest — one late morning reset',pts:5},
+        {task:'4:30 AM — 5-day work week perfect streak',pts:18},
+        {task:'4:30 AM — final week consistency',pts:20},
+        {task:'4:30 AM — establish weekend early rising',pts:20},
+        {task:'4:30 AM — 50min comprehensive morning routine',pts:20},
+        {task:'4:30 AM — perfect daily consistency to day 26',pts:22},
+        {task:'4:30 AM — advanced early rising mindset',pts:22},
+        {task:'4:30 AM — final week victory lap',pts:25},
+        {task:'4:30 AM — near-perfect completion + reflection',pts:28},
+        {task:'4:30 AM — 30 days mastered! Celebrate! 🏁',pts:30},
+      ]},
+    { id:'pedal_power', emoji:'🚴', name:'Pedal Power',
+      desc:'Progressive cycling building endurance and power with intervals and distance.',
+      days:[
+        {task:'Easy 10km ride steady pace',pts:5},
+        {task:'Recovery 8km easy spinning',pts:5},
+        {task:'Steady 12km ride moderate pace',pts:7},
+        {task:'Hill practice — 3×medium hills with recovery',pts:8},
+        {task:'Tempo 10km with 5km at hard pace',pts:10},
+        {task:'Long easy ride 15km conversational',pts:10},
+        {task:'REST — active recovery walk only',pts:5},
+        {task:'Intervals: 5km warm + 5×2min hard + 3km easy',pts:12},
+        {task:'Steady state 16km solid effort',pts:12},
+        {task:'Mixed terrain 15km varying pace',pts:12},
+        {task:'Hill repeats — 4×medium climbs',pts:15},
+        {task:'Long steady 18km easy-moderate',pts:15},
+        {task:'Power intervals — 8×1min hard, 1min recovery',pts:15},
+        {task:'Recovery spin 10km very easy technical work',pts:8},
+        {task:'Fartlek ride 16km varying pace throughout',pts:15},
+        {task:'Tempo: 3km warm + 3×5km tempo + 2km cool',pts:18},
+        {task:'Long ride 22km building distance base',pts:18},
+        {task:'Hill endurance — 5×medium climbs 3min efforts',pts:18},
+        {task:'Interval pyramid: 1/2/3/4/3/2/1 min hard',pts:20},
+        {task:'Long ride 25km steady moderate effort',pts:20},
+        {task:'Recovery week — easy 12km light pedaling',pts:5},
+        {task:'Peak intervals — 6×3min hard pace building',pts:20},
+        {task:'Long ride 28km toward century distance',pts:22},
+        {task:'Hill climbing — 6×4min sustained climbs',pts:22},
+        {task:'Threshold intervals — 2×10min hard sustained',pts:22},
+        {task:'Mixed hard: circuits of sprints and climbs',pts:25},
+        {task:'Long strong ride 30km challenging pace',pts:25},
+        {task:'Advanced intervals — 8×2min hard, 2min recovery',pts:25},
+        {task:'Peak effort: 28km with hard efforts on climbs',pts:28},
+        {task:'Victory ride 32km+ celebrating your progress 🏁',pts:30},
+      ]},
+    { id:'hiit_inferno', emoji:'⚡', name:'HIIT Inferno',
+      desc:'30-second work bursts with recovery — maximum calorie burn and metabolic boost.',
+      days:[
+        {task:'HIIT intro: 5 rounds 20sec work / 40sec rest',pts:8},
+        {task:'5 rounds 25sec work / 35sec rest',pts:8},
+        {task:'6 rounds 30sec work / 30sec rest, 2 exercises',pts:10},
+        {task:'6 rounds 30sec work / 30sec rest varying moves',pts:10},
+        {task:'8 rounds 30sec work / 30sec rest',pts:12},
+        {task:'5 rounds 35sec work / 25sec rest',pts:12},
+        {task:'REST — 15min light stretching only',pts:5},
+        {task:'8 rounds 35sec work / 25sec rest, 4 exercises',pts:12},
+        {task:'10 rounds 30sec work / 30sec rest',pts:15},
+        {task:'6 rounds 40sec work / 20sec rest',pts:15},
+        {task:'4× (30sec sprint / 30sec moderate / 30sec rest)',pts:15},
+        {task:'10 rounds 35sec work / 25sec rest power focus',pts:15},
+        {task:'4min each station max reps 30sec intervals',pts:18},
+        {task:'Recovery HIIT: 6 rounds 30sec work / 60sec rest',pts:8},
+        {task:'Tabata: 4min 20sec/10sec one move',pts:18},
+        {task:'Double round: 10 rounds 40sec/20sec × 2',pts:18},
+        {task:'EMOM 10min — 8 burpees every minute',pts:18},
+        {task:'Pyramid HIIT: 30-40-50-40-30sec work bursts',pts:20},
+        {task:'Full body HIIT 20min alternating upper/lower/core',pts:20},
+        {task:'Challenge round: 10 rounds 45sec work / 15sec rest',pts:20},
+        {task:'Recovery HIIT: 6 rounds 25sec/45sec easy',pts:5},
+        {task:'Advanced EMOM: 10 rounds 10 mountain climbers/min',pts:22},
+        {task:'Descending ladder: 10-9-8-7-6 reps burpees',pts:22},
+        {task:'Ascending pyramid: 5-6-7-8-9-10 jump squats',pts:22},
+        {task:'Double pyramid: 1-2-3-4-5-4-3-2-1 min segments',pts:25},
+        {task:'Metabolic finisher: 5 rounds 50sec/10sec all-out',pts:25},
+        {task:'Complex circuits: 3 rounds 8 compounds 30sec each',pts:25},
+        {task:'HIIT marathon: 25min at 40sec/20sec throughout',pts:28},
+        {task:'Peak power: 8×45sec all-out / 45sec recovery',pts:28},
+        {task:'Victory HIIT — celebratory final session 🏁',pts:30},
+      ]},
+    { id:'step_counter', emoji:'👟', name:'Step Counter',
+      desc:'Progressive daily step targets building sustainable movement habits.',
+      days:[
+        {task:'3,000 steps — establish baseline',pts:5},
+        {task:'3,000 steps building consistency',pts:5},
+        {task:'3,500 steps slight increase',pts:7},
+        {task:'3,500 steps + one 5min brisk burst',pts:8},
+        {task:'4,000 steps climbing daily total',pts:10},
+        {task:'4,000 steps sustaining week 1',pts:10},
+        {task:'2,500 steps — active recovery',pts:5},
+        {task:'4,500 steps building past week 1',pts:10},
+        {task:'4,500 steps with intervals',pts:12},
+        {task:'5,000 steps — building momentum',pts:12},
+        {task:'5,000 steps varied intensity',pts:12},
+        {task:'5,500 steps pushing higher',pts:15},
+        {task:'6,000 steps — checkpoint!',pts:15},
+        {task:'3,500 steps — recovery restart',pts:8},
+        {task:'6,000 steps momentum returns',pts:15},
+        {task:'6,500 steps escalating daily',pts:18},
+        {task:'7,000 steps strong week 3 habit',pts:18},
+        {task:'7,000 steps + terrain variation',pts:18},
+        {task:'7,500 steps approaching peak',pts:18},
+        {task:'8,000 steps — major week 3 achievement!',pts:20},
+        {task:'4,000 steps recovery day',pts:5},
+        {task:'8,500 steps final stretch begins',pts:20},
+        {task:'9,000 steps escalating',pts:20},
+        {task:'9,000 steps + brisk intervals',pts:22},
+        {task:'9,500 steps near final push',pts:22},
+        {task:'10,000 steps — classic 10k daily target!',pts:22},
+        {task:'10,500 steps beyond normal',pts:25},
+        {task:'11,000 steps big daily effort',pts:25},
+        {task:'11,500 steps near maximum',pts:28},
+        {task:'12,000 steps — champion completion! 🏁',pts:30},
+      ]},
+    { id:'bodyweight', emoji:'🤸', name:'Bodyweight Battalion',
+      desc:'Push-ups, squats, planks and pull-ups — no equipment, scale as you grow.',
+      days:[
+        {task:'3×5 push-ups, 3×10 squats, 30sec plank',pts:8},
+        {task:'3×6 push-ups, 3×10 tricep dips, 3×8 rows',pts:8},
+        {task:'3×12 squats, 3×10 lunges, 3×8 jump squats',pts:10},
+        {task:'Core: 3×45sec plank, 3×15 crunches, 3×10 leg raises',pts:10},
+        {task:'2 rounds: 10 push-ups / 15 squats / 20 crunches',pts:12},
+        {task:'Active recovery — stretching and movement 20min',pts:5},
+        {task:'REST — complete rest',pts:5},
+        {task:'4×8 push-ups, 3×8 pike push-ups, 3×10 tricep dips',pts:12},
+        {task:'4×12 squats, 3×10 single-leg squats (assisted)',pts:12},
+        {task:'3 rounds: 15 push-ups / 20 squats / 15 crunches',pts:15},
+        {task:'4×5 assisted pull-ups or inverted rows, 3×10 rows',pts:15},
+        {task:'4×10 jump squats, 3×15 walking lunges, pistol squat work',pts:15},
+        {task:'Core endurance: 3×60sec plank, 3×20 crunches, 3×12 leg raises',pts:15},
+        {task:'Easy recovery — gentle stretch and walking',pts:5},
+        {task:'Burpees 4×8, mountain climbers 3×15',pts:18},
+        {task:'5×10 push-ups, 3×12 dips, 3×8 decline push-ups',pts:18},
+        {task:'5×15 squats, 4×8 pistol squat progressions',pts:18},
+        {task:'4 rounds: 10 burpees / 20 jump squats / 15 push-ups',pts:20},
+        {task:'4×8 assisted pull-ups, 4×10 Australian pull-ups',pts:20},
+        {task:'5 rounds: 8 burpees / 12 push-ups / 20 squats',pts:20},
+        {task:'Recovery: yoga and mobility 25min',pts:5},
+        {task:'5×12 push-ups, 4×10 decline, 3×6 one-arm progressions',pts:22},
+        {task:'5×12 pistol squats (modified), 4×15 jump squats',pts:22},
+        {task:'EMOM 15min: odd=10 pull-ups / even=15 squats',pts:22},
+        {task:'Maximal circuit: 3 rounds max effort all movements',pts:25},
+        {task:'Advanced: handstand progressions + pistols + pull-ups',pts:25},
+        {task:'6 rounds: 10 burpees / 15 squats / 20 mountain climbers',pts:25},
+        {task:'Master test: max reps on each bodyweight movement',pts:28},
+        {task:'Final power — PR attempts on chosen movements',pts:28},
+        {task:'Celebration circuit — unlimited fun bodyweight session 🏁',pts:30},
+      ]},
+    { id:'water_warrior', emoji:'💦', name:'Water Warrior',
+      desc:'Swimming and water-based fitness building full-body aquatic endurance.',
+      days:[
+        {task:'Easy swim 400m freestyle continuous',pts:8},
+        {task:'Technique: 200m warm + 6×50m drills + 200m cool',pts:8},
+        {task:'Steady 500m continuous moderate pace',pts:10},
+        {task:'Stroke variety: 200m free + 150m back + 150m breast',pts:10},
+        {task:'Intervals: 8×75m with 30sec rest',pts:12},
+        {task:'Easy 600m steady conversational pace',pts:10},
+        {task:'REST — complete swim-free day',pts:5},
+        {task:'Threshold: 400m warm + 300m tempo + 200m easy',pts:12},
+        {task:'Long easy 700m building base',pts:15},
+        {task:'Speed work: 5×100m with 20sec rest',pts:15},
+        {task:'Mixed distance: 200+300+200+100m efforts',pts:15},
+        {task:'Kick focus: 100m swim + 400m kick drills',pts:12},
+        {task:'Pyramid: 100-200-300-200-100m with 15sec rest',pts:18},
+        {task:'Recovery swim: 500m easy technical work',pts:8},
+        {task:'Long distance 800m steady effort',pts:18},
+        {task:'Power intervals: 6×150m hard, 30sec rest',pts:18},
+        {task:'Continuous threshold 600m challenging pace',pts:18},
+        {task:'IM focus: 200m individual medley ×3 rounds',pts:18},
+        {task:'Sprint work: 10×50m building speed',pts:20},
+        {task:'Long steady 1000m — 1km milestone!',pts:20},
+        {task:'Recovery swim: 600m easy gentle pacing',pts:5},
+        {task:'Ladder: 50-100-150-200-250-200-150-100-50m',pts:22},
+        {task:'Endurance 1100m continuous',pts:22},
+        {task:'Advanced tempo: 500m warm + 500m hard',pts:22},
+        {task:'Threshold push: 800m consistent challenging pace',pts:25},
+        {task:'Complex sets: multiple intervals and distances',pts:25},
+        {task:'Distance 1200m continuous effort',pts:25},
+        {task:'Peak workout: 5×200m fast, 20sec rest',pts:28},
+        {task:'Final distance: 1300m long easy swim',pts:28},
+        {task:'Victory swim: 1500m — Water Warrior complete! 🏁',pts:30},
+      ]},
+    { id:'warrior_mind', emoji:'🛡️', name:'Warrior Mind',
+      desc:'Mental resilience boot camp — cold exposure, breathwork, meditation and discipline.',
+      days:[
+        {task:'Cold shower 2min + 20min meditation on breath',pts:10},
+        {task:'Cold shower 3min + 10min journaling',pts:10},
+        {task:'3×5min Wim Hof breathing + 15min visualisation',pts:12},
+        {task:'Cold shower 4min + 30min meditation + gratitude journaling',pts:12},
+        {task:'Cold shower 5min + 10min breathing + commitment writing',pts:15},
+        {task:'Wim Hof 3× + cold exposure 5min + 15min visualisation',pts:15},
+        {task:'Meditation day: 45min total split sessions',pts:8},
+        {task:'Cold shower 5min + hard workout + breathing drills',pts:15},
+        {task:'Cold shower 5min + meditation + journaling + pushups',pts:18},
+        {task:'Cold shower + Wim Hof + 20min meditation',pts:18},
+        {task:'Wim Hof protocol 3× full + 20min meditation',pts:18},
+        {task:'Hard workout + cold shower + breathing recovery',pts:20},
+        {task:'Complete mental reset: 60min meditation + journaling',pts:20},
+        {task:'REST — gentle stretch + light meditation only',pts:5},
+        {task:'Cold exposure 5–10min + hard workout + breathing',pts:20},
+        {task:'Cold shower 5min + meditation + mental toughness',pts:22},
+        {task:'Warrior day — cold + hardest workout yet + breathing',pts:22},
+        {task:'Wim Hof mastery 5× + 30min meditation',pts:22},
+        {task:'Complete day: cold + hard workout + breathing + journal',pts:25},
+        {task:'Peak challenge: cold shower + intense training + 1hr meditation',pts:25},
+        {task:'Reflection day: journaling + meditation + easy movement',pts:8},
+        {task:'Advanced breathing: 6× Wim Hof + cold + visualisation',pts:22},
+        {task:'Warrior workout: hard training + cold shower + breathing',pts:25},
+        {task:'Mental marathon: 70min meditation + cold + journaling',pts:25},
+        {task:'Full integration: cold shower + Wim Hof 5× + hard workout',pts:25},
+        {task:'Mastery session: cold shower + meditation + intense training',pts:28},
+        {task:'Triple threat: cold + breathing mastery + final workout',pts:28},
+        {task:'Mind-body synthesis: complete integration of all practices',pts:28},
+        {task:'Final warrior test: max cold + meditation + full intensity',pts:30},
+        {task:'Warrior celebration: ceremony of your mental fortitude 🏁',pts:30},
+      ]},
+  ];
+
   const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🐼','🦅','🦆','🐲','🦈','🐊','🦄','🔥','⚡','💎','🌊','🚀','🌟','💪','🥊','👑','😈','🤖','🎯'];
   const BADGE_DEFS = [
     { id:'first_blood',   icon:'🔥', name:'First Rep',      desc:'Complete any challenge on Day 1' },
@@ -1973,10 +2423,56 @@
     return r;
   }
 
-  function getDayPoints(userId, day) { return Object.values(getCompletionsForDay(userId,day)).filter(Boolean).length; }
+  // ─── Template campaign helpers ────────────────────────
+  function isTemplateCampaign() {
+    return !!(state.campaignData && state.campaignData.templateId);
+  }
+  function getTemplateForCampaign() {
+    if (!isTemplateCampaign()) return null;
+    return CAMPAIGN_TEMPLATES.find(t => t.id === state.campaignData.templateId) || null;
+  }
+  function getTemplateDay(dayIndex) { // dayIndex = day-1 (0-based)
+    const tpl = getTemplateForCampaign();
+    if (!tpl) return null;
+    return tpl.days[dayIndex] || null;
+  }
+  function isMissionComplete(userId, day) {
+    if (!isTemplateCampaign()) {
+      return getDayPointsClassic(userId, day) >= 4;
+    }
+    const m = state.members[userId];
+    return !!(m?.completions?.[`d${day}_mission`]);
+  }
+  async function toggleMission(day) {
+    if (!isTemplateCampaign()) return;
+    const key = `d${day}_mission`;
+    const m = state.members[state.userId];
+    const current = !!(m?.completions?.[key]);
+    const ref = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
+    await updateDoc(ref, { [`completions.${key}`]: !current });
+  }
 
-  // 5-pt bonus only for the CURRENT campaign day (not catch-up)
+  // Classic-only version (used internally by helpers when not a template campaign)
+  function getDayPointsClassic(userId, day) {
+    return Object.values(getCompletionsForDay(userId,day)).filter(Boolean).length;
+  }
+
+  function getDayPoints(userId, day) {
+    if (isTemplateCampaign()) {
+      // For template campaigns, points = the day's pts value if mission done, else 0
+      const td = getTemplateDay(day - 1);
+      if (!td) return 0;
+      return isMissionComplete(userId, day) ? td.pts : 0;
+    }
+    return getDayPointsClassic(userId, day);
+  }
+
+  // 5-pt bonus only for the CURRENT campaign day (not catch-up), and only for classic campaigns
   function getDayScore(userId, day, currentDay) {
+    if (isTemplateCampaign()) {
+      // Template campaigns: no bonus, just the raw day pts
+      return getDayPoints(userId, day);
+    }
     const pts = getDayPoints(userId, day);
     if (day === currentDay && pts >= 4) return 5;
     return pts; // 0–4 for any other day
@@ -1996,12 +2492,12 @@
 
   function getStreak(userId) {
     const cur=getDayNumber(state.campaignData.startDate);
-    let s=0; for(let d=cur;d>=1;d--) { if(getDayPoints(userId,d)>=4)s++; else break; } return s;
+    let s=0; for(let d=cur;d>=1;d--) { if(isMissionComplete(userId,d))s++; else break; } return s;
   }
 
   function getPerfectDays(userId) {
     const cur=getDayNumber(state.campaignData.startDate);
-    let c=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>=4) c++; return c;
+    let c=0; for(let d=1;d<=cur;d++) if(isMissionComplete(userId,d)) c++; return c;
   }
 
   // ─── Clan Title helpers ───────────────────────────────
@@ -2046,12 +2542,13 @@
     const cur = getDayNumber(state.campaignData.startDate);
     const m   = state.members[userId]; if(!m) return new Set();
     const earned = new Set();
+    const isTemplate = isTemplateCampaign();
 
     // First Rep — any completion on day 1
     if(getDayPoints(userId,1) > 0) earned.add('first_blood');
 
-    // Perfect Day
-    for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>=4){ earned.add('perfect_day'); break; }
+    // Perfect Day — for classic: ≥4 pts; for template: mission complete
+    for(let d=1;d<=cur;d++) if(isMissionComplete(userId,d)){ earned.add('perfect_day'); break; }
 
     // Week Warrior — any 7 days with ≥1 point
     let activeDays=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>0)activeDays++;
@@ -2060,19 +2557,28 @@
     // Halfway Hero
     if(cur>=15) earned.add('halfway');
 
-    // Per-challenge completion badges
-    const chBadges = {squats:'squat_star',pushups:'pushup_pro',plank:'plank_king',crunches:'crunch_champ'};
-    CHALLENGES.forEach(ch=>{
-      let allDone=true;
-      for(let d=1;d<=cur;d++){
-        const isRest=ch.schedule[d-1]===null;
-        if(!isRest && !m.completions?.[`d${d}_${ch.id}`]){ allDone=false; break; }
-      }
-      if(allDone && cur>0) earned.add(chBadges[ch.id]);
-    });
+    // Per-challenge completion badges — only for classic campaigns
+    if (!isTemplate) {
+      const chBadges = {squats:'squat_star',pushups:'pushup_pro',plank:'plank_king',crunches:'crunch_champ'};
+      CHALLENGES.forEach(ch=>{
+        let allDone=true;
+        for(let d=1;d<=cur;d++){
+          const isRest=ch.schedule[d-1]===null;
+          if(!isRest && !m.completions?.[`d${d}_${ch.id}`]){ allDone=false; break; }
+        }
+        if(allDone && cur>0) earned.add(chBadges[ch.id]);
+      });
+    }
 
-    // 30-Day Champion
-    if(cur>=30 && getTotalPoints(userId) >= 30*4*0.8) earned.add('champion');
+    // 30-Day Champion — adjust threshold for template campaigns (80% of missions complete)
+    if (cur >= 30) {
+      if (isTemplate) {
+        let doneDays=0; for(let d=1;d<=30;d++) if(isMissionComplete(userId,d)) doneDays++;
+        if(doneDays >= 24) earned.add('champion'); // ≥80% of 30 days
+      } else {
+        if(getTotalPoints(userId) >= 30*4*0.8) earned.add('champion');
+      }
+    }
 
     return earned;
   }
@@ -2312,44 +2818,83 @@
     nextBtn.style.opacity = (day < currentDay) ? '1' : '0.2';
     nextBtn.style.pointerEvents = (day < currentDay) ? 'auto' : 'none';
 
-    const comps = getCompletionsForDay(state.userId, day);
-    const pts   = Object.values(comps).filter(Boolean).length;
-    const maxPts = isCurrent ? 5 : 4;
-    const score  = isCurrent && pts >= 4 ? 5 : pts;
-    document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
-    for (let i = 0; i < 4; i++) document.getElementById(`dot-${i}`).classList.toggle('done', i < pts);
-    // 5th dot (bonus star) — only visible on current day when all 4 done
-    const bonusDot = document.getElementById('dot-bonus');
-    bonusDot.style.opacity = (isCurrent && pts >= 4) ? '1' : '0';
-    bonusDot.style.boxShadow = (isCurrent && pts >= 4) ? '0 0 8px rgba(255,215,0,0.7)' : 'none';
-
-    const isPerfect = pts >= 4;
-    const banner = document.getElementById('completed-banner');
-    banner.classList.toggle('hidden', !isPerfect);
-    banner.classList.toggle('show', isPerfect);
-    if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
-    wasPerfect = isCurrent && isPerfect;
-
     const list = document.getElementById('challenges-list');
     list.innerHTML = '';
-    CHALLENGES.forEach(ch => {
-      const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
-      const target = isRest ? null : formatTarget(ch, day-1);
-      const card = document.createElement('div');
-      card.className = `challenge-card${isDone?' completed':''}${isRest?' rest-day':''}${isLocked?' rest-day':''}`;
-      card.style.setProperty('--card-color', ch.color);
-      card.innerHTML = `
-        <div class="card-icon">${ch.img ? `<img src="${ch.img}" alt="${ch.name}">` : ch.emoji}</div>
-        <div class="card-body">
-          <div class="card-name">${ch.name}</div>
-          ${isRest ? `<div class="card-rest">REST DAY 😴</div>` :
-            isLocked ? `<div class="card-rest">🔒 LOCKED</div>` :
-            `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
-        </div>
-        <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
-      if (!isRest && !isLocked) card.addEventListener('click', () => toggleCompletion(day, ch.id));
-      list.appendChild(card);
-    });
+
+    if (isTemplateCampaign()) {
+      // ── Template campaign rendering ──
+      const tpl = getTemplateForCampaign();
+      const td  = getTemplateDay(day - 1); // { task, pts }
+      const missionDone = isMissionComplete(state.userId, day);
+      const dayPts = td ? td.pts : 0;
+
+      // Score dots: 1 dot = mission complete
+      for (let i = 0; i < 4; i++) { const d=document.getElementById(`dot-${i}`); d.classList.toggle('done', i === 0 && missionDone); }
+      const bonusDot = document.getElementById('dot-bonus');
+      bonusDot.style.opacity = '0'; bonusDot.style.boxShadow = 'none';
+      document.getElementById('daily-pts').innerHTML = `${missionDone ? dayPts : 0} <span>/ ${dayPts} pts</span>`;
+
+      const isPerfect = missionDone;
+      const banner = document.getElementById('completed-banner');
+      banner.classList.toggle('hidden', !isPerfect);
+      banner.classList.toggle('show', isPerfect);
+      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast(`🔥 Mission Complete! +${dayPts} pts 🌟`, 3000); }
+      wasPerfect = isCurrent && isPerfect;
+
+      if (!td) {
+        list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-2)">No mission for this day.</div>`;
+      } else {
+        const card = document.createElement('div');
+        card.className = `mission-card${missionDone?' completed':''}${isLocked?' locked':''}`;
+        card.innerHTML = `
+          <div class="mission-icon">${tpl ? tpl.emoji : '🏅'}</div>
+          <div class="mission-body">
+            <div class="mission-label">${tpl ? tpl.name : 'Daily Mission'} · Day ${day}</div>
+            <div class="mission-task">${isLocked ? '🔒 Locked' : escHtml(td.task)}</div>
+            <div class="mission-pts">+${td.pts} pts on completion</div>
+          </div>
+          <div class="mission-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+        if (!isLocked) card.addEventListener('click', async () => { await toggleMission(day); });
+        list.appendChild(card);
+      }
+    } else {
+      // ── Classic campaign rendering ──
+      const comps = getCompletionsForDay(state.userId, day);
+      const pts   = Object.values(comps).filter(Boolean).length;
+      const maxPts = isCurrent ? 5 : 4;
+      const score  = isCurrent && pts >= 4 ? 5 : pts;
+      document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
+      for (let i = 0; i < 4; i++) document.getElementById(`dot-${i}`).classList.toggle('done', i < pts);
+      const bonusDot = document.getElementById('dot-bonus');
+      bonusDot.style.opacity = (isCurrent && pts >= 4) ? '1' : '0';
+      bonusDot.style.boxShadow = (isCurrent && pts >= 4) ? '0 0 8px rgba(255,215,0,0.7)' : 'none';
+
+      const isPerfect = pts >= 4;
+      const banner = document.getElementById('completed-banner');
+      banner.classList.toggle('hidden', !isPerfect);
+      banner.classList.toggle('show', isPerfect);
+      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
+      wasPerfect = isCurrent && isPerfect;
+
+      CHALLENGES.forEach(ch => {
+        const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
+        const target = isRest ? null : formatTarget(ch, day-1);
+        const card = document.createElement('div');
+        card.className = `challenge-card${isDone?' completed':''}${isRest?' rest-day':''}${isLocked?' rest-day':''}`;
+        card.style.setProperty('--card-color', ch.color);
+        card.innerHTML = `
+          <div class="card-icon">${ch.img ? `<img src="${ch.img}" alt="${ch.name}">` : ch.emoji}</div>
+          <div class="card-body">
+            <div class="card-name">${ch.name}</div>
+            ${isRest ? `<div class="card-rest">REST DAY 😴</div>` :
+              isLocked ? `<div class="card-rest">🔒 LOCKED</div>` :
+              `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
+          </div>
+          <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+        if (!isRest && !isLocked) card.addEventListener('click', () => toggleCompletion(day, ch.id));
+        list.appendChild(card);
+      });
+    }
 
     const rem = 30 - currentDay;
     document.getElementById('today-info').textContent = rem > 0 ? `${rem} days remaining` : '🎉 Challenge complete!';
@@ -2903,10 +3448,16 @@
       }));
       listEl.innerHTML = items.map(({ id, data, memberCount }) => {
         const wagerLabel = data.wagerAmount > 0 ? ` · 💰 $${data.wagerAmount}/person` : '';
+        const tplBadge = (() => {
+          if (!data.templateId) return '';
+          const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === data.templateId);
+          return tpl ? `<span class="camp-tpl-badge">${tpl.emoji} ${escHtml(tpl.name)}</span>` : '';
+        })();
         return `
         <div class="campaign-browse-card" style="cursor:pointer" data-campaign-id="${escHtml(id)}">
           <div style="flex:1;min-width:0">
             <div class="campaign-browse-name">${escHtml(data.name || 'Unnamed Campaign')}</div>
+            ${tplBadge}
             <div class="campaign-browse-meta">👥 ${memberCount} member${memberCount !== 1 ? 's' : ''}${wagerLabel}</div>
           </div>
           <button class="btn-browse-join" data-campaign-id="${escHtml(id)}">Join →</button>
@@ -5450,6 +6001,31 @@
       }
     }
 
+    // ── Populate template picker ──
+    (function populateTemplatePicker() {
+      const grid = document.getElementById('admin-tpl-grid');
+      if (!grid) return;
+      CAMPAIGN_TEMPLATES.forEach(tpl => {
+        const card = document.createElement('div');
+        card.className = 'tpl-card';
+        card.dataset.tplId = tpl.id;
+        card.innerHTML = `<div class="tpl-card-emoji">${tpl.emoji}</div><div class="tpl-card-name">${tpl.name}</div>`;
+        grid.appendChild(card);
+      });
+      grid.addEventListener('click', e => {
+        const card = e.target.closest('.tpl-card');
+        if (!card) return;
+        grid.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        // Auto-fill name with template name if field is empty
+        const nameInp = document.getElementById('admin-create-name');
+        if (nameInp && !nameInp.value.trim() && card.dataset.tplId) {
+          const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === card.dataset.tplId);
+          if (tpl) nameInp.value = tpl.name;
+        }
+      });
+    })();
+
     // ── Create campaign ──
     document.getElementById('btn-admin-create-camp').addEventListener('click', async () => {
       const nameInp  = document.getElementById('admin-create-name');
@@ -5460,18 +6036,28 @@
       const startDate = dateInp?.value || '';
       const wager    = parseFloat(wagerInp.value) || 0;
 
+      // Get selected template (empty string = classic)
+      const selectedTplCard = document.querySelector('#admin-tpl-grid .tpl-card.selected');
+      const templateId = selectedTplCard?.dataset?.tplId || '';
+
       errEl.textContent = '';
       if (!name) { errEl.textContent = 'Campaign name is required.'; nameInp.focus(); return; }
 
       const btn = document.getElementById('btn-admin-create-camp');
       btn.textContent = 'Creating…'; btn.disabled = true;
       try {
-        await addDoc(collection(db, 'campaigns'), {
+        const docData = {
           name, wagerAmount: wager || 0,
           startDate: startDate || null,
           createdAt: serverTimestamp(), createdBy: 'admin',
-        });
+        };
+        if (templateId) docData.templateId = templateId;
+        await addDoc(collection(db, 'campaigns'), docData);
         nameInp.value = ''; if(dateInp) dateInp.value = ''; wagerInp.value = '';
+        // Reset picker to Classic
+        document.querySelectorAll('#admin-tpl-grid .tpl-card').forEach(c => c.classList.remove('selected'));
+        const classicCard = document.querySelector('#admin-tpl-grid .tpl-card[data-tpl-id=""]');
+        if (classicCard) classicCard.classList.add('selected');
         toast(`✅ Campaign "${name}" created!`);
         await loadAdminCampaigns();
       } catch(err) { errEl.textContent = 'Error: ' + err.message; }
