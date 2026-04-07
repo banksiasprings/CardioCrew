@@ -1,13 +1,16 @@
-const CACHE = 'cardio-crew-v11';
+const CACHE = 'cardio-crew-v12';
+
+// Detect base path dynamically — works for /CardioCrew/, /CardioCrew-DEV/, or any deployment
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '') + '/';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll([
-      '/CardioCrew/',
-      '/CardioCrew/index.html',
-      '/CardioCrew/manifest.json',
-      '/CardioCrew/icons/icon-192.png',
-      '/CardioCrew/icons/icon-512.png'
+      BASE,
+      BASE + 'index.html',
+      BASE + 'manifest.json',
+      BASE + 'icons/icon-192.png',
+      BASE + 'icons/icon-512.png'
     ]))
   );
   self.skipWaiting();
@@ -28,7 +31,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(e.request));
     return;
   }
-  if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/CardioCrew/') {
+  if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === BASE) {
     e.respondWith(
       fetch(e.request).then(r => {
         const clone = r.clone();
@@ -69,8 +72,8 @@ function checkNotifications() {
   if (wo?.enabled && wo.time === hhmm && sent.workout !== todayKey) {
     self.registration.showNotification('💪 CardioCrew', {
       body: "Time to complete today's challenges! Keep the streak alive 🔥",
-      icon: '/CardioCrew/icons/icon-192.png',
-      badge: '/CardioCrew/icons/icon-192.png',
+      icon: BASE + 'icons/icon-192.png',
+      badge: BASE + 'icons/icon-192.png',
       tag: 'workout-reminder',
     });
     sent.workout = todayKey;
@@ -82,8 +85,8 @@ function checkNotifications() {
   if (wi?.enabled && wi.time === hhmm && String(dow) === String(wi.day || '1') && sent.weighin !== todayKey) {
     self.registration.showNotification('⚖️ CardioCrew', {
       body: "Time to log your weight — keep tracking your progress!",
-      icon: '/CardioCrew/icons/icon-192.png',
-      badge: '/CardioCrew/icons/icon-192.png',
+      icon: BASE + 'icons/icon-192.png',
+      badge: BASE + 'icons/icon-192.png',
       tag: 'weighin-reminder',
     });
     sent.weighin = todayKey;
@@ -95,8 +98,8 @@ function checkNotifications() {
   if (st?.enabled && st.time === hhmm && sent.streak !== todayKey) {
     self.registration.showNotification('🔥 CardioCrew', {
       body: "Don't break your streak! Complete today's challenges before midnight.",
-      icon: '/CardioCrew/icons/icon-192.png',
-      badge: '/CardioCrew/icons/icon-192.png',
+      icon: BASE + 'icons/icon-192.png',
+      badge: BASE + 'icons/icon-192.png',
       tag: 'streak-saver',
     });
     sent.streak = todayKey;
@@ -113,9 +116,9 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
-      const existing = cs.find(c => c.url.includes('/CardioCrew/'));
+      const existing = cs.find(c => c.url.includes(BASE));
       if (existing) { existing.focus(); return; }
-      clients.openWindow('/CardioCrew/');
+      clients.openWindow(BASE);
     })
   );
 });
