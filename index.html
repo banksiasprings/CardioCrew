@@ -2098,9 +2098,12 @@
         </div>`;
       list.appendChild(row);
       // Render warrior canvas into the avatar slot
+      // Use devicePixelRatio so warriors are crisp on high-DPI mobile screens
       const avatarSlot=row.querySelector('.lb-avatar');
       try {
-        const wc=makeWarriorCanvas(m.id,56,75,isGoat);
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
+        const wc=makeWarriorCanvas(m.id, Math.round(56*dpr), Math.round(75*dpr), isGoat);
+        wc.style.width='56px'; wc.style.height='75px';
         avatarSlot.appendChild(wc);
       } catch(e) {
         avatarSlot.textContent='⚔️';
@@ -2479,7 +2482,9 @@
       const feedSlot=div.querySelector('.feed-avatar');
       if(feedSlot){
         try{
-          const wc=makeWarriorCanvas(msg.userId,44,58,false);
+          const dpr = Math.min(window.devicePixelRatio || 1, 3);
+          const wc=makeWarriorCanvas(msg.userId, Math.round(44*dpr), Math.round(58*dpr), false);
+          wc.style.width='44px'; wc.style.height='58px';
           feedSlot.appendChild(wc);
         }catch(e){feedSlot.textContent='⚔️';}
       }
@@ -3078,15 +3083,13 @@
     const pts = state.campaignData ? getTotalPoints(userId) : 0;
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    if(isGoat) {
-      // Draw full-size (260×340) so the crown renders, then scale to thumbnail
-      const full = document.createElement('canvas');
-      full.width = 260; full.height = 340;
-      WC.draw(full, cfg, pts, true);
-      canvas.getContext('2d').drawImage(full, 0, 0, w, h);
-    } else {
-      WC.draw(canvas, cfg, pts, false);
-    }
+    // Always draw at full native resolution (260×340) then scale down.
+    // Drawing directly at thumbnail size distorts the warrior artwork —
+    // the renderer is designed for 260×340 proportions.
+    const full = document.createElement('canvas');
+    full.width = 260; full.height = 340;
+    WC.draw(full, cfg, pts, isGoat);
+    canvas.getContext('2d').drawImage(full, 0, 0, w, h);
     return canvas;
   }
 
