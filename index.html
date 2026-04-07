@@ -679,6 +679,16 @@
     /* ── Wager / Prize Pool ── */
     .wager-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
     .wager-btn.active { border-color: var(--gold); background: rgba(201,162,39,0.12); color: var(--gold); }
+    /* Profile wager card */
+    .profile-wager-card { margin:0 16px 12px; background:linear-gradient(135deg,#1a1400,#2a1f00); border:1px solid var(--gold); border-radius:var(--radius); padding:12px 14px; }
+    .profile-wager-pool { font-size:14px; font-weight:800; color:var(--gold); margin-bottom:3px; }
+    .profile-wager-sub { font-size:11px; color:#8B7A4A; margin-bottom:10px; line-height:1.4; }
+    .profile-wager-toggle { display:flex; gap:8px; }
+    .profile-wager-opt { flex:1; padding:8px 6px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--text-2); font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; touch-action:manipulation; }
+    .profile-wager-opt.active-in  { border-color:#3FB950; background:rgba(63,185,80,0.12); color:#3FB950; }
+    .profile-wager-opt.active-out { border-color:var(--text-3); background:var(--surface); color:var(--text-3); }
+    .profile-wager-opt:disabled { opacity:0.5; cursor:default; }
+    .profile-wager-locked { font-size:11px; color:#8B7A4A; margin-top:8px; text-align:center; }
     .prize-pool-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a1400,#2a1f00); border: 1px solid var(--gold); border-radius: var(--radius); padding: 12px 16px; text-align: center; }
     .prize-pool-banner.show { display: block; }
     .prize-pool-amount { font-size: 20px; font-weight: 900; color: var(--gold); }
@@ -2770,6 +2780,23 @@
     toast('Avatar updated! ' + newAvatar);
   }
 
+  async function updateWagerOptIn(newOptIn) {
+    const day = getDayNumber(state.campaignData?.startDate);
+    if (day > 27 || isCampaignOver()) { toast('Wager is locked for the final week', 2000); return; }
+    // Optimistically update local state so the UI re-renders immediately
+    if (state.members[state.userId]) state.members[state.userId].wagerOptIn = newOptIn;
+    renderProfile(day);
+    try {
+      await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), { wagerOptIn: newOptIn });
+      toast(newOptIn ? '💰 You\'re in! Your $' + (state.campaignData?.wagerAmount||0) + ' is on the line!' : '✓ Opted out of the wager', 2500);
+    } catch(e) {
+      // Revert on failure
+      if (state.members[state.userId]) state.members[state.userId].wagerOptIn = !newOptIn;
+      renderProfile(day);
+      toast('Couldn\'t update — try again', 2000);
+    }
+  }
+
   async function sendMessage(text) {
     await addDoc(collection(db,'campaigns',state.campaignId,'messages'),{
       userId:state.userId,
@@ -3292,18 +3319,34 @@
     if(!wagerBadgeEl){
       wagerBadgeEl=document.createElement('div');
       wagerBadgeEl.id='profile-wager-badge';
-      wagerBadgeEl.style.cssText='margin:0 16px 12px;padding:10px 14px;background:linear-gradient(135deg,#1a1400,#2a1f00);border:1px solid var(--gold);border-radius:var(--radius);font-size:13px;font-weight:700;color:var(--gold);text-align:center';
       document.getElementById('profile-warrior-section').before(wagerBadgeEl);
     }
-    if(profWager>0&&myOptIn){
+    if(profWager>0){
+      const WAGER_LOCK_DAY = 23;
+      const wagerLocked = day > WAGER_LOCK_DAY || isCampaignOver();
       const optInCount=Object.values(state.members).filter(m=>m.wagerOptIn===true).length;
       const pool=optInCount*profWager;
+      const poolLabel = pool > 0 ? `💰 Prize pool: $${pool}` : `💰 Wager: $${profWager}/person`;
+      const subLabel = pool > 0
+        ? `${optInCount} warrior${optInCount!==1?'s':''} opted in · $${profWager}/person`
+        : 'No one has opted in yet';
       wagerBadgeEl.style.display='block';
-      wagerBadgeEl.textContent=`💰 Wagered $${profWager} — Prize pool: $${pool} (${optInCount} warrior${optInCount!==1?'s':''} in)`;
-    }else if(profWager>0&&!myOptIn){
-      wagerBadgeEl.style.display='block';
-      wagerBadgeEl.style.opacity='0.55';
-      wagerBadgeEl.textContent=`💰 Campaign wager: $${profWager}/person (you opted out)`;
+      wagerBadgeEl.className='profile-wager-card';
+      wagerBadgeEl.innerHTML=`
+        <div class="profile-wager-pool">${poolLabel}</div>
+        <div class="profile-wager-sub">${subLabel}</div>
+        <div class="profile-wager-toggle">
+          <button class="profile-wager-opt${myOptIn?' active-in':''}" id="btn-wager-optin" ${wagerLocked?'disabled':''}>✓ I'm in</button>
+          <button class="profile-wager-opt${!myOptIn?' active-out':''}" id="btn-wager-optout" ${wagerLocked?'disabled':''}>✗ Opt out</button>
+        </div>
+        ${wagerLocked
+          ? `<div class="profile-wager-locked">🔒 Wager locked — final pool confirmed</div>`
+          : `<div class="profile-wager-locked">You can change this any time before Day 24</div>`
+        }`;
+      if(!wagerLocked){
+        document.getElementById('btn-wager-optin')?.addEventListener('click', ()=>updateWagerOptIn(true));
+        document.getElementById('btn-wager-optout')?.addEventListener('click', ()=>updateWagerOptIn(false));
+      }
     }else{
       wagerBadgeEl.style.display='none';
     }
