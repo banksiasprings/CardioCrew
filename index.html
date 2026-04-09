@@ -257,15 +257,14 @@
 
     /* ── App shell ── */
     #screen-app { background: var(--bg); }
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 60px); padding-top: calc(var(--sat) + 4px); }
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 8px); padding-top: calc(var(--sat) + 4px); }
     .app-content::-webkit-scrollbar { display: none; }
 
     /* ── Dual Stopwatch Timer Bar ── */
     #timer-bar {
-      position: absolute; bottom: calc(var(--nav-h) + var(--sab) + 8px); left: 0; right: 0;
+      margin-top: 16px; margin-bottom: 16px;
       height: auto; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
-      border-top: 1px solid var(--border); display: flex; gap: 12px; padding: 14px 12px;
-      z-index: 99;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; gap: 12px; padding: 14px 12px;
     }
     .timer-widget { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: rgba(30,40,50,0.8); border: 1px solid rgba(88,166,255,0.25); border-radius: 12px; gap: 8px; padding: 14px 12px;
@@ -1549,6 +1548,26 @@
       </div>
       <div class="challenges-list" id="challenges-list"></div>
       <div style="text-align:center;padding:4px 16px 8px;color:var(--text-2);font-size:12px" id="today-info"></div>
+
+      <!-- Dual Stopwatch Timer Bar (Today page only) -->
+      <div id="timer-bar">
+        <div class="timer-widget">
+          <div class="timer-label">Workout</div>
+          <div class="timer-display" id="workout-timer">00:00</div>
+          <div class="timer-buttons">
+            <button class="timer-btn" id="workout-start">Start</button>
+            <button class="timer-btn stop" id="workout-reset">Reset</button>
+          </div>
+        </div>
+        <div class="timer-widget">
+          <div class="timer-label">Interval</div>
+          <div class="timer-display" id="interval-timer">00:00</div>
+          <div class="timer-buttons">
+            <button class="timer-btn" id="interval-start">Start</button>
+            <button class="timer-btn stop" id="interval-reset">Reset</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- LEADERBOARD TAB -->
@@ -1931,26 +1950,6 @@
         <div style="height:32px"></div>
       </div>
     </div>
-
-  <!-- Dual Stopwatch Timer Bar -->
-  <div id="timer-bar">
-    <div class="timer-widget">
-      <div class="timer-label">Workout</div>
-      <div class="timer-display" id="workout-timer">00:00</div>
-      <div class="timer-buttons">
-        <button class="timer-btn" id="workout-start">Start</button>
-        <button class="timer-btn stop" id="workout-reset">Reset</button>
-      </div>
-    </div>
-    <div class="timer-widget">
-      <div class="timer-label">Interval</div>
-      <div class="timer-display" id="interval-timer">00:00</div>
-      <div class="timer-buttons">
-        <button class="timer-btn" id="interval-start">Start</button>
-        <button class="timer-btn stop" id="interval-reset">Reset</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Bottom Nav (4 tabs) -->
   <nav id="bottom-nav">
