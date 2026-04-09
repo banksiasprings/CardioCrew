@@ -262,22 +262,23 @@
 
     /* ── Dual Stopwatch Timer Bar ── */
     #timer-bar {
-      position: absolute; bottom: calc(var(--nav-h) + var(--sab)); left: 0; right: 0;
-      height: 56px; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
-      border-top: 1px solid var(--border); display: flex; gap: 8px; padding: 8px;
+      position: absolute; bottom: calc(var(--nav-h) + var(--sab) + 8px); left: 0; right: 0;
+      height: auto; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border); display: flex; gap: 12px; padding: 14px 12px;
       z-index: 99;
     }
     .timer-widget { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; gap: 4px; padding: 6px;
+      background: rgba(30,40,50,0.8); border: 1px solid rgba(88,166,255,0.25); border-radius: 12px; gap: 8px; padding: 14px 12px;
     }
-    .timer-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); }
-    .timer-display { font-size: 18px; font-family: monospace; font-weight: 700; color: var(--text); }
-    .timer-buttons { display: flex; gap: 6px; }
-    .timer-btn { padding: 4px 12px; font-size: 11px; font-weight: 600; border: none; border-radius: 4px;
-      background: var(--primary); color: #fff; cursor: pointer; transition: opacity 0.15s; user-select: none;
+    .timer-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #F5A623; }
+    .timer-display { font-size: 1.6rem; font-family: monospace; font-weight: 900; color: #E6EDF3; }
+    .timer-buttons { display: flex; gap: 8px; }
+    .timer-btn { padding: 8px 14px; font-size: 12px; font-weight: 700; border: none; border-radius: 6px;
+      background: #2EA043; color: #fff; cursor: pointer; transition: all 0.15s ease; user-select: none;
     }
-    .timer-btn:active { opacity: 0.8; }
-    .timer-btn.stop { background: var(--text-3); }
+    .timer-btn:active { opacity: 0.85; transform: scale(0.98); }
+    .timer-btn.running { background: #DC3C3C; }
+    .timer-btn.stop { background: rgba(139,148,158,0.4); color: var(--text-2); border: 1px solid rgba(139,148,158,0.6); }
 
     /* ── Bottom nav (5 items) ── */
     #bottom-nav {
@@ -6988,10 +6989,12 @@
         clearInterval(timer.interval);
         timer.running = false;
         startBtn.textContent = 'Start';
+        startBtn.classList.remove('running');
       } else {
         // Start
         timer.running = true;
         startBtn.textContent = 'Stop';
+        startBtn.classList.add('running');
         const startTime = Date.now() - (timer.elapsed * 1000);
         timer.interval = setInterval(() => {
           timer.elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -7007,6 +7010,7 @@
       timer.elapsed = 0;
       const startBtn = document.getElementById(timerKey + '-start');
       startBtn.textContent = 'Start';
+      startBtn.classList.remove('running');
       updateDisplay(timerKey);
     }
 
