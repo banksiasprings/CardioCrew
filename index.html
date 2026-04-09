@@ -821,6 +821,12 @@
     }
     .btn-admin-panel:active { background: rgba(201,162,39,0.2); }
 
+    /* ── Voice Coaching Toggle ── */
+    .voice-toggle-pill { display:flex; background:var(--surface); border-radius:10px; padding:4px; gap:4px; margin-bottom:8px; border:1px solid var(--border); }
+    .voice-toggle-pill button { flex:1; padding:8px; border:none; background:transparent; color:var(--text-2); font-weight:600; font-size:12px; border-radius:7px; cursor:pointer; transition:all 0.2s; }
+    .voice-toggle-pill button.active { background:var(--primary); color:#fff; }
+    .voice-toggle-pill button:active { opacity:0.8; }
+
     /* ── Admin badge (shown in profile when admin is unlocked) ── */
     .admin-badge {
       display: inline-flex; align-items: center; gap: 4px;
@@ -1870,6 +1876,11 @@
             <button class="theme-btn" data-theme="night">🌙 Night</button>
             <button class="theme-btn" data-theme="auto">🔄 Auto</button>
           </div>
+          <div style="margin:10px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">Voice Coach</div>
+          <div class="voice-toggle-pill" id="voice-toggle">
+            <button class="voice-btn" data-voice="off">🔇 Off</button>
+            <button class="voice-btn" data-voice="on">🔊 On</button>
+          </div>
           <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
           <div style="margin:14px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">🔐 Login &amp; Security</div>
           <div id="profile-account-section"></div>
@@ -2555,7 +2566,7 @@
   ];
 
   // ─── State ────────────────────────────────────────────
-  let state = { userId:null, userName:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[] };
+  let state = { userId:null, userName:null, campaignId:null, campaignData:null, members:{}, messages:[], clans:{}, pendingAvatar:null, unsubscribers:[], voiceGreetingShown:false };
   let viewDay = null; // null = use current campaign day
   let _completionConfettiShown = false; // fire once per session when campaign finishes
 
@@ -2595,6 +2606,46 @@
     const el=document.getElementById('toast');
     el.textContent=msg; el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'),dur);
+  }
+
+  // ─── Voice Coaching ───────────────────────────────────
+  function isVoiceEnabled() {
+    return localStorage.getItem('cardioVoiceEnabled') === 'true';
+  }
+
+  function setVoiceEnabled(enabled) {
+    localStorage.setItem('cardioVoiceEnabled', enabled ? 'true' : 'false');
+  }
+
+  function speak(text) {
+    if (!isVoiceEnabled()) return;
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function announceTaskComplete(taskName) {
+    const phrases = [
+      `${taskName} done! Keep it up!`,
+      `${taskName}! Crushing it!`,
+      `${taskName} complete! You're unstoppable!`,
+      `Done with ${taskName}! Keep going!`
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    speak(phrase);
+  }
+
+  function announcePerfectDay(challengeCount) {
+    speak(`Perfect day! All ${challengeCount} challenges crushed. You're on fire!`);
+  }
+
+  function announceGreeting(challengeCount) {
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    speak(`${timeGreeting}! You have ${challengeCount} challenges today.`);
   }
 
   function showScreen(id) {
@@ -2660,6 +2711,11 @@
     const key = `d${day}_mission`;
     const m = state.members[state.userId];
     const current = !!(m?.completions?.[key]);
+    const tpl = getTemplateForCampaign();
+    const td = getTemplateDay(day - 1);
+    if (!current && tpl && td) {
+      announceTaskComplete(tpl.name);
+    }
     const ref = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
     await updateDoc(ref, { [`completions.${key}`]: !current });
   }
@@ -2860,6 +2916,10 @@
     const key=`d${day}_${challengeId}`;
     const m=state.members[state.userId]; if(!m) return;
     const current=m.completions?.[key]||false;
+    const challenge = CHALLENGES.find(c => c.id === challengeId);
+    if (!current && challenge) {
+      announceTaskComplete(challenge.name);
+    }
     await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: !current });
   }
 
@@ -3090,6 +3150,13 @@
     const isCatchup  = !isCurrent && isEditableDay(day, currentDay);
     const isLocked   = isLockedDay(day, currentDay) || day > currentDay;
 
+    // Voice greeting on today's first render
+    if (isCurrent && !state.voiceGreetingShown) {
+      state.voiceGreetingShown = true;
+      const challengeCount = isTemplateCampaign() ? 1 : CHALLENGES.filter(ch => ch.schedule[day-1] !== null).length;
+      announceGreeting(challengeCount);
+    }
+
     document.getElementById('today-day-num').textContent = `Day ${day}`;
 
     // Date label: for past days, show the actual date
@@ -3142,7 +3209,7 @@
       const banner = document.getElementById('completed-banner');
       banner.classList.toggle('hidden', !isPerfect);
       banner.classList.toggle('show', isPerfect);
-      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast(`🔥 Mission Complete! +${dayPts} pts 🌟`, 3000); }
+      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast(`🔥 Mission Complete! +${dayPts} pts 🌟`, 3000); announcePerfectDay(1); }
       wasPerfect = isCurrent && isPerfect;
 
       if (!td) {
@@ -3178,7 +3245,7 @@
       const banner = document.getElementById('completed-banner');
       banner.classList.toggle('hidden', !isPerfect);
       banner.classList.toggle('show', isPerfect);
-      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
+      if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); announcePerfectDay(4); }
       wasPerfect = isCurrent && isPerfect;
 
       CHALLENGES.forEach(ch => {
@@ -6400,6 +6467,23 @@
       localStorage.setItem('cardio_theme',mode);
       window._applyTheme(mode);
       activateThemeBtn(mode);
+    });
+  })();
+
+  // ─── Voice Coach toggle ──────────────────────────────
+  (function(){
+    function activateVoiceBtn(enabled){
+      document.querySelectorAll('.voice-btn').forEach(b=>
+        b.classList.toggle('active',b.dataset.voice===(enabled?'on':'off')));
+    }
+    activateVoiceBtn(isVoiceEnabled());
+    document.getElementById('voice-toggle')?.addEventListener('click',e=>{
+      const btn=e.target.closest('.voice-btn');
+      if(!btn) return;
+      const enabled=btn.dataset.voice==='on';
+      setVoiceEnabled(enabled);
+      activateVoiceBtn(enabled);
+      toast(enabled ? '🔊 Voice coach enabled' : '🔇 Voice coach disabled', 1800);
     });
   })();
 
