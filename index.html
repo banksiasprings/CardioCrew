@@ -4538,7 +4538,8 @@
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
-      window.location.reload(true);
+      // Use location.replace with cache-bust param — more reliable than reload(true) on iOS PWA
+      window.location.replace(location.pathname + '?_cb=' + Date.now());
     } catch(e) {
       if (btn) { btn.textContent = 'Check for Update'; btn.disabled = false; }
     }
@@ -6962,7 +6963,10 @@
         setTimeout(() => window.location.reload(), 1200);
       }
     });
-    navigator.serviceWorker.register(swPath);
+    // updateViaCache:'none' forces the browser to ALWAYS fetch sw.js fresh from network
+    // on every update check — without this, iOS Safari caches sw.js for up to 24 hours
+    // which means updates are never detected until the HTTP cache expires.
+    navigator.serviceWorker.register(swPath, { updateViaCache: 'none' });
   }
 </script>
 </body>
