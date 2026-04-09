@@ -257,27 +257,29 @@
 
     /* ── App shell ── */
     #screen-app { background: var(--bg); }
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 60px); padding-top: calc(var(--sat) + 4px); }
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 72px); padding-top: calc(var(--sat) + 4px); }
     .app-content::-webkit-scrollbar { display: none; }
 
     /* ── Dual Stopwatch Timer Bar ── */
     #timer-bar {
       position: absolute; bottom: calc(var(--nav-h) + var(--sab)); left: 0; right: 0;
-      height: 56px; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
+      height: 64px; background: rgba(13,17,23,0.97); backdrop-filter: blur(24px);
       border-top: 1px solid var(--border); display: flex; gap: 8px; padding: 8px;
-      z-index: 99;
+      z-index: 99; touch-action: none;
     }
     .timer-widget { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; gap: 4px; padding: 6px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; gap: 3px; padding: 6px;
+      touch-action: none;
     }
     .timer-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); }
-    .timer-display { font-size: 18px; font-family: monospace; font-weight: 700; color: var(--text); }
+    .timer-display { font-size: 19px; font-family: monospace; font-weight: 700; color: var(--text); }
     .timer-buttons { display: flex; gap: 6px; }
-    .timer-btn { padding: 4px 12px; font-size: 11px; font-weight: 600; border: none; border-radius: 4px;
+    .timer-btn { padding: 5px 14px; font-size: 11px; font-weight: 700; border: none; border-radius: 6px;
       background: var(--primary); color: #fff; cursor: pointer; transition: opacity 0.15s; user-select: none;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
     .timer-btn:active { opacity: 0.8; }
-    .timer-btn.stop { background: var(--text-3); }
+    .timer-btn.reset { background: var(--text-3); }
 
     /* ── Bottom nav (5 items) ── */
     #bottom-nav {
@@ -1930,6 +1932,7 @@
         <div style="height:32px"></div>
       </div>
     </div>
+  </div><!-- end .app-content -->
 
   <!-- Dual Stopwatch Timer Bar -->
   <div id="timer-bar">
@@ -1938,7 +1941,7 @@
       <div class="timer-display" id="workout-timer">00:00</div>
       <div class="timer-buttons">
         <button class="timer-btn" id="workout-start">Start</button>
-        <button class="timer-btn stop" id="workout-reset">Reset</button>
+        <button class="timer-btn reset" id="workout-reset">Reset</button>
       </div>
     </div>
     <div class="timer-widget">
@@ -1946,7 +1949,7 @@
       <div class="timer-display" id="interval-timer">00:00</div>
       <div class="timer-buttons">
         <button class="timer-btn" id="interval-start">Start</button>
-        <button class="timer-btn stop" id="interval-reset">Reset</button>
+        <button class="timer-btn reset" id="interval-reset">Reset</button>
       </div>
     </div>
   </div>
@@ -1966,7 +1969,6 @@
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile    </button>
   </nav>
-</div><!-- end .app-content -->
 </div><!-- end #screen-app -->
 
 <!-- Warrior Creator Screen -->
@@ -6969,6 +6971,12 @@
     };
 
     function formatTime(seconds) {
+      if (seconds >= 3600) {
+        const hh = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const ss = String(seconds % 60).padStart(2, '0');
+        return hh + ':' + mm + ':' + ss;
+      }
       const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
       const ss = String(seconds % 60).padStart(2, '0');
       return mm + ':' + ss;
