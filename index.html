@@ -331,6 +331,8 @@
     .card-tick svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
     .challenge-card.completed .card-tick svg, .challenge-card.rest-day .card-tick svg { opacity: 1; }
     .challenge-card.rest-day .card-tick { background: var(--text-3); border-color: var(--text-3); }
+    .card-timer { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-family: monospace; font-weight: 700; color: var(--text-2); cursor: pointer; user-select: none; flex-shrink: 0; transition: background 0.15s, color 0.15s; margin-right: 6px; min-width: 38px; text-align: center; }
+    .card-timer.running { background: var(--primary, #1a6b3a); color: #fff; border-color: transparent; }
     .completed-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a3a1a,#0f2d0f); border: 1px solid #3FB950; border-radius: var(--radius); padding: 14px; text-align: center; }
     .completed-banner.show { display: block; animation: slideDown 0.4s ease; }
     @keyframes slideDown { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -2647,8 +2649,8 @@
       return getDayPoints(userId, day);
     }
     const pts = getDayPoints(userId, day);
-    if (day === currentDay && pts >= 4) return 5;
-    return pts; // 0–4 for any other day
+    if (pts >= 4) return 5;
+    return pts; // 0–4 for any day
   }
 
   function getTotalPoints(userId) {
@@ -3142,6 +3144,7 @@
       if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
       wasPerfect = isCurrent && isPerfect;
 
+      const timerMap = new Map();
       CHALLENGES.forEach(ch => {
         const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
         const target = isRest ? null : formatTarget(ch, day-1);
@@ -3156,8 +3159,33 @@
               isLocked ? `<div class="card-rest">🔒 LOCKED</div>` :
               `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
           </div>
+          ${!isRest && !isLocked ? `<button class="card-timer">⏱</button>` : ''}
           <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
-        if (!isRest && !isLocked) card.addEventListener('click', () => toggleCompletion(day, ch.id));
+        if (!isRest && !isLocked) {
+          card.addEventListener('click', () => toggleCompletion(day, ch.id));
+          const timerBtn = card.querySelector('.card-timer');
+          timerBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const id = ch.id;
+            if (timerMap.has(id)) {
+              clearInterval(timerMap.get(id));
+              timerMap.delete(id);
+              timerBtn.textContent = '⏱';
+              timerBtn.classList.remove('running');
+            } else {
+              const start = Date.now();
+              timerBtn.classList.add('running');
+              timerBtn.textContent = '00:00';
+              const iv = setInterval(() => {
+                const s = Math.floor((Date.now() - start) / 1000);
+                const mm = String(Math.floor(s / 60)).padStart(2, '0');
+                const ss = String(s % 60).padStart(2, '0');
+                timerBtn.textContent = mm + ':' + ss;
+              }, 1000);
+              timerMap.set(id, iv);
+            }
+          });
+        }
         list.appendChild(card);
       });
     }
