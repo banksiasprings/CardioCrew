@@ -257,8 +257,27 @@
 
     /* ── App shell ── */
     #screen-app { background: var(--bg); }
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 12px); padding-top: calc(var(--sat) + 4px); }
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 60px); padding-top: calc(var(--sat) + 4px); }
     .app-content::-webkit-scrollbar { display: none; }
+
+    /* ── Dual Stopwatch Timer Bar ── */
+    #timer-bar {
+      position: absolute; bottom: calc(var(--nav-h) + var(--sab)); left: 0; right: 0;
+      height: 56px; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border); display: flex; gap: 8px; padding: 8px;
+      z-index: 99;
+    }
+    .timer-widget { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; gap: 4px; padding: 6px;
+    }
+    .timer-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); }
+    .timer-display { font-size: 18px; font-family: monospace; font-weight: 700; color: var(--text); }
+    .timer-buttons { display: flex; gap: 6px; }
+    .timer-btn { padding: 4px 12px; font-size: 11px; font-weight: 600; border: none; border-radius: 4px;
+      background: var(--primary); color: #fff; cursor: pointer; transition: opacity 0.15s; user-select: none;
+    }
+    .timer-btn:active { opacity: 0.8; }
+    .timer-btn.stop { background: var(--text-3); }
 
     /* ── Bottom nav (5 items) ── */
     #bottom-nav {
@@ -331,8 +350,6 @@
     .card-tick svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
     .challenge-card.completed .card-tick svg, .challenge-card.rest-day .card-tick svg { opacity: 1; }
     .challenge-card.rest-day .card-tick { background: var(--text-3); border-color: var(--text-3); }
-    .card-timer { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-family: monospace; font-weight: 700; color: var(--text-2); cursor: pointer; user-select: none; flex-shrink: 0; transition: background 0.15s, color 0.15s; margin-right: 6px; min-width: 38px; text-align: center; }
-    .card-timer.running { background: var(--primary, #1a6b3a); color: #fff; border-color: transparent; }
     .completed-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a3a1a,#0f2d0f); border: 1px solid #3FB950; border-radius: var(--radius); padding: 14px; text-align: center; }
     .completed-banner.show { display: block; animation: slideDown 0.4s ease; }
     @keyframes slideDown { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -1914,6 +1931,26 @@
       </div>
     </div>
 
+  <!-- Dual Stopwatch Timer Bar -->
+  <div id="timer-bar">
+    <div class="timer-widget">
+      <div class="timer-label">Workout</div>
+      <div class="timer-display" id="workout-timer">00:00</div>
+      <div class="timer-buttons">
+        <button class="timer-btn" id="workout-start">Start</button>
+        <button class="timer-btn stop" id="workout-reset">Reset</button>
+      </div>
+    </div>
+    <div class="timer-widget">
+      <div class="timer-label">Interval</div>
+      <div class="timer-display" id="interval-timer">00:00</div>
+      <div class="timer-buttons">
+        <button class="timer-btn" id="interval-start">Start</button>
+        <button class="timer-btn stop" id="interval-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Nav (4 tabs) -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="today">
@@ -3144,7 +3181,6 @@
       if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); }
       wasPerfect = isCurrent && isPerfect;
 
-      const timerMap = new Map();
       CHALLENGES.forEach(ch => {
         const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
         const target = isRest ? null : formatTarget(ch, day-1);
@@ -3159,32 +3195,9 @@
               isLocked ? `<div class="card-rest">🔒 LOCKED</div>` :
               `<div><span class="card-target">${target.display}</span> <span class="card-unit">${target.unit}</span></div>`}
           </div>
-          ${!isRest && !isLocked ? `<button class="card-timer">⏱</button>` : ''}
           <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
         if (!isRest && !isLocked) {
           card.addEventListener('click', () => toggleCompletion(day, ch.id));
-          const timerBtn = card.querySelector('.card-timer');
-          timerBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            const id = ch.id;
-            if (timerMap.has(id)) {
-              clearInterval(timerMap.get(id));
-              timerMap.delete(id);
-              timerBtn.textContent = '⏱';
-              timerBtn.classList.remove('running');
-            } else {
-              const start = Date.now();
-              timerBtn.classList.add('running');
-              timerBtn.textContent = '00:00';
-              const iv = setInterval(() => {
-                const s = Math.floor((Date.now() - start) / 1000);
-                const mm = String(Math.floor(s / 60)).padStart(2, '0');
-                const ss = String(s % 60).padStart(2, '0');
-                timerBtn.textContent = mm + ':' + ss;
-              }, 1000);
-              timerMap.set(id, iv);
-            }
-          });
         }
         list.appendChild(card);
       });
@@ -6947,6 +6960,76 @@
     }
 
   })(); // end admin IIFE
+
+  // ── Dual Stopwatch Timers ──
+  (function() {
+    const timers = {
+      workout: { running: false, elapsed: 0, interval: null },
+      interval: { running: false, elapsed: 0, interval: null }
+    };
+
+    function formatTime(seconds) {
+      const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const ss = String(seconds % 60).padStart(2, '0');
+      return mm + ':' + ss;
+    }
+
+    function updateDisplay(timerKey) {
+      const display = document.getElementById(timerKey + '-timer');
+      if (display) display.textContent = formatTime(timers[timerKey].elapsed);
+    }
+
+    function toggleTimer(timerKey) {
+      const timer = timers[timerKey];
+      const startBtn = document.getElementById(timerKey + '-start');
+
+      if (timer.running) {
+        // Stop
+        clearInterval(timer.interval);
+        timer.running = false;
+        startBtn.textContent = 'Start';
+      } else {
+        // Start
+        timer.running = true;
+        startBtn.textContent = 'Stop';
+        const startTime = Date.now() - (timer.elapsed * 1000);
+        timer.interval = setInterval(() => {
+          timer.elapsed = Math.floor((Date.now() - startTime) / 1000);
+          updateDisplay(timerKey);
+        }, 100);
+      }
+    }
+
+    function resetTimer(timerKey) {
+      const timer = timers[timerKey];
+      clearInterval(timer.interval);
+      timer.running = false;
+      timer.elapsed = 0;
+      const startBtn = document.getElementById(timerKey + '-start');
+      startBtn.textContent = 'Start';
+      updateDisplay(timerKey);
+    }
+
+    // Attach event listeners with stopPropagation to prevent card tap conflicts
+    ['workout', 'interval'].forEach(key => {
+      const startBtn = document.getElementById(key + '-start');
+      const resetBtn = document.getElementById(key + '-reset');
+
+      if (startBtn) {
+        startBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleTimer(key);
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          resetTimer(key);
+        });
+      }
+    });
+  })();
 
   if ('serviceWorker' in navigator) {
     // Derive SW path dynamically so this works on /CardioCrew/, /CardioCrew-DEV/, or any host
