@@ -257,12 +257,12 @@
 
     /* ── App shell ── */
     #screen-app { background: var(--bg); }
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + var(--sab) + 60px); padding-top: calc(var(--sat) + 4px); }
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 16px; padding-top: calc(var(--sat) + 4px); }
     .app-content::-webkit-scrollbar { display: none; }
 
     /* ── Dual Stopwatch Timer Bar ── */
     #timer-bar {
-      position: absolute; bottom: calc(var(--nav-h) + var(--sab)); left: 0; right: 0;
+      flex-shrink: 0;
       height: 56px; background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
       border-top: 1px solid var(--border); display: flex; gap: 8px; padding: 8px;
       z-index: 99;
@@ -281,7 +281,7 @@
 
     /* ── Bottom nav (5 items) ── */
     #bottom-nav {
-      position: absolute; bottom: 0; left: 0; right: 0;
+      flex-shrink: 0;
       height: calc(var(--nav-h) + var(--sab));
       background: rgba(13,17,23,0.95); backdrop-filter: blur(24px);
       border-top: 1px solid var(--border);
@@ -489,7 +489,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Toast ── */
-    #toast { position: fixed; bottom: calc(var(--nav-h) + var(--sab) + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 1000; white-space: nowrap; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    #toast { position: fixed; bottom: calc(var(--nav-h) + var(--sab) + 56px + 16px); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-2); color: var(--text); padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 1000; white-space: nowrap; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ── Badge popup ── */
@@ -1930,6 +1930,7 @@
         <div style="height:32px"></div>
       </div>
     </div>
+  </div><!-- end .app-content -->
 
   <!-- Dual Stopwatch Timer Bar -->
   <div id="timer-bar">
@@ -1966,7 +1967,6 @@
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile    </button>
   </nav>
-</div><!-- end .app-content -->
 </div><!-- end #screen-app -->
 
 <!-- Warrior Creator Screen -->
