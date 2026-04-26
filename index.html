@@ -1691,6 +1691,16 @@
         </div>
         <div class="psec-body" id="psec-clan">
           <div id="profile-clan-section"></div>
+          <div id="account-switcher-section" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:8px">👥 Switch Account</div>
+            <select class="input" id="clan-account-select" style="appearance:auto;-webkit-appearance:auto;width:100%;margin-bottom:8px;font-size:14px">
+              <option value="">Choose a clan member…</option>
+            </select>
+            <div id="switch-pin-wrap" style="display:none;margin-bottom:8px">
+              <input class="input" type="password" id="switch-pin-input" inputmode="numeric" maxlength="8" placeholder="🔒 Enter their PIN" autocomplete="off" />
+            </div>
+            <button class="btn btn-primary" id="btn-switch-account" style="width:100%;padding:12px;font-size:15px;font-weight:700">Load Profile</button>
+          </div>
         </div>
 
         <!-- ── Badges ── -->
@@ -1939,6 +1949,10 @@
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
             <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v15</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:8px">⚠️ Danger Zone</div>
+            <div id="leave-clan-settings-wrap"></div>
           </div>
           <div style="height:8px"></div>
         </div>
@@ -3772,11 +3786,9 @@
             <div style="margin-top:10px">${memberListHtml}</div>
           </div>
         </div>
-        <button class="btn-clan-action" id="btn-leave-clan">Leave Clan</button>`;
-      document.getElementById('btn-leave-clan')?.addEventListener('click',async()=>{
-        if(!confirm('Leave your clan? Your individual progress stays.')) return;
-        await leaveClan(); toast('You left the clan');
-      });
+        `;
+      // ── Account Switcher ──
+      renderAccountSwitcher(clanMembers.map(([id]) => id));
     } else {
       clanSec.innerHTML=`<button class="btn-clan-action" id="btn-join-create-clan">🏰 Join a Clan</button>`;
       document.getElementById('btn-join-create-clan')?.addEventListener('click',()=>{
@@ -3870,6 +3882,100 @@
   }
 
   function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ─── Account Switcher ─────────────────────────────────
+  function renderAccountSwitcher(clanMemberIds) {
+    const wrap = document.getElementById('account-switcher-section');
+    const sel  = document.getElementById('clan-account-select');
+    if (!wrap || !sel) return;
+    // Only show switcher if there are other members in the clan
+    const others = clanMemberIds.filter(id => id !== state.userId);
+    if (!others.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    sel.innerHTML = '<option value="">Choose a clan member…</option>';
+    others.sort((a, b) => (state.members[a]?.name || '').localeCompare(state.members[b]?.name || ''))
+      .forEach(uid => {
+        const m = state.members[uid];
+        if (!m) return;
+        const opt = document.createElement('option');
+        opt.value = uid;
+        opt.textContent = (m.avatar || '⚔️') + ' ' + (m.name || uid);
+        sel.appendChild(opt);
+      });
+    document.getElementById('switch-pin-wrap').style.display = 'none';
+    document.getElementById('switch-pin-input').value = '';
+    // Wire up select change to show/hide PIN field
+    sel.onchange = async () => {
+      const tid = sel.value;
+      document.getElementById('switch-pin-wrap').style.display = 'none';
+      document.getElementById('switch-pin-input').value = '';
+      if (!tid) return;
+      try {
+        const snap = await getDoc(doc(db, 'users', tid));
+        if (snap.exists() && snap.data().pinHash) {
+          document.getElementById('switch-pin-wrap').style.display = '';
+        }
+      } catch(e) {}
+    };
+    document.getElementById('btn-switch-account').onclick = handleAccountSwitch;
+  }
+
+  async function handleAccountSwitch() {
+    const sel = document.getElementById('clan-account-select');
+    const targetId = sel?.value;
+    if (!targetId) { toast('Choose a clan member first'); return; }
+    try {
+      const snap = await getDoc(doc(db, 'users', targetId));
+      if (!snap.exists()) { toast('Account not found'); return; }
+      const pinHash = snap.data().pinHash || null;
+      if (pinHash) {
+        const pinInput = document.getElementById('switch-pin-input');
+        const entered  = pinInput?.value?.trim() || '';
+        if (!entered) {
+          document.getElementById('switch-pin-wrap').style.display = '';
+          pinInput?.focus();
+          toast('🔒 This account has a PIN — enter it to switch');
+          return;
+        }
+        const h = await hashPin(entered);
+        if (h !== pinHash) {
+          toast('Incorrect PIN — try again');
+          if (pinInput) pinInput.value = '';
+          return;
+        }
+      }
+      // Switch!
+      const newName = snap.data().name || targetId;
+      state.userId   = targetId;
+      state.userName = newName;
+      saveLocal();
+      renderAll();
+      switchTab('today');
+      toast(`Switched to ${newName} 👋`, 2500);
+      // Reset switcher
+      sel.value = '';
+      document.getElementById('switch-pin-wrap').style.display = 'none';
+      document.getElementById('switch-pin-input').value = '';
+    } catch(e) { toast('Switch failed: ' + e.message); }
+  }
+
+  function renderLeaveClanInSettings() {
+    const wrap = document.getElementById('leave-clan-settings-wrap');
+    if (!wrap) return;
+    const me = state.members[state.userId];
+    if (!me?.clanId) {
+      wrap.innerHTML = '<div style="font-size:12px;color:var(--text-2)">You\'re not in a clan.</div>';
+      return;
+    }
+    const clan = state.clans[me.clanId];
+    wrap.innerHTML = `<button id="btn-leave-clan-settings" style="width:100%;padding:10px;font-size:13px;font-weight:700;border-radius:8px;border:1px solid #c0392b;background:transparent;color:#c0392b;cursor:pointer">Leave ${clan?.name || 'Clan'}</button>`;
+    document.getElementById('btn-leave-clan-settings').onclick = async () => {
+      if (!confirm('Leave your clan? Your individual progress stays.')) return;
+      await leaveClan();
+      toast('You left the clan');
+      renderLeaveClanInSettings();
+    };
+  }
 
   // ─── Leaderboard Chat (campaign-aware) ───────────────
   let lbChatUnsubscriber = null;
@@ -4997,7 +5103,8 @@
       if (!body || !arrow) return;
       let saved = {};
       try { saved = JSON.parse(localStorage.getItem('cc_profile_open') || '{}'); } catch {}
-      const isOpen = key in saved ? saved[key] : DEFAULT_OPEN.has(key);
+      // Settings always starts collapsed (regardless of saved state — too many things in there for kids)
+      const isOpen = key === 'settings' ? false : (key in saved ? saved[key] : DEFAULT_OPEN.has(key));
       body.classList.toggle('hidden', !isOpen);
       arrow.textContent = isOpen ? '▾' : '▸';
       hdr.addEventListener('click', () => {
@@ -5005,12 +5112,14 @@
         body.classList.toggle('hidden', nowOpen);
         arrow.textContent = nowOpen ? '▸' : '▾';
         try {
-          const s = JSON.parse(localStorage.getItem('cc_profile_open') || '{}');
-          s[key] = !nowOpen;
-          localStorage.setItem('cc_profile_open', JSON.stringify(s));
+          if (key !== 'settings') { // don't persist settings open state
+            const s = JSON.parse(localStorage.getItem('cc_profile_open') || '{}');
+            s[key] = !nowOpen;
+            localStorage.setItem('cc_profile_open', JSON.stringify(s));
+          }
         } catch {}
         // Load PIN section when settings opens
-        if (key === 'settings' && !nowOpen) renderPinSection();
+        if (key === 'settings' && !nowOpen) { renderPinSection(); renderLeaveClanInSettings(); }
       });
     });
   }
