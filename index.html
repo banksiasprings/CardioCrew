@@ -1623,6 +1623,26 @@
       <div id="winner-banner-wrap"></div>
       <div class="lb-list" id="lb-list"></div>
       <div style="padding:16px;text-align:center;color:var(--text-2);font-size:11px" id="lb-footer"></div>
+
+      <!-- ── Campaign Chat (campaign-aware) ── -->
+      <div id="lb-chat-section" style="border-top:2px solid var(--border);margin-top:8px">
+        <div style="padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:15px;font-weight:800">💬 Campaign Chat</span>
+          <span id="lb-chat-campaign-label" style="font-size:11px;color:var(--text-2);font-weight:600"></span>
+        </div>
+        <div class="feed-messages" id="lb-chat-messages" style="padding:0 16px 4px;height:260px">
+          <div class="feed-empty"><div class="feed-empty-icon">💬</div>Loading chat…</div>
+        </div>
+        <div id="lb-chat-readonly-note" style="display:none;padding:6px 16px 10px;font-size:12px;color:var(--text-2);text-align:center;font-style:italic">
+          You're viewing another challenge's chat — join that challenge to participate
+        </div>
+        <div class="feed-input-wrap" id="lb-chat-input-wrap" style="padding:0 16px 20px;border-top:1px solid var(--border)">
+          <textarea class="feed-input" id="lb-chat-input" placeholder="Say something to the crew…" rows="1" maxlength="200"></textarea>
+          <button class="feed-send" id="lb-chat-send-btn">
+            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- HISTORY TAB -->
@@ -1923,8 +1943,8 @@
           <div style="height:8px"></div>
         </div>
 
-        <!-- ── Community ── -->
-        <div class="psec-hdr" data-sec="community">
+        <!-- ── Community (chat moved to Leaderboard tab) ── -->
+        <div class="psec-hdr" data-sec="community" style="display:none">
           <span class="psec-label">💬 Community</span>
           <span class="psec-arrow">▾</span>
         </div>
@@ -3851,6 +3871,87 @@
 
   function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+  // ─── Leaderboard Chat (campaign-aware) ───────────────
+  let lbChatUnsubscriber = null;
+  let lbChatCampaignId   = null;
+
+  function renderLbChat(messages, campaignId) {
+    const feed = document.getElementById('lb-chat-messages');
+    if (!feed) return;
+    const inputWrap   = document.getElementById('lb-chat-input-wrap');
+    const readonlyNote = document.getElementById('lb-chat-readonly-note');
+    const label       = document.getElementById('lb-chat-campaign-label');
+
+    // Show/hide input based on whether this is the user's own campaign
+    const isOwn = campaignId === state.campaignId;
+    if (inputWrap)    inputWrap.style.display    = isOwn ? '' : 'none';
+    if (readonlyNote) readonlyNote.style.display = isOwn ? 'none' : '';
+    if (label) {
+      const sel = document.getElementById('lb-campaign-select');
+      const opt = sel?.querySelector(`option[value="${campaignId}"]`);
+      label.textContent = opt ? opt.textContent.replace(' ★ yours','') : '';
+    }
+
+    if (!messages.length) {
+      feed.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">💬</div>No messages yet — be the first!</div>';
+      return;
+    }
+    feed.innerHTML = '';
+    messages.forEach(msg => {
+      const isMe = msg.userId === state.userId;
+      const time = msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}) : '';
+      const div = document.createElement('div');
+      div.className = 'feed-msg' + (isMe ? ' mine' : '');
+      div.innerHTML = `
+        <div class="feed-avatar" data-uid="${msg.userId}"></div>
+        <div class="feed-bubble">
+          <div class="feed-sender">${isMe ? 'You' : escHtml(msg.name || '?')}</div>
+          <div class="feed-text">${escHtml(msg.text)}</div>
+          ${time ? `<div class="feed-time">${time}</div>` : ''}
+        </div>`;
+      feed.appendChild(div);
+      const slot = div.querySelector('.feed-avatar');
+      if (slot) {
+        try {
+          const dpr = Math.min(window.devicePixelRatio || 1, 3);
+          const wc  = makeWarriorCanvas(msg.userId, Math.round(44*dpr), Math.round(58*dpr), false);
+          wc.style.width = '44px'; wc.style.height = '58px';
+          slot.appendChild(wc);
+        } catch(e) { slot.textContent = '⚔️'; }
+      }
+    });
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function subscribeLbChat(campaignId) {
+    if (!campaignId) return;
+    // No-op if already subscribed to this campaign
+    if (lbChatCampaignId === campaignId && lbChatUnsubscriber) return;
+    // Tear down previous listener
+    if (lbChatUnsubscriber) { lbChatUnsubscriber(); lbChatUnsubscriber = null; }
+    lbChatCampaignId = campaignId;
+    const feed = document.getElementById('lb-chat-messages');
+    if (feed) feed.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">💬</div>Loading…</div>';
+    const q = query(collection(db, 'campaigns', campaignId, 'messages'), orderBy('createdAt','asc'), limit(50));
+    lbChatUnsubscriber = onSnapshot(q, snap => {
+      const msgs = [];
+      snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+      renderLbChat(msgs, campaignId);
+    });
+  }
+
+  // Send button for leaderboard chat
+  document.getElementById('lb-chat-send-btn').addEventListener('click', async () => {
+    const input = document.getElementById('lb-chat-input');
+    const text  = input.value.trim();
+    if (!text || lbChatCampaignId !== state.campaignId) return;
+    input.value = '';
+    await sendMessage(text);
+  });
+  document.getElementById('lb-chat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('lb-chat-send-btn').click(); }
+  });
+
   // ─── Tab nav ──────────────────────────────────────────
   function switchTab(tabId) {
     document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
@@ -4926,12 +5027,14 @@
     }
     if (tabId === 'leaderboard') {
       populateLbCampaignDropdown();
+      subscribeLbChat(lbSelectedCampaignId || state.campaignId);
     }
   };
 
   // Leaderboard campaign dropdown change
   document.getElementById('lb-campaign-select').addEventListener('change', function() {
     setLbCampaign(this.value);
+    subscribeLbChat(this.value);
   });
 
   // ═══════════════════════════════════════════════════════
