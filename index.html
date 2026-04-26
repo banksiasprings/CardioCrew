@@ -555,9 +555,10 @@
     .lb-view-btn.active { background: var(--primary); color: #fff; }
 
     /* ── Clan leaderboard cards ── */
-    .clan-lb-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+    .clan-lb-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s; cursor: pointer; }
     .clan-lb-card.mine-clan { border-color: var(--primary); }
-    .clan-lb-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--clan-accent, var(--primary)); }
+    .clan-lb-card-row { padding: 14px; display: flex; align-items: center; gap: 12px; position: relative; }
+    .clan-lb-card-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--clan-accent, var(--primary)); }
     .clan-crest-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; background: var(--surface-2); }
     .clan-info { flex: 1; min-width: 0; }
     .clan-name { font-size: 15px; font-weight: 800; }
@@ -569,6 +570,32 @@
     .clan-score { text-align: right; flex-shrink: 0; }
     .clan-pts { font-size: 22px; font-weight: 900; color: var(--primary); line-height: 1; }
     .clan-pts-label { font-size: 10px; color: var(--text-2); }
+    /* ── Clan expand panel ── */
+    .clan-expand { display: none; border-top: 1px solid var(--border); }
+    .clan-expand.open { display: block; }
+    .clan-expand-tartan { height: 56px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .clan-expand-tartan-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.38); }
+    .clan-expand-crest-big { font-size: 36px; position: relative; z-index: 1; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7)); }
+    .clan-expand-body { padding: 14px 16px 16px; background: rgba(0,0,0,0.25); }
+    .clan-expand-name { font-size: 18px; font-weight: 900; color: #fff; }
+    .clan-expand-subtitle { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .clan-expand-motto-block { background: var(--surface-2); border-left: 3px solid var(--clan-accent,#C9A227); border-radius: 0 8px 8px 0; padding: 8px 12px; margin-bottom: 10px; }
+    .clan-expand-motto { font-style: italic; font-size: 13px; font-weight: 700; color: #fff; }
+    .clan-expand-motto-en { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+    .clan-expand-meta-row { display: flex; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+    .clan-expand-meta-item { font-size: 11px; color: var(--text-2); }
+    .clan-expand-meta-item strong { color: var(--text-1); }
+    .clan-expand-history { font-size: 12px; color: var(--text-2); line-height: 1.6; margin-bottom: 12px; }
+    .clan-expand-section-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 8px; }
+    .clan-expand-member-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .clan-expand-member-row:last-child { border-bottom: none; }
+    .clan-expand-member-avatar { font-size: 20px; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .clan-expand-member-name { flex: 1; font-size: 13px; font-weight: 600; }
+    .clan-expand-member-pts { font-size: 13px; font-weight: 800; color: var(--primary); }
+    .clan-expand-leader-badge { font-size: 10px; background: rgba(201,162,39,0.2); color: #C9A227; border: 1px solid rgba(201,162,39,0.4); border-radius: 4px; padding: 1px 5px; font-weight: 700; margin-left: 4px; }
+    .clan-expand-trophies { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .clan-expand-trophy { display: flex; align-items: center; gap: 5px; background: var(--surface-2); border-radius: 8px; padding: 5px 10px; font-size: 11px; color: var(--text-2); }
+    .clan-expand-trophy-icon { font-size: 16px; }
 
     /* ── Profile clan card ── */
     .profile-clan-card { border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; border: 1px solid rgba(201,162,39,0.4); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
@@ -2568,6 +2595,12 @@
       badge: 'Flowering Pearlwort', origin: 'Annandale, Scottish Borders',
     },
   ];
+  const CLAN_HISTORY = {
+    johnson:  'The Johnstons of Annandale were among the most formidable of the Border Reiver clans — warriors who guarded the Scottish Marches against English incursion for over five centuries. Named from the Barony of Johnston in Annandale, they rose to great power in the Western Marches. Their winged spur crest symbolises readiness for battle at a moment\'s notice, and their motto \'Never unprepared\' was a creed lived in earnest through generations of border conflict, cattle raiding, and fierce clan loyalty.',
+    macnicol: 'Clan MacNicol traces its roots to the Isle of Skye, where Norse-Gaelic chieftains held sway over the rugged western coast. The name derives from the Norse personal name Nikulás, carried by settlers who shaped the culture of the Hebrides over centuries. The MacNicols held the lands of Scorrybreac on Skye, and their eagle crest reflects the proud independence and far-sighted vigilance of an island clan who watched the seas from their ancient strongholds.',
+    atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
+    deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
+  };
   const APP_VERSION = 'v15';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
@@ -3407,41 +3440,102 @@
     const maxAvg=clanData[0]?.avgPts||1;
     const rank1Id=clanData[0]?.clanId;
 
+    let expandedClanId = null;
+
     clanData.forEach(({clanId,clan,members,totalPts,avgPts},i)=>{
       const t=getTartan(clan.tartanId);
       const pct=Math.round((avgPts/Math.max(1,maxAvg))*100);
       const isMe=clanId===myClanId;
       const rank=i+1;
       const trophies=getClanTrophies(clanId);
-      const trophyHtml=[...trophies].map(id=>{
+      const trophyPips=[...trophies].map(id=>{
         const def=CLAN_TROPHY_DEFS.find(t=>t.id===id);
         return def?`<span class="clan-trophy-pip" title="${def.name}">${def.icon}</span>`:'';
       }).join('');
+
+      // ── Expanded detail ──
+      const preset = PRESET_CLANS.find(p=>p.id===(clan.presetId||''));
+      const history = CLAN_HISTORY[preset?.id||''] || '';
+
+      // Member rows sorted by pts desc
+      const memberRows = members
+        .map(uid=>({ uid, name: state.members[uid]?.name||'Unknown', pts: getTotalPoints(uid), avatar: state.members[uid]?.avatar||'⚔️' }))
+        .sort((a,b)=>b.pts-a.pts)
+        .map((m,mi)=>`
+          <div class="clan-expand-member-row">
+            <div class="clan-expand-member-avatar">${m.avatar}</div>
+            <div class="clan-expand-member-name">${escHtml(m.name)}${mi===0?'<span class="clan-expand-leader-badge">👑 Leader</span>':''}</div>
+            <div class="clan-expand-member-pts">${m.pts} pts</div>
+          </div>`).join('');
+
+      const trophyDetail = [...trophies].map(id=>{
+        const def=CLAN_TROPHY_DEFS.find(t=>t.id===id);
+        return def?`<div class="clan-expand-trophy"><span class="clan-expand-trophy-icon">${def.icon}</span><span>${def.name}</span></div>`:'';
+      }).join('');
+
+      const tartanStripes = `repeating-linear-gradient(90deg,${t.c1} 0px,${t.c1} 18px,${t.c2} 18px,${t.c2} 36px,${t.c3} 36px,${t.c3} 44px,${t.c2} 44px,${t.c2} 56px,${t.c1} 56px,${t.c1} 74px)`;
+
       const card=document.createElement('div');
       card.className=`clan-lb-card${isMe?' mine-clan':''} fade-in`;
       card.style.cssText=`--clan-accent:${t.c1}`;
       card.innerHTML=`
-        <div class="lb-rank ${rank<=3?'lb-rank-'+rank:''}" style="width:28px;text-align:center;font-size:18px;font-weight:900">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank}</div>
-        <div class="clan-crest-circle" style="background:color-mix(in srgb,${t.c1} 30%,var(--surface-2))">${clan.crest||'🏰'}</div>
-        <div class="clan-info">
-          <div class="clan-name">${clan.name}${isMe?' <span style="font-size:10px;color:var(--text-2)">(you)</span>':''}</div>
-          <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} total pts${clan.motto?` · <em style="opacity:0.7">${clan.motto}</em>`:''}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-            <div class="clan-color-dots">
-              <div class="clan-color-dot" style="background:${t.c1}"></div>
-              <div class="clan-color-dot" style="background:${t.c2}"></div>
-              <div class="clan-color-dot" style="background:${t.c3}"></div>
+        <div class="clan-lb-card-row">
+          <div class="lb-rank ${rank<=3?'lb-rank-'+rank:''}" style="width:28px;text-align:center;font-size:18px;font-weight:900">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank}</div>
+          <div class="clan-crest-circle" style="background:color-mix(in srgb,${t.c1} 30%,var(--surface-2))">${clan.crest||'🏰'}</div>
+          <div class="clan-info">
+            <div class="clan-name">${clan.name}${isMe?' <span style="font-size:10px;color:var(--text-2)">(you)</span>':''}</div>
+            <div class="clan-meta">${members.length} member${members.length!==1?'s':''} · ${totalPts} total pts</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <div class="clan-color-dots">
+                <div class="clan-color-dot" style="background:${t.c1}"></div>
+                <div class="clan-color-dot" style="background:${t.c2}"></div>
+                <div class="clan-color-dot" style="background:${t.c3}"></div>
+              </div>
+              <div class="clan-trophies-row">${trophyPips}</div>
             </div>
-            <div class="clan-trophies-row">${trophyHtml}</div>
+            <div style="margin-top:6px;height:3px;background:var(--bg);border-radius:2px">
+              <div style="width:${pct}%;height:100%;border-radius:2px;background:linear-gradient(90deg,${t.c1},${t.c2})"></div>
+            </div>
           </div>
-          <div style="margin-top:6px;height:3px;background:var(--bg);border-radius:2px">
-            <div style="width:${pct}%;height:100%;border-radius:2px;background:linear-gradient(90deg,${t.c1},${t.c2})"></div>
+          <div class="clan-score">
+            <div class="clan-pts">${avgPts%1===0?avgPts:avgPts.toFixed(1)}</div>
+            <div class="clan-pts-label">avg pts/member</div>
+            <div style="font-size:16px;margin-top:4px;transition:transform 0.25s" class="clan-expand-chevron">▾</div>
           </div>
         </div>
-        <div class="clan-score">
-          <div class="clan-pts">${avgPts%1===0?avgPts:avgPts.toFixed(1)}</div>
-          <div class="clan-pts-label">avg pts/member</div>
+        <div class="clan-expand" id="clan-expand-${clanId}">
+          <div class="clan-expand-tartan" style="background:${tartanStripes}">
+            <div class="clan-expand-tartan-overlay"></div>
+            <div class="clan-expand-crest-big">${clan.crest||'🏰'}</div>
+          </div>
+          <div class="clan-expand-body">
+            <div class="clan-expand-name">${clan.name}</div>
+            ${preset?.subtitle?`<div class="clan-expand-subtitle">${escHtml(preset.subtitle)}</div>`:''}
+            ${clan.motto?`
+            <div class="clan-expand-motto-block" style="border-left-color:${t.c1}">
+              <div class="clan-expand-motto">${escHtml(clan.motto)}</div>
+              ${clan.mottoEn?`<div class="clan-expand-motto-en">"${escHtml(clan.mottoEn)}"</div>`:''}
+            </div>`:''}
+            <div class="clan-expand-meta-row">
+              ${preset?.origin?`<div class="clan-expand-meta-item">📍 <strong>${escHtml(preset.origin)}</strong></div>`:''}
+              ${preset?.badge?`<div class="clan-expand-meta-item">🌿 <strong>${escHtml(preset.badge)}</strong></div>`:''}
+            </div>
+            ${history?`<p class="clan-expand-history">${escHtml(history)}</p>`:''}
+            <div class="clan-expand-section-lbl">⚔️ Clan Members</div>
+            ${members.length?memberRows:`<div style="font-size:12px;color:var(--text-3);padding:8px 0">No members yet</div>`}
+            ${trophyDetail?`<div class="clan-expand-section-lbl" style="margin-top:12px">🏆 Honours</div><div class="clan-expand-trophies">${trophyDetail}</div>`:''}
+          </div>
         </div>`;
+
+      card.addEventListener('click', ()=>{
+        const panel = card.querySelector('.clan-expand');
+        const chevron = card.querySelector('.clan-expand-chevron');
+        const isOpen = panel.classList.contains('open');
+        // Close all others
+        list.querySelectorAll('.clan-expand.open').forEach(p=>{ p.classList.remove('open'); p.closest('.clan-lb-card')?.querySelector('.clan-expand-chevron')?.style.setProperty('transform','rotate(0deg)'); });
+        if(!isOpen){ panel.classList.add('open'); chevron.style.transform='rotate(180deg)'; }
+      });
+
       list.appendChild(card);
     });
 
