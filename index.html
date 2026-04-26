@@ -1292,25 +1292,19 @@
       </div>
       <!-- Sign Up form -->
       <div class="auth-form active" id="auth-form-signup">
-        <div class="input-group">
+        <div class="input-group" style="margin-bottom:6px">
           <label class="input-group label">Display Name</label>
           <input class="input" id="auth-signup-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
-        </div>
-        <div class="input-group" style="margin-bottom:6px">
-          <label class="input-group label">4-Digit PIN</label>
-          <input class="input" id="auth-signup-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 1234" autocomplete="new-password">
         </div>
         <button class="btn btn-primary" id="btn-auth-signup">Create Account</button>
       </div>
       <!-- Log In form -->
       <div class="auth-form" id="auth-form-login">
-        <div class="input-group">
-          <label class="input-group label">Display Name</label>
-          <input class="input" id="auth-login-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
-        </div>
         <div class="input-group" style="margin-bottom:6px">
-          <label class="input-group label">PIN</label>
-          <input class="input" id="auth-login-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="****" autocomplete="current-password">
+          <label class="input-group label">Who are you?</label>
+          <select class="input" id="auth-login-select" style="appearance:auto;-webkit-appearance:auto">
+            <option value="">Loading users…</option>
+          </select>
         </div>
         <button class="btn btn-primary" id="btn-auth-login">Log In</button>
       </div>
@@ -3614,106 +3608,12 @@
   async function renderAccountSection() {
     const sec = document.getElementById('profile-account-section');
     if (!sec) return;
-    sec.innerHTML = '<div style="padding:0 16px 12px;color:var(--text-2);font-size:12px">Checking account…</div>';
-    try {
-      const userDocRef = doc(db, 'users', state.userId);
-      const userDocSnap = await getDoc(userDocRef);
-      const hasPin = userDocSnap.exists() && !!userDocSnap.data().pinHash;
-      const savedName = userDocSnap.exists() ? userDocSnap.data().name : (state.members[state.userId]?.name || '');
-
-      if (hasPin) {
-        // Already secured — show "change PIN" option
-        sec.innerHTML = `
-          <div style="margin:0 16px 12px;padding:12px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
-            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">✅ Login PIN is set</div>
-            <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">Logged in as <strong>${escHtml(savedName)}</strong> — you can sign in from any device.</div>
-            <button class="btn" id="btn-show-change-pin" style="font-size:13px;padding:8px 14px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer">🔑 Change PIN</button>
-          </div>
-          <div id="change-pin-form" class="hidden" style="margin:0 16px 12px;padding:14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
-            <div style="margin-bottom:10px">
-              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">New 4-digit PIN</label>
-              <input class="input" id="profile-pin-new" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="New PIN" style="max-width:160px">
-            </div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Confirm PIN</label>
-              <input class="input" id="profile-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Confirm" style="max-width:160px">
-            </div>
-            <div id="profile-pin-error" style="font-size:12px;color:#F85149;min-height:16px;margin-bottom:8px"></div>
-            <button class="btn btn-primary" id="btn-save-new-pin" style="font-size:13px;padding:8px 18px">Save New PIN</button>
-          </div>`;
-        document.getElementById('btn-show-change-pin').addEventListener('click', () => {
-          document.getElementById('change-pin-form').classList.toggle('hidden');
-        });
-        document.getElementById('btn-save-new-pin').addEventListener('click', async () => {
-          const newPin     = document.getElementById('profile-pin-new').value.trim();
-          const confirmPin = document.getElementById('profile-pin-confirm').value.trim();
-          const errEl      = document.getElementById('profile-pin-error');
-          errEl.textContent = '';
-          if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN must be exactly 4 digits'; return; }
-          if (newPin !== confirmPin)    { errEl.textContent = 'PINs do not match'; return; }
-          const btn = document.getElementById('btn-save-new-pin');
-          btn.textContent = '…'; btn.disabled = true;
-          try {
-            await updateDoc(userDocRef, { pinHash: btoa(newPin) });
-            toast('✅ PIN updated', 2500);
-            document.getElementById('change-pin-form').classList.add('hidden');
-            document.getElementById('profile-pin-new').value = '';
-            document.getElementById('profile-pin-confirm').value = '';
-          } catch(e) { errEl.textContent = e.message; }
-          finally { btn.textContent = 'Save New PIN'; btn.disabled = false; }
-        });
-
-      } else {
-        // No PIN yet — show setup form (pre-filled with their existing name)
-        sec.innerHTML = `
-          <div style="margin:0 16px 12px;padding:14px;background:linear-gradient(135deg,var(--surface),var(--bg-alt,var(--surface)));border-radius:var(--radius);border:1px solid rgba(201,162,39,0.4)">
-            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px">🔐 Secure your account</div>
-            <div style="font-size:12px;color:var(--text-2);margin-bottom:14px;line-height:1.5">Set a PIN so you can log in on any device and never lose your progress.</div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Your display name</label>
-              <input class="input" id="profile-setup-name" value="${escHtml(savedName)}" maxlength="20" autocomplete="off">
-            </div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Choose a 4-digit PIN</label>
-              <input class="input" id="profile-setup-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 1234">
-            </div>
-            <div id="profile-setup-error" style="font-size:12px;color:#F85149;min-height:16px;margin-bottom:8px"></div>
-            <button class="btn btn-primary" id="btn-setup-pin" style="width:100%">Set Up Login PIN 🔐</button>
-          </div>`;
-        document.getElementById('btn-setup-pin').addEventListener('click', async () => {
-          const nameEl = document.getElementById('profile-setup-name');
-          const pinEl  = document.getElementById('profile-setup-pin');
-          const errEl  = document.getElementById('profile-setup-error');
-          const name   = nameEl.value.trim();
-          const pin    = pinEl.value.trim();
-          errEl.textContent = '';
-          if (!name) { errEl.textContent = 'Enter your display name'; nameEl.focus(); return; }
-          if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN must be exactly 4 digits'; pinEl.focus(); return; }
-          const btn = document.getElementById('btn-setup-pin');
-          btn.textContent = '…'; btn.disabled = true;
-          try {
-            // Check name uniqueness — allow their own name, block others
-            const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
-            const snap = await getDocs(q);
-            if (!snap.empty && snap.docs[0].id !== state.userId) {
-              errEl.textContent = 'That name is already taken — try a slightly different one';
-              nameEl.focus(); return;
-            }
-            // Write their users doc using their existing userId as the doc ID
-            await setDoc(doc(db, 'users', state.userId), {
-              name, nameLower: name.toLowerCase(), pinHash: btoa(pin), createdAt: serverTimestamp()
-            }, { merge: true });
-            state.userName = name;
-            saveLocal();
-            toast('✅ Login PIN set — you can now log in from any device!', 3500);
-            renderAccountSection(); // refresh to show "PIN is set" state
-          } catch(e2) { errEl.textContent = e2.message; }
-          finally { btn.textContent = 'Set Up Login PIN 🔐'; btn.disabled = false; }
-        });
-      }
-    } catch(e) {
-      sec.innerHTML = `<div style="padding:0 16px 12px;color:#F85149;font-size:12px">Could not load account info</div>`;
-    }
+    const savedName = state.members[state.userId]?.name || state.userName || '';
+    sec.innerHTML = `
+      <div style="margin:0 16px 12px;padding:12px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">👤 Logged in</div>
+        <div style="font-size:12px;color:var(--text-2)">Signed in as <strong>${escHtml(savedName)}</strong>.</div>
+      </div>`;
   }
 
   function renderFeedback() {
@@ -4146,12 +4046,32 @@
     document.getElementById('auth-form-login').classList.remove('active');
     document.getElementById('auth-error').textContent = '';
   });
+  async function loadLoginUsers() {
+    const sel = document.getElementById('auth-login-select');
+    if (!sel) return;
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('name')));
+      sel.innerHTML = snap.empty
+        ? '<option value="">No users yet — sign up first</option>'
+        : '<option value="">— Select your name —</option>';
+      snap.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.data().name;
+        sel.appendChild(opt);
+      });
+    } catch(e) {
+      sel.innerHTML = '<option value="">Could not load users</option>';
+    }
+  }
+
   document.getElementById('auth-tab-login').addEventListener('click', () => {
     document.getElementById('auth-tab-login').classList.add('active');
     document.getElementById('auth-tab-signup').classList.remove('active');
     document.getElementById('auth-form-login').classList.add('active');
     document.getElementById('auth-form-signup').classList.remove('active');
     document.getElementById('auth-error').textContent = '';
+    loadLoginUsers();
   });
 
   // Shared helper to show campaigns section after auth
@@ -4166,13 +4086,10 @@
   // Sign Up
   document.getElementById('btn-auth-signup').addEventListener('click', async () => {
     const nameEl = document.getElementById('auth-signup-name');
-    const pinEl  = document.getElementById('auth-signup-pin');
     const errEl  = document.getElementById('auth-error');
     const name   = nameEl.value.trim();
-    const pin    = pinEl.value.trim();
     errEl.textContent = '';
     if (!name) { errEl.textContent = 'Enter a display name'; nameEl.focus(); return; }
-    if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN must be exactly 4 digits'; pinEl.focus(); return; }
     const btn = document.getElementById('btn-auth-signup');
     btn.textContent = '…'; btn.disabled = true;
     try {
@@ -4182,7 +4099,7 @@
       if (!snap.empty) { errEl.textContent = 'Name already taken — try another or log in'; nameEl.focus(); return; }
       // Create user doc
       const userRef = doc(collection(db, 'users'));
-      await setDoc(userRef, { name, nameLower: name.toLowerCase(), pinHash: btoa(pin), createdAt: serverTimestamp() });
+      await setDoc(userRef, { name, nameLower: name.toLowerCase(), createdAt: serverTimestamp() });
       state.userId = userRef.id;
       state.userName = name;
       saveLocal();
@@ -4193,24 +4110,18 @@
 
   // Log In
   document.getElementById('btn-auth-login').addEventListener('click', async () => {
-    const nameEl = document.getElementById('auth-login-name');
-    const pinEl  = document.getElementById('auth-login-pin');
+    const selEl  = document.getElementById('auth-login-select');
     const errEl  = document.getElementById('auth-error');
-    const name   = nameEl.value.trim();
-    const pin    = pinEl.value.trim();
+    const userId = selEl.value;
     errEl.textContent = '';
-    if (!name) { errEl.textContent = 'Enter your display name'; nameEl.focus(); return; }
-    if (!pin) { errEl.textContent = 'Enter your PIN'; pinEl.focus(); return; }
+    if (!userId) { errEl.textContent = 'Please select your name'; selEl.focus(); return; }
     const btn = document.getElementById('btn-auth-login');
     btn.textContent = '…'; btn.disabled = true;
     try {
-      const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
-      const snap = await getDocs(q);
-      if (snap.empty) { errEl.textContent = 'Name not found — did you mean to Sign Up?'; nameEl.focus(); return; }
-      const userDoc = snap.docs[0];
-      if (btoa(pin) !== userDoc.data().pinHash) { errEl.textContent = 'Incorrect PIN'; pinEl.value = ''; pinEl.focus(); return; }
-      state.userId = userDoc.id;
-      state.userName = userDoc.data().name;
+      const userDocSnap = await getDoc(doc(db, 'users', userId));
+      if (!userDocSnap.exists()) { errEl.textContent = 'User not found — try signing up'; return; }
+      state.userId   = userId;
+      state.userName = userDocSnap.data().name;
 
       // Auto-detect existing campaign membership so login restores progress
       try {
@@ -4246,9 +4157,8 @@
     document.getElementById('auth-section').classList.remove('hidden');
     document.getElementById('auth-error').textContent = '';
     document.getElementById('auth-signup-name').value = '';
-    document.getElementById('auth-signup-pin').value = '';
-    document.getElementById('auth-login-name').value = '';
-    document.getElementById('auth-login-pin').value = '';
+    const selEl = document.getElementById('auth-login-select');
+    if (selEl) selEl.value = '';
   });
 
   // Wager selector toggle
