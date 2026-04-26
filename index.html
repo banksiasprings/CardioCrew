@@ -6942,6 +6942,7 @@
             ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
             try {
               await deleteDoc(doc(db, 'campaigns', cId, 'members', mId));
+              await deleteDoc(doc(db, 'users', mId)).catch(() => {}); // also remove from login dropdown
               row.remove();
               toast(`🗑️ Removed ${m.name}`);
             } catch(err) {
