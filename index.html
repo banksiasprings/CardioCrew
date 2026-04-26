@@ -3886,22 +3886,61 @@
   function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   // ─── Account Switcher ─────────────────────────────────
-  // Fetches ALL users who belong to clanId from the users collection,
-  // regardless of which campaign they're in. This lets parents see kids
-  // even when they're enrolled in different challenges.
+  // Finds all clan members across ALL campaigns by matching clan name.
+  // Clan IDs differ between campaigns (kids vs adults challenge), but the
+  // clan name ("Clan MacNicol") is consistent — so we use that as the link.
   async function loadClanAccountSwitcher(clanId) {
+    // Get the name of the current user's clan
+    const myClanName = state.clans[clanId]?.name;
+
+    // Always start with members already loaded in state (current campaign)
+    const seenIds = new Set();
+    const allClanUsers = [];
+    const addUser = (id, data) => {
+      if (seenIds.has(id)) return;
+      seenIds.add(id);
+      allClanUsers.push({ id, ...data });
+    };
+    Object.entries(state.members)
+      .filter(([,m]) => m.clanId === clanId)
+      .forEach(([id, m]) => addUser(id, m));
+
     try {
-      const snap = await getDocs(query(collection(db, 'users'), where('clanId', '==', clanId)));
-      const allClanUsers = [];
-      snap.forEach(d => allClanUsers.push({ id: d.id, ...d.data() }));
-      renderAccountSwitcher(allClanUsers);
+      if (myClanName) {
+        // Fetch all campaigns, then find clans with the same name in each
+        const campaignsSnap = await getDocs(collection(db, 'campaigns'));
+        await Promise.all(campaignsSnap.docs.map(async campaignDoc => {
+          const cid = campaignDoc.id;
+          // Find clans in this campaign with the same name as ours
+          const clansSnap = await getDocs(
+            query(collection(db, 'campaigns', cid, 'clans'), where('name', '==', myClanName))
+          );
+          await Promise.all(clansSnap.docs.map(async clanDoc => {
+            // Get all members of that clan
+            const membersSnap = await getDocs(
+              query(collection(db, 'campaigns', cid, 'members'), where('clanId', '==', clanDoc.id))
+            );
+            await Promise.all(membersSnap.docs.map(async memberDoc => {
+              if (seenIds.has(memberDoc.id)) return;
+              // Fetch the user doc for their name (member docs may have different names)
+              try {
+                const userSnap = await getDoc(doc(db, 'users', memberDoc.id));
+                const data = userSnap.exists()
+                  ? { ...memberDoc.data(), ...userSnap.data() }
+                  : memberDoc.data();
+                addUser(memberDoc.id, data);
+              } catch(e) {
+                addUser(memberDoc.id, memberDoc.data());
+              }
+            }));
+          }));
+        }));
+      }
     } catch(e) {
-      // Fallback: use campaign-scoped members if Firestore query fails
-      const fallback = Object.entries(state.members)
-        .filter(([,m]) => m.clanId === clanId)
-        .map(([id, m]) => ({ id, ...m }));
-      renderAccountSwitcher(fallback);
+      console.warn('Cross-campaign clan lookup failed, using current campaign only', e);
     }
+
+    renderAccountSwitcher(allClanUsers);
   }
 
   // clanUsers: array of { id, name, avatar, ... } — may include members from other campaigns
