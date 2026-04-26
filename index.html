@@ -4659,6 +4659,8 @@
       if (btn) { btn.textContent = 'Check for Update'; btn.disabled = false; }
     }
   }
+  // Expose to global scope so inline onclick in the dynamically-created banner can call it
+  window.forceAppUpdate = forceAppUpdate;
   function showUpdateBanner() {
     if (document.getElementById('cc-update-banner')) return;
     const b = document.createElement('div');
