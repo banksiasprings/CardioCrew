@@ -2832,17 +2832,43 @@
     return getDayPointsClassic(userId, day);
   }
 
-  // 5-pt bonus only for the CURRENT campaign day (not catch-up), and only for classic campaigns
+  // Returns true if every exercise for `day` was completed within that calendar day.
+  // Completions are saved as Firestore Timestamps (new) or boolean true (legacy).
+  // Legacy booleans get the benefit of the doubt and are treated as on-time.
+  function wasDayCompletedOnTime(userId, day) {
+    const m = state.members[userId];
+    if (!m) return false;
+    const startStr = state.campaignData?.startDate;
+    if (!startStr) return true; // can't determine — treat as on-time
+
+    // Calendar window for day D: midnight local start to midnight local end
+    const dayStart = new Date(startStr + 'T00:00:00');
+    dayStart.setDate(dayStart.getDate() + (day - 1));
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    for (const ch of getActiveChallenges()) {
+      if (ch.schedule[day - 1] === null) continue; // rest day — skip
+      const val = m.completions?.[`d${day}_${ch.id}`];
+      if (!val) continue; // not ticked — not relevant to timing
+      if (val === true) continue; // legacy boolean — assume on-time
+      // Firestore Timestamp — check it falls within the correct calendar day
+      const completedAt = val.toDate ? val.toDate() : new Date(val);
+      if (completedAt < dayStart || completedAt >= dayEnd) return false;
+    }
+    return true;
+  }
+
+  // 5-pt bonus only when all 4 exercises were completed on the correct calendar day.
+  // Catch-up completions (timestamped on a later day) are capped at 4.
+  // Legacy boolean completions (no timestamp) get the benefit of the doubt.
   function getDayScore(userId, day, currentDay) {
     if (isTemplateCampaign()) {
-      // Template campaigns: no bonus, just the raw day pts
       return getDayPoints(userId, day);
     }
     const pts = getDayPoints(userId, day);
-    // Bonus point only awarded when all 4 exercises are done on the correct day.
-    // Catch-up days (day < currentDay) are capped at 4 — no bonus.
-    if (pts >= 4 && day === currentDay) return 5;
-    return pts; // 0–4 for catch-up days
+    if (pts >= 4 && wasDayCompletedOnTime(userId, day)) return 5;
+    return pts;
   }
 
   function getTotalPoints(userId) {
@@ -3021,7 +3047,10 @@
     if (!current && challenge) {
       announceTaskComplete(challenge.name);
     }
-    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: !current });
+    // Save a server timestamp when ticking ON so we can verify on-time completion later.
+    // Save false when un-ticking (boolean false = not done, no date needed).
+    const newVal = current ? false : serverTimestamp();
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: newVal });
   }
 
   async function updateAvatar(newAvatar) {
