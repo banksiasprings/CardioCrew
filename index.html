@@ -2839,8 +2839,10 @@
       return getDayPoints(userId, day);
     }
     const pts = getDayPoints(userId, day);
-    if (pts >= 4) return 5;
-    return pts; // 0–4 for any day
+    // Bonus point only awarded when all 4 exercises are done on the correct day.
+    // Catch-up days (day < currentDay) are capped at 4 — no bonus.
+    if (pts >= 4 && day === currentDay) return 5;
+    return pts; // 0–4 for catch-up days
   }
 
   function getTotalPoints(userId) {
