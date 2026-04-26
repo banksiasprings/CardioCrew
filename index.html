@@ -1905,6 +1905,7 @@
           <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
           <div style="margin:14px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">🔐 Login &amp; Security</div>
           <div id="profile-account-section"></div>
+          <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
             <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v15</div>
@@ -4658,6 +4659,114 @@
     b.innerHTML = '<span>🔄 New update available</span><button onclick="forceAppUpdate()" style="background:#4A9C6E;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Update Now</button>';
     document.body.prepend(b);
   }
+  // ─── PIN Management ──────────────────────────────────────
+  async function hashPin(pin) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function renderPinSection() {
+    const el = document.getElementById('pin-section');
+    if (!el || !state.userId) return;
+
+    // Fetch current PIN status from users collection
+    let hasPinHash = false;
+    try {
+      const snap = await getDoc(doc(db, 'users', state.userId));
+      hasPinHash = !!(snap.exists() && snap.data()?.pinHash);
+    } catch(e) {}
+
+    el.innerHTML = renderPinUI(hasPinHash);
+    wireUpPinEvents(hasPinHash);
+  }
+
+  function renderPinUI(hasPinHash) {
+    const statusRow = hasPinHash
+      ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+           <span style="font-size:18px">🔐</span>
+           <span style="font-size:13px;font-weight:600;color:var(--text-1)">PIN is active</span>
+           <span style="font-size:10px;background:rgba(74,156,110,0.2);color:#4A9C6E;border:1px solid rgba(74,156,110,0.4);border-radius:4px;padding:2px 6px;font-weight:700">ON</span>
+         </div>`
+      : `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+           <span style="font-size:18px">🔓</span>
+           <span style="font-size:13px;font-weight:600;color:var(--text-2)">No PIN set</span>
+           <span style="font-size:10px;background:rgba(255,255,255,0.06);color:var(--text-3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-weight:700">OFF</span>
+         </div>`;
+
+    const actionBtns = hasPinHash
+      ? `<div style="display:flex;gap:8px">
+           <button id="pin-btn-change" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-1);font-size:13px;font-weight:700;cursor:pointer">Change PIN</button>
+           <button id="pin-btn-remove" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(220,50,50,0.3);background:rgba(220,50,50,0.1);color:#e06060;font-size:13px;font-weight:700;cursor:pointer">Remove PIN</button>
+         </div>`
+      : `<button id="pin-btn-add" style="width:100%;padding:11px;border-radius:8px;border:1px solid rgba(74,156,110,0.4);background:rgba(74,156,110,0.12);color:#4A9C6E;font-size:13px;font-weight:700;cursor:pointer">＋ Add PIN to Account</button>`;
+
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:10px">Account PIN</div>
+        ${statusRow}
+        ${actionBtns}
+        <div id="pin-form" style="display:none;margin-top:10px">
+          <div style="margin-bottom:8px">
+            <label style="font-size:11px;font-weight:700;color:var(--text-2);display:block;margin-bottom:4px">${hasPinHash ? 'New PIN' : 'Choose a 4-digit PIN'}</label>
+            <input id="pin-input-new" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+              style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-1);font-size:20px;font-weight:700;letter-spacing:6px;text-align:center;box-sizing:border-box;outline:none">
+          </div>
+          <div style="margin-bottom:10px">
+            <label style="font-size:11px;font-weight:700;color:var(--text-2);display:block;margin-bottom:4px">Confirm PIN</label>
+            <input id="pin-input-confirm" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+              style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text-1);font-size:20px;font-weight:700;letter-spacing:6px;text-align:center;box-sizing:border-box;outline:none">
+          </div>
+          <div id="pin-form-msg" style="font-size:12px;min-height:16px;margin-bottom:8px;color:#e06060"></div>
+          <div style="display:flex;gap:8px">
+            <button id="pin-btn-save" style="flex:2;padding:11px;border-radius:8px;border:none;background:#4A9C6E;color:#fff;font-size:14px;font-weight:800;cursor:pointer">Save PIN</button>
+            <button id="pin-btn-cancel" style="flex:1;padding:11px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function wireUpPinEvents(hasPinHash) {
+    const form = document.getElementById('pin-form');
+
+    function showForm() { form.style.display = 'block'; document.getElementById('pin-input-new')?.focus(); }
+    function hideForm() { form.style.display = 'none'; document.getElementById('pin-input-new').value = ''; document.getElementById('pin-input-confirm').value = ''; document.getElementById('pin-form-msg').textContent = ''; }
+
+    document.getElementById('pin-btn-add')?.addEventListener('click', showForm);
+    document.getElementById('pin-btn-change')?.addEventListener('click', showForm);
+    document.getElementById('pin-btn-cancel')?.addEventListener('click', hideForm);
+
+    document.getElementById('pin-btn-remove')?.addEventListener('click', async () => {
+      if (!confirm('Remove your PIN? Anyone with your name can log in without a PIN.')) return;
+      try {
+        await updateDoc(doc(db, 'users', state.userId), { pinHash: deleteField() });
+        toast('PIN removed', 2000);
+        renderPinSection();
+      } catch(e) { toast('Error removing PIN', 2000); }
+    });
+
+    document.getElementById('pin-btn-save')?.addEventListener('click', async () => {
+      const newPin = document.getElementById('pin-input-new').value.trim();
+      const confirm2 = document.getElementById('pin-input-confirm').value.trim();
+      const msg = document.getElementById('pin-form-msg');
+      if (!/^\d{4}$/.test(newPin)) { msg.textContent = 'PIN must be exactly 4 digits'; return; }
+      if (newPin !== confirm2) { msg.textContent = 'PINs don\'t match — try again'; return; }
+      msg.textContent = '';
+      try {
+        const h = await hashPin(newPin);
+        await setDoc(doc(db, 'users', state.userId), { pinHash: h }, { merge: true });
+        toast('PIN saved 🔐', 2000);
+        renderPinSection();
+      } catch(e) { msg.textContent = 'Failed to save — try again'; }
+    });
+
+    // Only allow numeric input
+    ['pin-input-new','pin-input-confirm'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
+      });
+    });
+  }
+
   async function checkForUpdateOnLaunch() {
     if (!('serviceWorker' in navigator)) return;
     try {
@@ -4697,6 +4806,8 @@
           s[key] = !nowOpen;
           localStorage.setItem('cc_profile_open', JSON.stringify(s));
         } catch {}
+        // Load PIN section when settings opens
+        if (key === 'settings' && !nowOpen) renderPinSection();
       });
     });
   }
