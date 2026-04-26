@@ -3788,7 +3788,9 @@
         </div>
         `;
       // ── Account Switcher ──
-      renderAccountSwitcher(clanMembers.map(([id]) => id));
+      // Loads all users in the clan from Firestore (not just this campaign's members)
+      // so parents and kids on different challenges all appear in the list.
+      loadClanAccountSwitcher(myClanId);
     } else {
       clanSec.innerHTML=`<button class="btn-clan-action" id="btn-join-create-clan">🏰 Join a Clan</button>`;
       document.getElementById('btn-join-create-clan')?.addEventListener('click',()=>{
@@ -3884,22 +3886,38 @@
   function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   // ─── Account Switcher ─────────────────────────────────
-  function renderAccountSwitcher(clanMemberIds) {
+  // Fetches ALL users who belong to clanId from the users collection,
+  // regardless of which campaign they're in. This lets parents see kids
+  // even when they're enrolled in different challenges.
+  async function loadClanAccountSwitcher(clanId) {
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('clanId', '==', clanId)));
+      const allClanUsers = [];
+      snap.forEach(d => allClanUsers.push({ id: d.id, ...d.data() }));
+      renderAccountSwitcher(allClanUsers);
+    } catch(e) {
+      // Fallback: use campaign-scoped members if Firestore query fails
+      const fallback = Object.entries(state.members)
+        .filter(([,m]) => m.clanId === clanId)
+        .map(([id, m]) => ({ id, ...m }));
+      renderAccountSwitcher(fallback);
+    }
+  }
+
+  // clanUsers: array of { id, name, avatar, ... } — may include members from other campaigns
+  function renderAccountSwitcher(clanUsers) {
     const wrap = document.getElementById('account-switcher-section');
     const sel  = document.getElementById('clan-account-select');
     if (!wrap || !sel) return;
-    // Only show switcher if there are other members in the clan
-    const others = clanMemberIds.filter(id => id !== state.userId);
+    const others = clanUsers.filter(u => u.id !== state.userId);
     if (!others.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
     sel.innerHTML = '<option value="">Choose a clan member…</option>';
-    others.sort((a, b) => (state.members[a]?.name || '').localeCompare(state.members[b]?.name || ''))
-      .forEach(uid => {
-        const m = state.members[uid];
-        if (!m) return;
+    others.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .forEach(u => {
         const opt = document.createElement('option');
-        opt.value = uid;
-        opt.textContent = (m.avatar || '⚔️') + ' ' + (m.name || uid);
+        opt.value = u.id;
+        opt.textContent = (u.avatar || '⚔️') + ' ' + (u.name || u.id);
         sel.appendChild(opt);
       });
     document.getElementById('switch-pin-wrap').style.display = 'none';
