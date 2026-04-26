@@ -1285,29 +1285,14 @@
   <div class="welcome-card">
     <!-- Phase 1: Auth -->
     <div id="auth-section">
-      <h2 style="margin-bottom:14px">Join CardioCrew</h2>
-      <div class="auth-mode-toggle">
-        <button class="auth-mode-btn active" id="auth-tab-signup">Sign Up</button>
-        <button class="auth-mode-btn" id="auth-tab-login">Log In</button>
+      <h2 style="margin-bottom:14px">Welcome Back</h2>
+      <div class="input-group" style="margin-bottom:6px">
+        <label class="input-group label">Who are you?</label>
+        <select class="input" id="auth-login-select" style="appearance:auto;-webkit-appearance:auto">
+          <option value="">Loading users…</option>
+        </select>
       </div>
-      <!-- Sign Up form -->
-      <div class="auth-form active" id="auth-form-signup">
-        <div class="input-group" style="margin-bottom:6px">
-          <label class="input-group label">Display Name</label>
-          <input class="input" id="auth-signup-name" placeholder="e.g. Sarah" maxlength="20" autocomplete="off">
-        </div>
-        <button class="btn btn-primary" id="btn-auth-signup">Create Account</button>
-      </div>
-      <!-- Log In form -->
-      <div class="auth-form" id="auth-form-login">
-        <div class="input-group" style="margin-bottom:6px">
-          <label class="input-group label">Who are you?</label>
-          <select class="input" id="auth-login-select" style="appearance:auto;-webkit-appearance:auto">
-            <option value="">Loading users…</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" id="btn-auth-login">Log In</button>
-      </div>
+      <button class="btn btn-primary" id="btn-auth-login" style="width:100%">Log In</button>
       <div class="error-msg" id="auth-error"></div>
     </div>
 
@@ -4041,15 +4026,7 @@
   });
   document.getElementById('btn-back-to-join').addEventListener('click',()=>showScreen('screen-welcome'));
 
-  // ─── Auth (Sign Up / Log In) ─────────────────────────
-  // Tab toggle
-  document.getElementById('auth-tab-signup').addEventListener('click', () => {
-    document.getElementById('auth-tab-signup').classList.add('active');
-    document.getElementById('auth-tab-login').classList.remove('active');
-    document.getElementById('auth-form-signup').classList.add('active');
-    document.getElementById('auth-form-login').classList.remove('active');
-    document.getElementById('auth-error').textContent = '';
-  });
+  // ─── Auth ────────────────────────────────────────────
   async function loadLoginUsers() {
     const sel = document.getElementById('auth-login-select');
     if (!sel) return;
@@ -4069,14 +4046,7 @@
     }
   }
 
-  document.getElementById('auth-tab-login').addEventListener('click', () => {
-    document.getElementById('auth-tab-login').classList.add('active');
-    document.getElementById('auth-tab-signup').classList.remove('active');
-    document.getElementById('auth-form-login').classList.add('active');
-    document.getElementById('auth-form-signup').classList.remove('active');
-    document.getElementById('auth-error').textContent = '';
-    loadLoginUsers();
-  });
+  loadLoginUsers();
 
   // Shared helper to show campaigns section after auth
   function enterCampaignsView() {
@@ -4086,31 +4056,6 @@
     const gEl = document.getElementById('auth-greeting-name');
     if (gEl) gEl.textContent = `Hi, ${state.userName} 👋`;
   }
-
-  // Sign Up
-  document.getElementById('btn-auth-signup').addEventListener('click', async () => {
-    const nameEl = document.getElementById('auth-signup-name');
-    const errEl  = document.getElementById('auth-error');
-    const name   = nameEl.value.trim();
-    errEl.textContent = '';
-    if (!name) { errEl.textContent = 'Enter a display name'; nameEl.focus(); return; }
-    const btn = document.getElementById('btn-auth-signup');
-    btn.textContent = '…'; btn.disabled = true;
-    try {
-      // Check uniqueness (case-insensitive via nameLower field)
-      const q = query(collection(db, 'users'), where('nameLower', '==', name.toLowerCase()), limit(1));
-      const snap = await getDocs(q);
-      if (!snap.empty) { errEl.textContent = 'Name already taken — try another or log in'; nameEl.focus(); return; }
-      // Create user doc
-      const userRef = doc(collection(db, 'users'));
-      await setDoc(userRef, { name, nameLower: name.toLowerCase(), createdAt: serverTimestamp() });
-      state.userId = userRef.id;
-      state.userName = name;
-      saveLocal();
-      enterCampaignsView();
-    } catch(e2) { errEl.textContent = e2.message; }
-    finally { btn.textContent = 'Create Account'; btn.disabled = false; }
-  });
 
   // Log In
   document.getElementById('btn-auth-login').addEventListener('click', async () => {
@@ -4216,8 +4161,10 @@
     state.campaignData = null; state.members = {}; state.messages = [];
     localStorage.removeItem('cc_user');
     showScreen('screen-welcome');
-    // Reset to Log In tab so they know how to get back in
-    document.getElementById('auth-tab-login')?.click();
+    document.getElementById('auth-error').textContent = '';
+    const selEl = document.getElementById('auth-login-select');
+    if (selEl) selEl.value = '';
+    loadLoginUsers();
   });
 
   document.getElementById('btn-leave').addEventListener('click',()=>{
