@@ -7451,36 +7451,148 @@
       const listEl = document.getElementById('admin-clan-list');
       listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px">⏳ Loading clans…</div>';
       try {
-        const snap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
-        if (snap.empty) {
+        const [clansSnap, membersSnap] = await Promise.all([
+          getDocs(collection(db, 'campaigns', campId, 'clans')),
+          getDocs(collection(db, 'campaigns', campId, 'members')),
+        ]);
+
+        // Build clan map and member list
+        const clans = {};
+        clansSnap.docs.forEach(d => { clans[d.id] = { id: d.id, members: [], ...d.data() }; });
+        const allMembers = [];
+        membersSnap.docs.forEach(d => {
+          const m = { id: d.id, ...d.data() };
+          allMembers.push(m);
+          if (m.clanId && clans[m.clanId]) clans[m.clanId].members.push(m);
+        });
+        const unassigned = allMembers.filter(m => !m.clanId || !clans[m.clanId]);
+
+        if (clansSnap.empty) {
           listEl.innerHTML = '<div style="color:var(--text-2);font-size:13px;padding:8px 0">No clans yet — add one below.</div>';
           return;
         }
         listEl.innerHTML = '';
-        snap.docs.forEach(cdoc => {
-          const clan = cdoc.data();
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;margin-bottom:8px';
-          row.innerHTML = `
-            <span style="font-size:22px">${clan.crest || '🏰'}</span>
+
+        const rebuildList = () => loadAdminClans(campId);
+
+        Object.values(clans).forEach(clan => {
+          const card = document.createElement('div');
+          card.style.cssText = 'background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden';
+
+          // Header row (clickable to expand)
+          const header = document.createElement('div');
+          header.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;user-select:none';
+          header.innerHTML = `
+            <span style="font-size:20px">${clan.crest || '🏰'}</span>
             <span style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${escHtml(clan.name || 'Unnamed')}</span>
-            <button type="button" class="btn-adm btn-adm-danger" data-delete-clan="${cdoc.id}" data-camp-id="${campId}" style="font-size:12px;padding:6px 10px">🗑️ Remove</button>`;
-          row.querySelector('[data-delete-clan]').addEventListener('click', async (ev) => {
-            const cId = ev.currentTarget.dataset.deleteClan;
-            const cCamp = ev.currentTarget.dataset.campId;
-            if (!confirm(`Delete clan "${clan.name}"?`)) return;
-            ev.currentTarget.textContent = '…'; ev.currentTarget.disabled = true;
+            <span style="font-size:12px;color:var(--text-2);margin-right:4px">${clan.members.length} member${clan.members.length!==1?'s':''}</span>
+            <span class="clan-admin-chevron" style="font-size:12px;color:var(--text-3);transition:transform .2s">▼</span>
+            <button type="button" class="btn-adm btn-adm-danger" style="font-size:11px;padding:5px 9px;margin-left:4px">🗑️</button>`;
+
+          // Delete button
+          header.querySelector('.btn-adm-danger').addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            if (!confirm(`Delete clan "${clan.name}"?\nMembers will become unassigned.`)) return;
             try {
-              await deleteDoc(doc(db, 'campaigns', cCamp, 'clans', cId));
-              row.remove();
+              await deleteDoc(doc(db, 'campaigns', campId, 'clans', clan.id));
+              // Clear clanId for all members of this clan
+              await Promise.all(clan.members.map(m =>
+                updateDoc(doc(db, 'campaigns', campId, 'members', m.id), { clanId: deleteField() })
+              ));
               toast('🗑️ Clan deleted');
-            } catch(err) {
-              toast('Error: ' + err.message, 3500);
-              ev.currentTarget.textContent = '🗑️ Remove'; ev.currentTarget.disabled = false;
-            }
+              rebuildList();
+            } catch(err) { toast('Error: ' + err.message, 3500); }
           });
-          listEl.appendChild(row);
+
+          // Expandable body
+          const body = document.createElement('div');
+          body.style.cssText = 'display:none;border-top:1px solid var(--border);padding:10px 12px';
+
+          const renderBody = () => {
+            body.innerHTML = '';
+
+            // Existing members
+            if (clan.members.length) {
+              const lbl = document.createElement('div');
+              lbl.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:8px';
+              lbl.textContent = 'Members';
+              body.appendChild(lbl);
+
+              clan.members.forEach(m => {
+                const mrow = document.createElement('div');
+                mrow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)';
+                mrow.innerHTML = `
+                  <span style="font-size:16px">${m.avatar||'⚔️'}</span>
+                  <span style="flex:1;font-size:13px;color:var(--text)">${escHtml(m.name||m.id)}</span>
+                  <button type="button" class="btn-adm btn-adm-danger" style="font-size:11px;padding:4px 8px">Remove</button>`;
+                mrow.querySelector('.btn-adm-danger').addEventListener('click', async () => {
+                  try {
+                    await updateDoc(doc(db, 'campaigns', campId, 'members', m.id), { clanId: deleteField() });
+                    toast(`${m.name} removed from ${clan.name}`);
+                    rebuildList();
+                  } catch(err) { toast('Error: ' + err.message, 3500); }
+                });
+                body.appendChild(mrow);
+              });
+            } else {
+              const empty = document.createElement('div');
+              empty.style.cssText = 'font-size:12px;color:var(--text-3);padding:4px 0 8px';
+              empty.textContent = 'No members yet';
+              body.appendChild(empty);
+            }
+
+            // Assign unassigned members
+            const available = allMembers.filter(m => !m.clanId || !clans[m.clanId] || m.clanId !== clan.id);
+            if (available.length) {
+              const assignWrap = document.createElement('div');
+              assignWrap.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,162,39,.15)';
+              assignWrap.innerHTML = `
+                <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Assign a member</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <select style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px">
+                    <option value="">— choose —</option>
+                    ${available.map(m=>`<option value="${m.id}">${escHtml(m.name||m.id)} ${m.clanId&&clans[m.clanId]?'('+escHtml(clans[m.clanId].name)+')':''}</option>`).join('')}
+                  </select>
+                  <button type="button" class="btn-adm" style="padding:8px 12px;font-size:12px;font-weight:700;background:rgba(201,162,39,.15);color:#C9A227;border:1px solid rgba(201,162,39,.3);border-radius:8px;white-space:nowrap">Add ➕</button>
+                </div>`;
+              const sel = assignWrap.querySelector('select');
+              assignWrap.querySelector('.btn-adm').addEventListener('click', async () => {
+                const uid = sel.value;
+                if (!uid) { toast('Choose a member first'); return; }
+                try {
+                  await updateDoc(doc(db, 'campaigns', campId, 'members', uid), { clanId: clan.id });
+                  const memberName = available.find(m=>m.id===uid)?.name || uid;
+                  toast(`${memberName} → ${clan.name}`);
+                  rebuildList();
+                } catch(err) { toast('Error: ' + err.message, 3500); }
+              });
+              body.appendChild(assignWrap);
+            }
+          };
+
+          // Toggle expand on header click
+          let expanded = false;
+          header.addEventListener('click', (ev) => {
+            if (ev.target.closest('.btn-adm-danger')) return;
+            expanded = !expanded;
+            body.style.display = expanded ? 'block' : 'none';
+            header.querySelector('.clan-admin-chevron').style.transform = expanded ? 'rotate(180deg)' : '';
+            if (expanded) renderBody();
+          });
+
+          card.appendChild(header);
+          card.appendChild(body);
+          listEl.appendChild(card);
         });
+
+        // Unassigned members summary
+        if (unassigned.length) {
+          const uDiv = document.createElement('div');
+          uDiv.style.cssText = 'font-size:12px;color:var(--text-2);padding:8px 4px;border-top:1px solid var(--border);margin-top:4px';
+          uDiv.innerHTML = `⚠️ ${unassigned.length} unassigned: ${unassigned.map(m=>escHtml(m.name||m.id)).join(', ')}`;
+          listEl.appendChild(uDiv);
+        }
+
       } catch(e) {
         listEl.innerHTML = `<div style="color:#F85149;font-size:13px">Error: ${escHtml(e.message)}</div>`;
       }
