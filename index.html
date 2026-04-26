@@ -2087,6 +2087,18 @@
       schedule:[25,30,35,40,45,45,null,55,60,65,70,75,null,80,90,null,100,105,110,115,115,120,120,null,125,130,135,140,145,150] },
   ];
 
+  // ─── Kids Challenge data (approx. half of adult values) ──
+  const KIDS_CHALLENGES = [
+    { id:'squats',   name:'Squats',    emoji:'🦵', img:'icons/ex-squats.png',   color:'var(--c-squats)',   unit:'reps',
+      schedule:[25,28,30,null,35,38,40,null,50,53,55,null,65,68,70,null,75,78,80,null,90,93,95,null,110,113,115,null,120,125] },
+    { id:'pushups',  name:'Push-Ups',  emoji:'🤸', img:'icons/ex-pushups.png',  color:'var(--c-pushups)',  unit:'reps',
+      schedule:[3,3,3,3,4,4,null,5,5,6,8,8,null,8,9,10,10,10,13,13,15,15,18,18,18,20,20,23,23,25] },
+    { id:'plank',    name:'Plank',     emoji:'🏊', img:'icons/ex-plank.png',    color:'var(--c-plank)',    unit:'sec',
+      schedule:[10,10,15,15,20,null,23,23,30,30,30,45,null,45,45,60,60,75,null,75,75,90,90,105,105,null,120,120,135,150] },
+    { id:'crunches', name:'Crunches',  emoji:'🧎', img:'icons/ex-crunches.png', color:'var(--c-crunches)', unit:'reps',
+      schedule:[13,15,18,20,23,23,null,28,30,33,35,38,null,40,45,null,50,53,55,58,58,60,60,null,63,65,68,70,73,75] },
+  ];
+
   // ─── Campaign Templates ───────────────────────────────
   // 12 different 30-day challenge types. Each day has a task string and pts value.
   const CAMPAIGN_TEMPLATES = [
@@ -2673,7 +2685,7 @@
   function getCompletionsForDay(userId, day) {
     const m = state.members[userId]; if(!m) return {};
     const r = {};
-    CHALLENGES.forEach(ch => {
+    getActiveChallenges().forEach(ch => {
       const isRest = ch.schedule[day-1] === null;
       r[ch.id] = isRest || !!(m.completions?.[`d${day}_${ch.id}`]);
     });
@@ -2681,7 +2693,15 @@
   }
 
   // ─── Template campaign helpers ────────────────────────
+  function isKidsClassic() {
+    return state.campaignData?.templateId === 'kids_classic';
+  }
+  function getActiveChallenges() {
+    return isKidsClassic() ? KIDS_CHALLENGES : CHALLENGES;
+  }
   function isTemplateCampaign() {
+    // kids_classic uses the classic 4-card UI, not the single-mission template UI
+    if (isKidsClassic()) return false;
     return !!(state.campaignData && state.campaignData.templateId);
   }
   function getTemplateForCampaign() {
@@ -2822,7 +2842,7 @@
     // Per-challenge completion badges — only for classic campaigns
     if (!isTemplate) {
       const chBadges = {squats:'squat_star',pushups:'pushup_pro',plank:'plank_king',crunches:'crunch_champ'};
-      CHALLENGES.forEach(ch=>{
+      getActiveChallenges().forEach(ch=>{
         let allDone=true;
         for(let d=1;d<=cur;d++){
           const isRest=ch.schedule[d-1]===null;
@@ -2912,7 +2932,7 @@
     const key=`d${day}_${challengeId}`;
     const m=state.members[state.userId]; if(!m) return;
     const current=m.completions?.[key]||false;
-    const challenge = CHALLENGES.find(c => c.id === challengeId);
+    const challenge = getActiveChallenges().find(c => c.id === challengeId);
     if (!current && challenge) {
       announceTaskComplete(challenge.name);
     }
@@ -3149,7 +3169,7 @@
     // Voice greeting on today's first render
     if (isCurrent && !state.voiceGreetingShown) {
       state.voiceGreetingShown = true;
-      const challengeCount = isTemplateCampaign() ? 1 : CHALLENGES.filter(ch => ch.schedule[day-1] !== null).length;
+      const challengeCount = isTemplateCampaign() ? 1 : getActiveChallenges().filter(ch => ch.schedule[day-1] !== null).length;
       announceGreeting(challengeCount);
     }
 
@@ -3244,7 +3264,7 @@
       if (isCurrent && isPerfect && !wasPerfect) { launchConfetti(); toast('🔥 Perfect Day! +5 pts 🌟', 3000); announcePerfectDay(4); }
       wasPerfect = isCurrent && isPerfect;
 
-      CHALLENGES.forEach(ch => {
+      getActiveChallenges().forEach(ch => {
         const isRest = ch.schedule[day-1] === null, isDone = comps[ch.id];
         const target = isRest ? null : formatTarget(ch, day-1);
         const card = document.createElement('div');
@@ -3436,7 +3456,7 @@
       row.innerHTML=`
         <div><div class="hist-day-num">D${d}</div><div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
         <div class="hist-checks">
-          ${CHALLENGES.map(ch=>{
+          ${getActiveChallenges().map(ch=>{
             const isRest=ch.schedule[d-1]===null, done=isRest||comps[ch.id];
             return `<div class="hist-dot${done&&!isFuture?' done':''}${isRest&&!isFuture?' rest':''}" style="--dot-color:${ch.color}" title="${ch.name}">${ch.img?`<img src="${ch.img}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;opacity:${done&&!isFuture?1:0.35}" alt="${ch.name}">`:`${ch.emoji}`}</div>`;
           }).join('')}
@@ -3582,7 +3602,7 @@
     // Challenge progress
     const cpList=document.getElementById('challenge-progress-list');
     cpList.innerHTML='';
-    CHALLENGES.forEach(ch=>{
+    getActiveChallenges().forEach(ch=>{
       let done=0,possible=0;
       for(let d=1;d<=day;d++){
         const isRest=ch.schedule[d-1]===null;
