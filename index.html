@@ -1607,6 +1607,11 @@
         <div class="lb-title">🏆 Leaderboard</div>
         <div class="lb-subtitle" id="lb-subtitle">Loading...</div>
       </div>
+      <div style="padding:0 16px 10px">
+        <select class="input" id="lb-campaign-select" style="appearance:auto;-webkit-appearance:auto;font-size:13px;font-weight:600;width:100%;padding:9px 12px">
+          <option value="">Loading challenges…</option>
+        </select>
+      </div>
       <div class="lb-view-toggle">
         <button class="lb-view-btn active" data-view="individual">👤 Individual</button>
         <button class="lb-view-btn" data-view="clans">🏰 Clans</button>
@@ -3335,6 +3340,73 @@
   }
 
   let lbView = 'individual'; // 'individual' | 'clans'
+  let lbSelectedCampaignId = null;
+  let lbCampaignCache = {};
+
+  async function populateLbCampaignDropdown() {
+    const sel = document.getElementById('lb-campaign-select');
+    if (!sel) return;
+    try {
+      const snap = await getDocs(collection(db, 'campaigns'));
+      const items = [];
+      for (const cdoc of snap.docs) {
+        const d = cdoc.data();
+        const memSnap = await getDocs(collection(db, 'campaigns', cdoc.id, 'members'));
+        items.push({ id: cdoc.id, name: d.name || 'Campaign', templateId: d.templateId, memberCount: memSnap.size });
+      }
+      items.sort((a, b) => {
+        if (a.id === state.campaignId) return -1;
+        if (b.id === state.campaignId) return 1;
+        return a.name.localeCompare(b.name);
+      });
+      sel.innerHTML = '';
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        const mine  = item.id === state.campaignId ? ' ★ yours' : '';
+        const kids  = item.templateId === 'kids_classic' ? '👦 ' : '';
+        const count = item.memberCount;
+        opt.textContent = `${kids}${item.name}${mine} · ${count} member${count !== 1 ? 's' : ''}`;
+        if (item.id === (lbSelectedCampaignId || state.campaignId)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    } catch(e) {
+      sel.innerHTML = `<option value="${state.campaignId}">My Campaign</option>`;
+    }
+  }
+
+  async function setLbCampaign(campaignId) {
+    if (!campaignId) return;
+    lbSelectedCampaignId = campaignId;
+    if (campaignId === state.campaignId) {
+      renderLeaderboard(getDayNumber(state.campaignData.startDate));
+      return;
+    }
+    // Fetch and cache if needed
+    if (!lbCampaignCache[campaignId]) {
+      try {
+        const [campSnap, membersSnap, clansSnap] = await Promise.all([
+          getDoc(doc(db, 'campaigns', campaignId)),
+          getDocs(collection(db, 'campaigns', campaignId, 'members')),
+          getDocs(collection(db, 'campaigns', campaignId, 'clans')),
+        ]);
+        if (!campSnap.exists()) return;
+        const members = {}, clans = {};
+        membersSnap.forEach(d => { members[d.id] = d.data(); });
+        clansSnap.forEach(d => { clans[d.id] = d.data(); });
+        lbCampaignCache[campaignId] = { campaignData: campSnap.data(), members, clans };
+      } catch(e) { return; }
+    }
+    const cached = lbCampaignCache[campaignId];
+    // Temporarily swap state so all scoring/render helpers work on the other campaign
+    const _cd = state.campaignData, _mb = state.members, _cl = state.clans, _cid = state.campaignId;
+    state.campaignData = cached.campaignData;
+    state.members      = cached.members;
+    state.clans        = cached.clans;
+    state.campaignId   = campaignId;
+    renderLeaderboard(getDayNumber(state.campaignData.startDate));
+    state.campaignData = _cd; state.members = _mb; state.clans = _cl; state.campaignId = _cid;
+  }
 
   function renderLeaderboard(day) {
     if(lbView==='clans') { renderClanLeaderboard(day); return; }
@@ -4852,7 +4924,15 @@
       const activeComm = document.querySelector('.profile-comm-section.active');
       if (activeComm && activeComm.id === 'comm-appfeedback') setTimeout(initFeedbackTab, 50);
     }
+    if (tabId === 'leaderboard') {
+      populateLbCampaignDropdown();
+    }
   };
+
+  // Leaderboard campaign dropdown change
+  document.getElementById('lb-campaign-select').addEventListener('change', function() {
+    setLbCampaign(this.value);
+  });
 
   // ═══════════════════════════════════════════════════════
   // ─── Me Tab ──────────────────────────────────────────
