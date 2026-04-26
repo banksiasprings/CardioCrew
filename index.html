@@ -2901,6 +2901,8 @@
     await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
     // Creator auto-opts in to their own wager
     await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn: (wagerAmount||0)>0 });
+    // Ensure a users doc exists so they appear in the login dropdown
+    await setDoc(doc(db,'users',userId),{ name:yourName, nameLower:yourName.toLowerCase(), createdAt:serverTimestamp() },{ merge:true });
     return { campaignId, userId };
   }
 
@@ -3880,6 +3882,8 @@
         wagerOptIn = confirm(`💰 This campaign has a $${wager}/person wager!\n\nDo you want to opt in to the prize pool?\n\nOK = Yes, I'm in!\nCancel = No thanks, just train`);
       }
       await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name, avatar: currentAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn });
+      // Ensure a users doc exists so they appear in the login dropdown
+      await setDoc(doc(db,'users',userId),{ name, nameLower:name.toLowerCase(), createdAt:serverTimestamp() },{ merge:true });
 
       const isSwitching = !!state.campaignId;
       state.userId = userId; state.campaignId = campaignId;
