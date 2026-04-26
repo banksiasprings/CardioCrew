@@ -1333,6 +1333,10 @@
             <option value="">Loading users…</option>
           </select>
         </div>
+        <div class="input-group" id="auth-pin-group" style="margin-bottom:6px;display:none">
+          <label class="input-group label">🔒 Enter your PIN</label>
+          <input class="input" type="password" id="auth-pin-input" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="current-password" />
+        </div>
         <button class="btn btn-primary" id="btn-auth-login">Log In</button>
       </div>
       <div class="error-msg" id="auth-error"></div>
@@ -4233,6 +4237,20 @@
     finally { btn.textContent = 'Create Account'; btn.disabled = false; }
   });
 
+  // Show/hide PIN field based on whether selected user has a PIN set
+  document.getElementById('auth-login-select').addEventListener('change', async () => {
+    const userId   = document.getElementById('auth-login-select').value;
+    const pinGroup = document.getElementById('auth-pin-group');
+    const pinInput = document.getElementById('auth-pin-input');
+    pinInput.value = '';
+    document.getElementById('auth-error').textContent = '';
+    if (!userId) { pinGroup.style.display = 'none'; return; }
+    try {
+      const snap = await getDoc(doc(db, 'users', userId));
+      pinGroup.style.display = (snap.exists() && snap.data().pinHash) ? '' : 'none';
+    } catch(e) { pinGroup.style.display = 'none'; }
+  });
+
   // Log In
   document.getElementById('btn-auth-login').addEventListener('click', async () => {
     const selEl  = document.getElementById('auth-login-select');
@@ -4245,6 +4263,16 @@
     try {
       const userDocSnap = await getDoc(doc(db, 'users', userId));
       if (!userDocSnap.exists()) { errEl.textContent = 'User not found — try signing up'; return; }
+
+      // PIN check — only for accounts that have a PIN set
+      const storedHash = userDocSnap.data().pinHash || null;
+      if (storedHash) {
+        const pinVal = (document.getElementById('auth-pin-input').value || '').trim();
+        if (!pinVal) { errEl.textContent = 'This account requires a PIN'; btn.textContent = 'Log In'; btn.disabled = false; return; }
+        const enteredHash = await hashPin(pinVal);
+        if (enteredHash !== storedHash) { errEl.textContent = 'Incorrect PIN — try again'; btn.textContent = 'Log In'; btn.disabled = false; document.getElementById('auth-pin-input').value = ''; return; }
+      }
+
       state.userId   = userId;
       state.userName = userDocSnap.data().name;
 
@@ -4284,6 +4312,8 @@
     document.getElementById('auth-signup-name').value = '';
     const selEl = document.getElementById('auth-login-select');
     if (selEl) selEl.value = '';
+    document.getElementById('auth-pin-group').style.display = 'none';
+    document.getElementById('auth-pin-input').value = '';
   });
 
   // Wager selector toggle
