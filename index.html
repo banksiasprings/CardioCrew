@@ -4340,17 +4340,7 @@
     document.getElementById('auth-tab-login')?.click();
   });
 
-  document.getElementById('btn-leave').addEventListener('click',()=>{
-    if(!confirm('Leave this campaign permanently? This removes you from the leaderboard. Your account stays — you can join another campaign.')) return;
-    state.unsubscribers.forEach(u=>u());
-    // Remove from Firestore campaign members
-    if (state.campaignId && state.userId) {
-      deleteDoc(doc(db, 'campaigns', state.campaignId, 'members', state.userId)).catch(()=>{});
-    }
-    state.campaignId=null; state.campaignData=null; state.members={}; state.messages=[];
-    saveLocal();
-    showScreen('screen-welcome');
-  });
+  // btn-leave removed
 
   // ─── Day navigation ───────────────────────────────────
   document.getElementById('btn-day-prev').addEventListener('click', () => {
