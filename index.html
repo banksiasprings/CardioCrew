@@ -176,6 +176,18 @@
     .btn-browse-campaigns-profile:active { opacity:0.7; background:var(--surface-2); }
 
     /* ── Campaign Detail Sheet ── */
+    /* ── Evening nudge modal ── */
+    #evening-nudge-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9500; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+    #evening-nudge-overlay.show { opacity:1; pointer-events:auto; }
+    #evening-nudge-card { background:var(--bg-alt); border-radius:20px; padding:28px 24px 24px; max-width:360px; width:100%; text-align:center; border:1px solid rgba(88,166,255,0.2); box-shadow:0 20px 60px rgba(0,0,0,0.5); transform:translateY(20px) scale(0.97); transition:transform 0.3s cubic-bezier(0.32,0.72,0,1); }
+    #evening-nudge-overlay.show #evening-nudge-card { transform:translateY(0) scale(1); }
+    #evening-nudge-emoji { font-size:44px; margin-bottom:8px; display:block; }
+    #evening-nudge-title { font-size:18px; font-weight:800; color:var(--primary); margin-bottom:10px; }
+    #evening-nudge-quote { font-size:13.5px; color:var(--text-2); line-height:1.6; margin-bottom:20px; font-style:italic; }
+    #evening-nudge-go { width:100%; padding:13px; background:var(--primary); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:8px; }
+    #evening-nudge-go:active { opacity:0.85; }
+    #evening-nudge-skip { font-size:12px; color:var(--text-3); background:none; border:none; cursor:pointer; padding:4px 8px; }
+
     .camp-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9200; opacity:0; pointer-events:none; transition:opacity 0.25s; }
     .camp-detail-overlay.show { opacity:1; pointer-events:auto; }
     .camp-detail-sheet { position:fixed; bottom:0; left:0; right:0; max-height:88vh; background:var(--bg-alt); border-radius:20px 20px 0 0; z-index:9201; transform:translateY(100%); transition:transform 0.32s cubic-bezier(0.32,0.72,0,1); display:flex; flex-direction:column; overflow:hidden; }
@@ -1919,6 +1931,17 @@
               <label class="me-label" style="margin:0">Time</label>
               <input type="time" class="input me-time-input" id="me-notif-streak-time" value="20:00">
             </div>
+            <div class="me-divider"></div>
+            <div class="me-notif-row">
+              <div class="me-notif-info">
+                <div class="me-notif-title">⚡ Evening Motivational Nudge</div>
+                <div class="me-notif-sub">6PM push with a personalised quote if you haven't trained</div>
+              </div>
+              <label class="me-switch">
+                <input type="checkbox" id="me-notif-evening-toggle">
+                <span class="me-slider"></span>
+              </label>
+            </div>
             <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">
               For best results, add CardioCrew to your Home Screen so reminders arrive even when the app is closed.
             </div>
@@ -2092,6 +2115,17 @@
 
 <canvas id="confetti-canvas"></canvas>
 <div id="toast"></div>
+
+<!-- ── Evening Motivational Nudge Modal ── -->
+<div id="evening-nudge-overlay">
+  <div id="evening-nudge-card">
+    <span id="evening-nudge-emoji">⚡</span>
+    <div id="evening-nudge-title">Hey <span id="evening-nudge-name">Warrior</span>, time to move!</div>
+    <div id="evening-nudge-quote"></div>
+    <button id="evening-nudge-go">Let's go! 🔥</button>
+    <button id="evening-nudge-skip">Already done for today</button>
+  </div>
+</div>
 
 <!-- Campaign Detail Sheet -->
 <div class="camp-detail-overlay" id="camp-detail-overlay"></div>
@@ -2816,6 +2850,7 @@
     }
     const ref = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
     await updateDoc(ref, { [`completions.${key}`]: !current });
+    scheduleLocalNotifications(); // update SW with latest workoutComplete status
   }
 
   // Classic-only version (used internally by helpers when not a template campaign)
@@ -3052,6 +3087,7 @@
     // Save false when un-ticking (boolean false = not done, no date needed).
     const newVal = current ? false : serverTimestamp();
     await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: newVal });
+    scheduleLocalNotifications(); // update SW with latest workoutComplete status
   }
 
   async function updateAvatar(newAvatar) {
@@ -5585,6 +5621,23 @@
     applyToggle('me-notif-weighin-toggle',  'me-notif-weighin-time-row',  'weighin');
     applyToggle('me-notif-streak-toggle',   'me-notif-streak-time-row',   'streak');
 
+    // Evening nudge — no time row (fixed 6PM)
+    const eveningToggle = document.getElementById('me-notif-evening-toggle');
+    if (eveningToggle) {
+      eveningToggle.checked = !!prefs.evening?.enabled;
+      eveningToggle.addEventListener('change', async () => {
+        if (eveningToggle.checked && Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') { eveningToggle.checked = false; return; }
+        }
+        const p = getMeNotifPrefs();
+        p.evening = { ...(p.evening || {}), enabled: eveningToggle.checked };
+        saveMeNotifPrefs(p);
+        scheduleLocalNotifications();
+        toast(eveningToggle.checked ? '⚡ Evening nudge on' : '🔕 Evening nudge off', 1800);
+      });
+    }
+
     // Time inputs — save on change
     const timeInputs = [
       ['me-notif-workout-time',   'workout', 'time'],
@@ -5604,12 +5657,33 @@
     });
   }
 
+  // Returns true if the current user has completed today's workout
+  function isWorkoutDoneToday() {
+    try {
+      if (!state.campaignData || !state.userId) return false;
+      const day = getDayNumber(state.campaignData.startDate);
+      if (day < 1) return false;
+      const m = state.members[state.userId];
+      if (!m) return false;
+      if (isTemplateCampaign()) return isMissionComplete(state.userId, day);
+      // Standard campaign: all active (non-rest) challenges must be completed
+      const challenges = getActiveChallenges();
+      return challenges.every(ch => ch.schedule[day-1] === null || !!m.completions?.[`d${day}_${ch.id}`]);
+    } catch { return false; }
+  }
+
   function scheduleLocalNotifications() {
     // Schedule via service worker message (best-effort local notifications)
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker.ready.then(reg => {
       const prefs = getMeNotifPrefs();
-      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs });
+      // Enrich prefs with live state so SW can personalise notifications
+      const enriched = {
+        ...prefs,
+        userName: state.members[state.userId]?.name || state.userName || 'Warrior',
+        workoutComplete: isWorkoutDoneToday(),
+      };
+      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs: enriched });
     });
   }
 
@@ -5617,9 +5691,84 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then(reg => {
       const prefs = getMeNotifPrefs();
-      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs });
+      const enriched = {
+        ...prefs,
+        userName: state.members[state.userId]?.name || state.userName || 'Warrior',
+        workoutComplete: isWorkoutDoneToday(),
+      };
+      reg.active?.postMessage({ type: 'UPDATE_NOTIF_PREFS', prefs: enriched });
     });
   }
+
+  // ── In-app Evening Motivational Nudge ────────────────────
+  const EVENING_QUOTES = [
+    "You haven't done it yet. That's a fact. It's not a death sentence — but it is a choice you're still making.",
+    "The chaos doesn't care that you're tired. Order requires effort. Go be the effort.",
+    "Jocko's alarm goes off at 0430. It is past 6PM. You have zero excuses remaining.",
+    "Good. You haven't done it yet. That means you still can. Go.",
+    "Discipline is not a feeling. It is a decision. Make it now.",
+    "Your future self has serious aura. Your current self is one workout away from it.",
+    "Aura is not gifted. It's built — rep by rep, day by day, starting tonight.",
+    "It's giving NPC behaviour right now. Main characters finish their workout.",
+    "No cap — future you is going to be so mad if you skip this.",
+    "W behaviour is finishing. L behaviour is scrolling instead. You know which this is.",
+    "Bro really said 'I'll do it later.' It IS later. Do it now.",
+    "GOATs don't wait for motivation. Motivation waits for GOATs. Be first.",
+    "The GOAT moment isn't the trophy. It's 8PM when you didn't feel like it — and did it anyway.",
+    "It's not too late. It's after 6PM and the day still belongs to you. Go claim it.",
+    "Champions train when motivation is gone. This is that moment.",
+    "This is now o'clock. There is no better time. There is only now.",
+    "One workout. One streak. One version of yourself that kept the promise.",
+    "Built different means different choices. Make one right now.",
+    "Sigma move: do the thing when nobody's watching, especially when you don't feel like it.",
+    "Silent discipline hits different. No announcement. Just results.",
+    "Face the dragon. It doesn't shrink while you scroll.",
+    "Suffering is the price of meaning. Tonight's workout is cheap by comparison.",
+    "Sheesh — imagine finishing and feeling this good. You literally can. Right now.",
+    "Ate and left no crumbs — that's what tonight's workout will be. Go eat.",
+    "Nah this ain't it chief. Go do the thing.",
+  ];
+
+  function getEveningQuote() {
+    return EVENING_QUOTES[Math.floor(Math.random() * EVENING_QUOTES.length)];
+  }
+
+  function showEveningNudge() {
+    if (!state.userId || !state.campaignData) return; // not logged in yet
+    if (isWorkoutDoneToday()) return;                  // already done — no nudge
+    const hour = new Date().getHours();
+    if (hour < 18) return;                             // before 6PM — too early
+    // Only show once per day per user
+    const seenKey = `cc_nudge_${state.userId}_${new Date().toISOString().slice(0,10)}`;
+    if (sessionStorage.getItem(seenKey)) return;
+    sessionStorage.setItem(seenKey, '1');
+
+    const name = state.members[state.userId]?.name || state.userName || 'Warrior';
+    document.getElementById('evening-nudge-name').textContent = name;
+    document.getElementById('evening-nudge-quote').textContent = getEveningQuote();
+    document.getElementById('evening-nudge-overlay').classList.add('show');
+  }
+
+  function dismissEveningNudge() {
+    document.getElementById('evening-nudge-overlay').classList.remove('show');
+  }
+
+  document.getElementById('evening-nudge-go').addEventListener('click', () => {
+    dismissEveningNudge();
+    switchTab('today');
+  });
+  document.getElementById('evening-nudge-skip').addEventListener('click', dismissEveningNudge);
+  document.getElementById('evening-nudge-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('evening-nudge-overlay')) dismissEveningNudge();
+  });
+
+  // Show nudge when page becomes visible after 6PM (e.g. user returns to app)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') showEveningNudge();
+  });
+  // Also check on initial load (delayed to let state hydrate from Firestore)
+  setTimeout(showEveningNudge, 4000);
+
   // ═══════════════════════════════════════════════════════
   // ─── Highland Warrior Avatar Creator ─────────────────
   // ═══════════════════════════════════════════════════════
