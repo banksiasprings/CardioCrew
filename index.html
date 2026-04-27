@@ -1549,6 +1549,7 @@
 
     <!-- TODAY TAB -->
     <div id="tab-today" class="tab-page active">
+      <div id="today-profile-banner" style="display:none;padding:7px 16px;background:linear-gradient(90deg,rgba(88,166,255,0.10),rgba(88,166,255,0.06));border-bottom:1px solid rgba(88,166,255,0.18);text-align:center;font-size:12px;font-weight:700;letter-spacing:0.03em;color:var(--primary)"></div>
       <div class="today-header">
         <div class="today-label">Campaign Day</div>
         <div style="display:flex;align-items:center;gap:12px">
@@ -3275,6 +3276,19 @@
     // If the 30-day window has fully elapsed, show completion screen instead
     if (viewDay === null && isCampaignOver()) { renderCampaignComplete(); return; }
 
+    // Profile banner — always show whose workout this is
+    const profileBanner = document.getElementById('today-profile-banner');
+    if (profileBanner) {
+      const me = state.members[state.userId];
+      const displayName = me?.name || state.userName;
+      if (displayName) {
+        profileBanner.textContent = `👤 ${displayName}'s Workout`;
+        profileBanner.style.display = '';
+      } else {
+        profileBanner.style.display = 'none';
+      }
+    }
+
     const day = viewDay !== null ? viewDay : currentDay;
     const isCurrent  = day === currentDay;
     const isCatchup  = !isCurrent && isEditableDay(day, currentDay);
@@ -3934,7 +3948,7 @@
     };
     Object.entries(state.members)
       .filter(([,m]) => m.clanId === clanId)
-      .forEach(([id, m]) => addUser(id, m));
+      .forEach(([id, m]) => addUser(id, { ...m, campaignId: state.campaignId }));
 
     try {
       if (myClanName) {
@@ -3959,9 +3973,9 @@
                 const data = userSnap.exists()
                   ? { ...memberDoc.data(), ...userSnap.data() }
                   : memberDoc.data();
-                addUser(memberDoc.id, data);
+                addUser(memberDoc.id, { ...data, campaignId: cid });
               } catch(e) {
-                addUser(memberDoc.id, memberDoc.data());
+                addUser(memberDoc.id, { ...memberDoc.data(), campaignId: cid });
               }
             }));
           }));
@@ -3987,6 +4001,7 @@
       .forEach(u => {
         const opt = document.createElement('option');
         opt.value = u.id;
+        opt.dataset.campaignId = u.campaignId || '';
         opt.textContent = (u.avatar || '⚔️') + ' ' + (u.name || u.id);
         sel.appendChild(opt);
       });
@@ -4034,16 +4049,30 @@
       }
       // Switch!
       const newName = snap.data().name || targetId;
+      const targetCampaignId = sel.selectedOptions[0]?.dataset?.campaignId || '';
+      const campaignChanging = targetCampaignId && targetCampaignId !== state.campaignId;
       state.userId   = targetId;
       state.userName = newName;
+      if (campaignChanging) {
+        state.campaignId   = targetCampaignId;
+        state.campaignData = null;
+        state.members      = {};
+        state.clans        = {};
+        state.voiceGreetingShown = false;
+      }
       saveLocal();
-      renderAll();
-      switchTab('today');
-      toast(`Switched to ${newName} 👋`, 2500);
-      // Reset switcher
+      // Reset switcher UI before any async work
       sel.value = '';
       document.getElementById('switch-pin-wrap').style.display = 'none';
       document.getElementById('switch-pin-input').value = '';
+      if (campaignChanging) {
+        toast(`Switching to ${newName}…`, 1800);
+        await startApp();
+      } else {
+        renderAll();
+      }
+      switchTab('today');
+      toast(`Switched to ${newName} 👋`, 2500);
     } catch(e) { toast('Switch failed: ' + e.message); }
   }
 
