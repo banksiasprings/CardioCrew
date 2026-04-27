@@ -2878,7 +2878,16 @@
 
   function getStreak(userId) {
     const cur=getDayNumber(state.campaignData.startDate);
-    let s=0; for(let d=cur;d>=1;d--) { if(isMissionComplete(userId,d))s++; else break; } return s;
+    let s=0;
+    for(let d=cur;d>=1;d--) {
+      // A day counts toward the streak only if it was genuinely completed AND
+      // the completions were timestamped within that calendar day (not back-filled
+      // via the catch-up window on a later day). Legacy boolean completions
+      // (no timestamp) get the benefit of the doubt via wasDayCompletedOnTime.
+      if(isMissionComplete(userId,d) && wasDayCompletedOnTime(userId,d)) s++;
+      else break;
+    }
+    return s;
   }
 
   function getPerfectDays(userId) {
