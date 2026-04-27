@@ -1893,27 +1893,8 @@
           <span class="psec-arrow">▾</span>
         </div>
         <div class="psec-body" id="psec-community">
-          <div class="profile-comm-toggle">
-            <button class="profile-comm-btn active" data-comm="chat">&#x1F4AC; Clan Chat</button>
-            <button class="profile-comm-btn" data-comm="appfeedback">&#x1F4E3; Feedback</button>
-          </div>
-          <!-- Clan Chat -->
-          <div class="profile-comm-section active" id="comm-chat">
-            <div class="feed-header">
-              <div class="feed-subtitle" id="feed-subtitle">Cheer each other on!</div>
-            </div>
-            <div class="feed-messages" id="feed-messages">
-              <div class="feed-empty"><div class="feed-empty-icon">&#x1F4AC;</div>No messages yet &#8212; be the first to shout out your crew!</div>
-            </div>
-            <div class="feed-input-wrap">
-              <textarea class="feed-input" id="feed-input" placeholder="Say something to the crew..." rows="1" maxlength="200"></textarea>
-              <button class="feed-send" id="feed-send-btn">
-                <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
-              </button>
-            </div>
-          </div>
           <!-- App Feedback -->
-          <div class="profile-comm-section" id="comm-appfeedback">
+          <div id="comm-appfeedback">
             <div class="fbk-wrap">
               <div id="fbk-form-wrap">
                 <div class="fbk-card">
@@ -3225,13 +3206,6 @@
       scheduleRender(false);
     }));
 
-    // Messages (last 50)
-    const msgsQ = query(collection(db,'campaigns',state.campaignId,'messages'), orderBy('createdAt','asc'), limit(50));
-    state.unsubscribers.push(onSnapshot(msgsQ,(snap)=>{
-      state.messages=[];
-      snap.forEach(d=>state.messages.push({id:d.id,...d.data()}));
-      renderFeedback();
-    }));
   }
 
   // ─── Render ───────────────────────────────────────────
@@ -3933,39 +3907,6 @@
       </div>`;
   }
 
-  function renderFeedback() {
-    const feed=document.getElementById('feed-messages');
-    if(state.messages.length===0){
-      feed.innerHTML='<div class="feed-empty"><div class="feed-empty-icon">💬</div>No messages yet — be the first to shout out your crew!</div>';
-      return;
-    }
-    feed.innerHTML='';
-    state.messages.forEach(msg=>{
-      const isMe=msg.userId===state.userId;
-      const time=msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}) : '';
-      const div=document.createElement('div');
-      div.className='feed-msg'+(isMe?' mine':'');
-      div.innerHTML=`
-        <div class="feed-avatar" data-uid="${msg.userId}"></div>
-        <div class="feed-bubble">
-          <div class="feed-sender">${isMe?'You':msg.name}</div>
-          <div class="feed-text">${escHtml(msg.text)}</div>
-          ${time?`<div class="feed-time">${time}</div>`:''}
-        </div>`;
-      feed.appendChild(div);
-      // Render warrior canvas into avatar slot
-      const feedSlot=div.querySelector('.feed-avatar');
-      if(feedSlot){
-        try{
-          const dpr = Math.min(window.devicePixelRatio || 1, 3);
-          const wc=makeWarriorCanvas(msg.userId, Math.round(44*dpr), Math.round(58*dpr), false);
-          wc.style.width='44px'; wc.style.height='58px';
-          feedSlot.appendChild(wc);
-        }catch(e){feedSlot.textContent='⚔️';}
-      }
-    });
-    feed.scrollTop=feed.scrollHeight;
-  }
 
   function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -4802,19 +4743,6 @@
     } catch(e2) { err.textContent=e2.message; }
   });
 
-  // Feedback send
-  document.getElementById('feed-send-btn').addEventListener('click',async()=>{
-    const input=document.getElementById('feed-input');
-    const text=input.value.trim();
-    if(!text) return;
-    input.value='';
-    input.style.height='auto';
-    await sendMessage(text);
-  });
-  document.getElementById('feed-input').addEventListener('keydown',(e)=>{
-    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); document.getElementById('feed-send-btn').click(); }
-  });
-
   // Leave
   // Log Out — keeps campaign membership in Firestore, just clears local session
   document.getElementById('btn-logout-app').addEventListener('click', () => {
@@ -5099,20 +5027,6 @@
     }
   }
 
-  // Community tab toggle (Chat / Feedback inside Profile)
-  document.querySelectorAll('.profile-comm-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.comm;
-      document.querySelectorAll('.profile-comm-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.profile-comm-section').forEach(s => s.classList.toggle('active', s.id === 'comm-' + target));
-      if (target === 'chat') {
-        setTimeout(() => { const f = document.getElementById('feed-messages'); if (f) f.scrollTop = f.scrollHeight; }, 50);
-      }
-      if (target === 'appfeedback') {
-        setTimeout(initFeedbackTab, 50);
-      }
-    });
-  });
   // initProfileSections — collapsible section toggle with localStorage persistence
   function renderAppVersion() {
     const el = document.getElementById('app-version-tag');
@@ -5309,8 +5223,7 @@
     if (tabId === 'profile') {
       initProfileSections();
       setTimeout(initMeTab, 50);
-      const activeComm = document.querySelector('.profile-comm-section.active');
-      if (activeComm && activeComm.id === 'comm-appfeedback') setTimeout(initFeedbackTab, 50);
+      setTimeout(initFeedbackTab, 50);
     }
     if (tabId === 'leaderboard') {
       populateLbCampaignDropdown();
