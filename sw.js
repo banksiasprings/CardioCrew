@@ -1,4 +1,4 @@
-const CACHE = 'cardio-crew-v21';
+const CACHE = 'cardio-crew-v22';
 
 // Detect base path dynamically — works for /CardioCrew/, /CardioCrew-DEV/, or any deployment
 const BASE = self.location.pathname.replace(/\/sw\.js$/, '') + '/';
@@ -137,19 +137,6 @@ function checkNotifications() {
       tag: 'workout-reminder',
     });
     sent.workout = todayKey;
-    self.__notifSent = JSON.stringify(sent);
-  }
-
-  // ── Weigh-in reminder ─────────────────────────────────
-  const wi = notifPrefs.weighin;
-  if (wi?.enabled && wi.time === hhmm && String(dow) === String(wi.day || '1') && sent.weighin !== todayKey) {
-    self.registration.showNotification(`⚖️ ${name}, weigh-in time!`, {
-      body: "Log your weight and keep tracking your progress!",
-      icon: BASE + 'icons/icon-192.png',
-      badge: BASE + 'icons/icon-192.png',
-      tag: 'weighin-reminder',
-    });
-    sent.weighin = todayKey;
     self.__notifSent = JSON.stringify(sent);
   }
 

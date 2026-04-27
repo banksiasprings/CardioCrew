@@ -1750,65 +1750,15 @@
           <div style="height:8px"></div>
         </div>
 
-        <!-- ── Personal Tracking (formerly Me tab) ── -->
+        <!-- ── Personal Settings ── -->
         <div class="psec-hdr" data-sec="personal">
-          <span class="psec-label">📊 Personal Tracking</span>
+          <span class="psec-label">🏋️ Fitness Profile</span>
           <span class="psec-arrow">▸</span>
         </div>
         <div class="psec-body hidden" id="psec-personal">
-          <!-- Weight Progress card -->
-          <div class="me-section-header">⚖️ Weight Progress</div>
-          <div class="me-card" id="me-weight-card">
-            <div class="me-weight-row">
-              <div class="me-weight-col">
-                <div class="me-weight-val" id="me-w-start">—</div>
-                <div class="me-weight-lbl">Starting</div>
-              </div>
-              <div class="me-weight-arrow">→</div>
-              <div class="me-weight-col me-weight-col-current">
-                <div class="me-weight-val current" id="me-w-current">—</div>
-                <div class="me-weight-lbl">Current</div>
-              </div>
-              <div class="me-weight-arrow">→</div>
-              <div class="me-weight-col">
-                <div class="me-weight-val" id="me-w-goal">—</div>
-                <div class="me-weight-lbl">Goal</div>
-              </div>
-            </div>
-            <div class="me-progress-bar-wrap" id="me-weight-progress-wrap" style="display:none">
-              <div class="me-progress-bar-track">
-                <div class="me-progress-bar-fill" id="me-weight-bar"></div>
-              </div>
-              <div class="me-progress-label" id="me-weight-progress-label"></div>
-            </div>
-            <canvas id="me-weight-chart" class="me-weight-chart" style="display:none"></canvas>
-            <button class="me-log-btn" id="btn-me-log-weight">＋ Log Weight Today</button>
-            <div id="me-log-form" class="hidden" style="margin-top:12px;gap:8px;align-items:center">
-              <input class="input me-inline-input" id="me-log-weight-val" type="number" step="0.1" min="20" max="300" placeholder="kg" style="width:90px">
-              <button class="btn btn-primary" id="btn-me-log-save" style="padding:9px 16px;font-size:13px">Save</button>
-              <button class="btn" id="btn-me-log-cancel" style="padding:9px 12px;font-size:13px;background:var(--surface-2);color:var(--text-2)">✕</button>
-            </div>
-          </div>
-          <!-- Body Stats card -->
-          <div class="me-section-header">📋 Body Stats</div>
+          <!-- Fitness Profile card -->
           <div class="me-card">
             <div class="me-form-grid">
-              <div class="me-field">
-                <label class="me-label">Age</label>
-                <input class="input me-input" id="me-age" type="number" min="10" max="100" placeholder="years">
-              </div>
-              <div class="me-field">
-                <label class="me-label">Height</label>
-                <input class="input me-input" id="me-height" type="number" step="0.5" min="100" max="250" placeholder="cm">
-              </div>
-              <div class="me-field">
-                <label class="me-label">Starting Weight</label>
-                <input class="input me-input" id="me-start-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
-              </div>
-              <div class="me-field">
-                <label class="me-label">Goal Weight</label>
-                <input class="input me-input" id="me-goal-weight" type="number" step="0.1" min="20" max="300" placeholder="kg">
-              </div>
               <div class="me-field me-field-full">
                 <label class="me-label">Fitness Level</label>
                 <div class="me-fitness-btns" id="me-fitness-btns">
@@ -1829,41 +1779,8 @@
                 </div>
               </div>
             </div>
-            <button class="me-save-btn" id="btn-me-save-stats">Save Stats ✓</button>
+            <button class="me-save-btn" id="btn-me-save-stats">Save ✓</button>
             <div id="me-stats-saved" class="me-save-confirm hidden">✅ Saved!</div>
-          </div>
-          <!-- Measurements card -->
-          <div class="me-section-header me-collapsible-header" id="me-measurements-toggle">
-            📐 Measurements <span class="me-collapse-arrow" id="me-measurements-arrow">▸</span>
-            <span style="font-size:11px;font-weight:400;color:var(--text-3);margin-left:6px">optional</span>
-          </div>
-          <div id="me-measurements-body" class="hidden">
-            <div class="me-card">
-              <div class="me-form-grid">
-                <div class="me-field">
-                  <label class="me-label">Waist (cm)</label>
-                  <input class="input me-input" id="me-waist" type="number" step="0.5" placeholder="cm">
-                </div>
-                <div class="me-field">
-                  <label class="me-label">Hips (cm)</label>
-                  <input class="input me-input" id="me-hips" type="number" step="0.5" placeholder="cm">
-                </div>
-                <div class="me-field">
-                  <label class="me-label">Chest (cm)</label>
-                  <input class="input me-input" id="me-chest" type="number" step="0.5" placeholder="cm">
-                </div>
-                <div class="me-field">
-                  <label class="me-label">Thigh (cm)</label>
-                  <input class="input me-input" id="me-thigh" type="number" step="0.5" placeholder="cm">
-                </div>
-                <div class="me-field">
-                  <label class="me-label">Body Fat %</label>
-                  <input class="input me-input" id="me-bodyfat" type="number" step="0.1" min="1" max="60" placeholder="%">
-                </div>
-              </div>
-              <button class="me-save-btn" id="btn-me-save-measurements">Save Measurements ✓</button>
-              <div id="me-measurements-saved" class="me-save-confirm hidden">✅ Saved!</div>
-            </div>
           </div>
           <!-- Reminders card -->
           <div class="me-section-header">🔔 Reminders</div>
@@ -1884,37 +1801,6 @@
             <div id="me-notif-workout-time-row" class="me-notif-time-row hidden">
               <label class="me-label" style="margin:0">Time</label>
               <input type="time" class="input me-time-input" id="me-notif-workout-time" value="07:00">
-            </div>
-            <div class="me-divider"></div>
-            <div class="me-notif-row">
-              <div class="me-notif-info">
-                <div class="me-notif-title">⚖️ Weigh-in Reminder</div>
-                <div class="me-notif-sub">Remind me to log my weight</div>
-              </div>
-              <label class="me-switch">
-                <input type="checkbox" id="me-notif-weighin-toggle">
-                <span class="me-slider"></span>
-              </label>
-            </div>
-            <div id="me-notif-weighin-time-row" class="me-notif-time-row hidden">
-              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                <div>
-                  <label class="me-label" style="margin:0 0 4px">Day</label>
-                  <select class="input me-time-input" id="me-notif-weighin-day" style="width:130px">
-                    <option value="1">Monday</option>
-                    <option value="2">Tuesday</option>
-                    <option value="3">Wednesday</option>
-                    <option value="4">Thursday</option>
-                    <option value="5">Friday</option>
-                    <option value="6">Saturday</option>
-                    <option value="0">Sunday</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="me-label" style="margin:0 0 4px">Time</label>
-                  <input type="time" class="input me-time-input" id="me-notif-weighin-time" value="08:00">
-                </div>
-              </div>
             </div>
             <div class="me-divider"></div>
             <div class="me-notif-row">
@@ -5361,29 +5247,13 @@
     try {
       const userSnap = await getDoc(doc(db, 'users', state.userId));
       const profile = userSnap.exists() ? (userSnap.data().profile || {}) : {};
-      const meas    = userSnap.exists() ? (userSnap.data().measurements || {}) : {};
 
-      // Body stats fields
-      document.getElementById('me-age').value         = profile.age         || '';
-      document.getElementById('me-height').value      = profile.height      || '';
-      document.getElementById('me-start-weight').value= profile.startWeight || '';
-      document.getElementById('me-goal-weight').value = profile.goalWeight  || '';
-      document.getElementById('me-gym-toggle').checked= !!profile.gym;
+      document.getElementById('me-gym-toggle').checked = !!profile.gym;
 
       // Fitness level buttons
       document.querySelectorAll('.me-fit-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.level === (profile.fitnessLevel || ''));
       });
-
-      // Measurements
-      document.getElementById('me-waist').value   = meas.waist   || '';
-      document.getElementById('me-hips').value    = meas.hips    || '';
-      document.getElementById('me-chest').value   = meas.chest   || '';
-      document.getElementById('me-thigh').value   = meas.thigh   || '';
-      document.getElementById('me-bodyfat').value = meas.bodyfat || '';
-
-      // Weight progress
-      await renderMeWeightProgress(profile);
 
     } catch(e) { console.warn('Me tab profile load error:', e); }
 
@@ -5391,54 +5261,8 @@
     renderMeNotifPrefs();
   }
 
-  async function renderMeWeightProgress(profile) {
-    const startW   = parseFloat(profile?.startWeight) || null;
-    const goalW    = parseFloat(profile?.goalWeight)  || null;
-
-    // Load weight log
-    let weightLog = [];
-    try {
-      const logSnap = await getDocs(
-        collection(db, 'users', state.userId, 'weightLog')
-      );
-      logSnap.forEach(d => weightLog.push({ date: d.id, kg: d.data().kg }));
-      weightLog.sort((a, b) => a.date.localeCompare(b.date));
-    } catch(e) {}
-
-    const currentW = weightLog.length ? weightLog[weightLog.length - 1].kg : null;
-
-    document.getElementById('me-w-start').textContent   = startW   ? `${startW}kg`   : '—';
-    document.getElementById('me-w-current').textContent = currentW ? `${currentW}kg` : '—';
-    document.getElementById('me-w-goal').textContent    = goalW    ? `${goalW}kg`    : '—';
-
-    // Progress bar
-    const progressWrap = document.getElementById('me-weight-progress-wrap');
-    if (startW && goalW && currentW) {
-      progressWrap.style.display = 'block';
-      const totalChange  = Math.abs(goalW - startW);
-      const achieved     = Math.abs(currentW - startW);
-      const pct          = totalChange > 0 ? Math.min(100, Math.round((achieved / totalChange) * 100)) : 0;
-      document.getElementById('me-weight-bar').style.width = pct + '%';
-      const lost = (startW - currentW).toFixed(1);
-      const toGo = (currentW - goalW).toFixed(1);
-      document.getElementById('me-weight-progress-label').textContent =
-        lost > 0 ? `${lost}kg lost · ${Math.max(0, toGo)}kg to go · ${pct}% there`
-                 : `${Math.abs(lost)}kg gained · ${Math.abs(toGo)}kg to go`;
-    } else {
-      progressWrap.style.display = 'none';
-    }
-
-    // Sparkline
-    const chartEl = document.getElementById('me-weight-chart');
-    if (weightLog.length >= 2) {
-      chartEl.style.display = 'block';
-      drawWeightSparkline(chartEl, weightLog);
-    } else {
-      chartEl.style.display = 'none';
-    }
-  }
-
   function drawWeightSparkline(canvas, log) {
+    // Retained for compatibility — no longer called
     const dpr = window.devicePixelRatio || 1;
     canvas.width  = canvas.offsetWidth  * dpr || 300 * dpr;
     canvas.height = 70 * dpr;
@@ -5503,93 +5327,17 @@
     btn.textContent = '…'; btn.disabled = true;
     try {
       const profile = {
-        age:          parseFloat(document.getElementById('me-age').value)          || null,
-        height:       parseFloat(document.getElementById('me-height').value)       || null,
-        startWeight:  parseFloat(document.getElementById('me-start-weight').value) || null,
-        goalWeight:   parseFloat(document.getElementById('me-goal-weight').value)  || null,
-        fitnessLevel: document.querySelector('.me-fit-btn.active')?.dataset.level  || '',
+        fitnessLevel: document.querySelector('.me-fit-btn.active')?.dataset.level || '',
         gym:          document.getElementById('me-gym-toggle').checked,
       };
-      // Remove nulls
-      Object.keys(profile).forEach(k => profile[k] === null && delete profile[k]);
       await setDoc(doc(db, 'users', state.userId), { profile }, { merge: true });
       const confirmEl = document.getElementById('me-stats-saved');
       confirmEl.classList.remove('hidden');
       setTimeout(() => confirmEl.classList.add('hidden'), 2500);
-      // Refresh weight progress in case startWeight/goalWeight changed
-      await renderMeWeightProgress(profile);
     } catch(e) { toast('Error: ' + e.message, 3000); }
-    finally { btn.textContent = 'Save Stats ✓'; btn.disabled = false; }
+    finally { btn.textContent = 'Save ✓'; btn.disabled = false; }
   });
 
-  // ── Measurements save ─────────────────────────────────────
-  document.getElementById('btn-me-save-measurements').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-me-save-measurements');
-    btn.textContent = '…'; btn.disabled = true;
-    try {
-      const measurements = {
-        waist:   parseFloat(document.getElementById('me-waist').value)   || null,
-        hips:    parseFloat(document.getElementById('me-hips').value)    || null,
-        chest:   parseFloat(document.getElementById('me-chest').value)   || null,
-        thigh:   parseFloat(document.getElementById('me-thigh').value)   || null,
-        bodyfat: parseFloat(document.getElementById('me-bodyfat').value) || null,
-      };
-      Object.keys(measurements).forEach(k => measurements[k] === null && delete measurements[k]);
-      await setDoc(doc(db, 'users', state.userId), { measurements }, { merge: true });
-      const confirmEl = document.getElementById('me-measurements-saved');
-      confirmEl.classList.remove('hidden');
-      setTimeout(() => confirmEl.classList.add('hidden'), 2500);
-    } catch(e) { toast('Error: ' + e.message, 3000); }
-    finally { btn.textContent = 'Save Measurements ✓'; btn.disabled = false; }
-  });
-
-  // ── Measurements collapsible ──────────────────────────────
-  document.getElementById('me-measurements-toggle').addEventListener('click', () => {
-    const body  = document.getElementById('me-measurements-body');
-    const arrow = document.getElementById('me-measurements-arrow');
-    const open  = body.classList.toggle('hidden') === false;
-    arrow.classList.toggle('open', open);
-  });
-
-  // ── Log weight ────────────────────────────────────────────
-  document.getElementById('btn-me-log-weight').addEventListener('click', () => {
-    const form = document.getElementById('me-log-form');
-    const isHidden = form.classList.contains('hidden');
-    form.classList.toggle('hidden');
-    form.style.display = isHidden ? 'flex' : 'none';
-    if (isHidden) document.getElementById('me-log-weight-val').focus();
-  });
-  document.getElementById('btn-me-log-cancel').addEventListener('click', () => {
-    const form = document.getElementById('me-log-form');
-    form.classList.add('hidden');
-    form.style.display = 'none';
-  });
-  document.getElementById('btn-me-log-save').addEventListener('click', async () => {
-    const val = parseFloat(document.getElementById('me-log-weight-val').value);
-    if (!val || val < 20 || val > 300) {
-      toast('Enter a valid weight (20–300 kg)', 2000); return;
-    }
-    const btn = document.getElementById('btn-me-log-save');
-    btn.textContent = '…'; btn.disabled = true;
-    try {
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      await setDoc(doc(db, 'users', state.userId, 'weightLog', today), {
-        kg: val, loggedAt: serverTimestamp()
-      });
-      // Also update currentWeight on the profile for quick access
-      await setDoc(doc(db, 'users', state.userId), { currentWeight: val }, { merge: true });
-      const logForm = document.getElementById('me-log-form');
-      logForm.classList.add('hidden');
-      logForm.style.display = 'none';
-      document.getElementById('me-log-weight-val').value = '';
-      toast(`⚖️ Logged ${val}kg`, 2000);
-      // Refresh chart + progress
-      const userSnap = await getDoc(doc(db, 'users', state.userId));
-      const profile  = userSnap.exists() ? (userSnap.data().profile || {}) : {};
-      await renderMeWeightProgress(profile);
-    } catch(e) { toast('Error: ' + e.message, 3000); }
-    finally { btn.textContent = 'Save'; btn.disabled = false; }
-  });
 
   // ── Notifications ─────────────────────────────────────────
   function renderMeNotifPrefs() {
@@ -5618,7 +5366,6 @@
     };
 
     applyToggle('me-notif-workout-toggle',  'me-notif-workout-time-row',  'workout');
-    applyToggle('me-notif-weighin-toggle',  'me-notif-weighin-time-row',  'weighin');
     applyToggle('me-notif-streak-toggle',   'me-notif-streak-time-row',   'streak');
 
     // Evening nudge — no time row (fixed 6PM)
@@ -5641,8 +5388,6 @@
     // Time inputs — save on change
     const timeInputs = [
       ['me-notif-workout-time',   'workout', 'time'],
-      ['me-notif-weighin-time',   'weighin', 'time'],
-      ['me-notif-weighin-day',    'weighin', 'day'],
       ['me-notif-streak-time',    'streak',  'time'],
     ];
     timeInputs.forEach(([inputId, prefKey, field]) => {
