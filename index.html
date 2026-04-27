@@ -424,6 +424,26 @@
     .badge-icon { font-size: 28px; margin-bottom: 5px; filter: grayscale(1) opacity(0.3); transition: filter 0.3s; }
     .badge-name { font-size: 10px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
     .badge-card.earned .badge-name { color: var(--gold); }
+    .badge-card { cursor: pointer; }
+    .badge-card:active { transform: scale(0.94); }
+
+    /* ── Badge detail modal ── */
+    #badge-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:9600; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+    #badge-detail-overlay.show { opacity:1; pointer-events:auto; }
+    #badge-detail-card { background:linear-gradient(160deg,#1C2128,#22272E); border:2px solid var(--gold); border-radius:20px; padding:28px 24px 24px; max-width:340px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(201,162,39,0.12); transform:translateY(18px) scale(0.96); transition:transform 0.3s cubic-bezier(0.34,1.4,0.64,1); }
+    #badge-detail-overlay.show #badge-detail-card { transform:translateY(0) scale(1); }
+    #badge-detail-big-icon { font-size:56px; margin-bottom:6px; display:block; transition:filter 0.3s; }
+    #badge-detail-big-icon.locked { filter:grayscale(1) opacity(0.35); }
+    #badge-detail-status { display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; padding:3px 10px; border-radius:99px; margin-bottom:10px; }
+    #badge-detail-status.earned { background:rgba(63,185,80,0.18); color:#3FB950; border:1px solid rgba(63,185,80,0.35); }
+    #badge-detail-status.locked { background:rgba(139,148,158,0.15); color:#8B949E; border:1px solid rgba(139,148,158,0.25); }
+    #badge-detail-name { font-size:20px; font-weight:900; color:#F5E6B3; margin-bottom:8px; }
+    #badge-detail-desc { font-size:13px; color:var(--text-2); line-height:1.55; margin-bottom:16px; }
+    #badge-detail-how-wrap { background:rgba(201,162,39,0.07); border:1px solid rgba(201,162,39,0.2); border-radius:10px; padding:10px 14px; margin-bottom:18px; text-align:left; }
+    #badge-detail-how-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; color:var(--gold); margin-bottom:4px; }
+    #badge-detail-how-text { font-size:12.5px; color:var(--text-2); line-height:1.5; }
+    #badge-detail-close { width:100%; padding:12px; background:rgba(201,162,39,0.12); color:var(--gold); border:1px solid rgba(201,162,39,0.3); border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; }
+    #badge-detail-close:active { background:rgba(201,162,39,0.22); }
 
     /* ── Profile tab ── */
     .profile-wrap { padding: 16px 16px 24px; }
@@ -1991,12 +2011,27 @@
   <div class="clan-trophy-name" id="clan-trophy-name">—</div>
 </div></div>
 
-<!-- Badge popup -->
+<!-- Badge popup (unlock celebration) -->
 <div id="badge-popup"><div class="badge-popup-inner">
   <div class="badge-popup-icon" id="badge-popup-icon">🏅</div>
   <div class="badge-popup-title">Badge Unlocked!</div>
   <div class="badge-popup-name" id="badge-popup-name">—</div>
 </div></div>
+
+<!-- Badge detail modal (tap to learn more) -->
+<div id="badge-detail-overlay">
+  <div id="badge-detail-card">
+    <span id="badge-detail-big-icon">🏅</span>
+    <div id="badge-detail-status" class="locked">🔒 Locked</div>
+    <div id="badge-detail-name">—</div>
+    <div id="badge-detail-desc"></div>
+    <div id="badge-detail-how-wrap">
+      <div id="badge-detail-how-label">How to earn</div>
+      <div id="badge-detail-how-text"></div>
+    </div>
+    <button id="badge-detail-close">Got it</button>
+  </div>
+</div>
 
 
 <canvas id="confetti-canvas"></canvas>
@@ -2505,15 +2540,51 @@
 
   const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🐼','🦅','🦆','🐲','🦈','🐊','🦄','🔥','⚡','💎','🌊','🚀','🌟','💪','🥊','👑','😈','🤖','🎯'];
   const BADGE_DEFS = [
-    { id:'first_blood',   icon:'🔥', name:'First Rep',      desc:'Complete any challenge on Day 1' },
-    { id:'perfect_day',   icon:'⭐', name:'Perfect Day',    desc:'All 4 challenges in one day' },
-    { id:'week_warrior',  icon:'💪', name:'Week Warrior',   desc:'Active for 7 days' },
-    { id:'halfway',       icon:'🎯', name:'Halfway Hero',   desc:'Reach Day 15' },
-    { id:'squat_star',    icon:'🏋️', name:'Squat Star',     desc:'Complete all squat days' },
-    { id:'pushup_pro',    icon:'🤜', name:'Push-Up Pro',    desc:'Complete all push-up days' },
-    { id:'plank_king',    icon:'🧘', name:'Plank King',     desc:'Complete all plank days' },
-    { id:'crunch_champ',  icon:'💥', name:'Crunch Champ',  desc:'Complete all crunch days' },
-    { id:'champion',      icon:'🏆', name:'30-Day Champ',  desc:'Complete the full challenge' },
+    {
+      id:'first_blood', icon:'🔥', name:'First Rep',
+      desc:'You showed up on Day 1 — the hardest step is always the first.',
+      howToEarn:'Complete at least one challenge on Day 1 of the campaign.',
+    },
+    {
+      id:'perfect_day', icon:'⭐', name:'Perfect Day',
+      desc:'Every single challenge ticked off in one day. No excuses, no shortcuts — pure consistency.',
+      howToEarn:'Complete all active challenges in a single day.',
+    },
+    {
+      id:'week_warrior', icon:'💪', name:'Week Warrior',
+      desc:'Seven days in the game. The habit is forming — keep pushing.',
+      howToEarn:'Stay active for 7 days of the challenge (complete at least one challenge each day for 7 days).',
+    },
+    {
+      id:'halfway', icon:'🎯', name:'Halfway Hero',
+      desc:'Fifteen days down, fifteen to go. You\'re past the point of no return.',
+      howToEarn:'Reach Day 15 of the 30-day campaign.',
+    },
+    {
+      id:'squat_star', icon:'🏋️', name:'Squat Star',
+      desc:'Legs of steel — you completed every single squat session without skipping a day.',
+      howToEarn:'Complete every scheduled squat day in the campaign.',
+    },
+    {
+      id:'pushup_pro', icon:'🤜', name:'Push-Up Pro',
+      desc:'Upper body locked in. You nailed every push-up day from start to finish.',
+      howToEarn:'Complete every scheduled push-up day in the campaign.',
+    },
+    {
+      id:'plank_king', icon:'🧘', name:'Plank King',
+      desc:'Core of iron. Not a single plank session missed — you held the line every time.',
+      howToEarn:'Complete every scheduled plank day in the campaign.',
+    },
+    {
+      id:'crunch_champ', icon:'💥', name:'Crunch Champ',
+      desc:'Every crunch, every rep, every day. Your core strength speaks for itself.',
+      howToEarn:'Complete every scheduled crunch day in the campaign.',
+    },
+    {
+      id:'champion', icon:'🏆', name:'30-Day Champ',
+      desc:'30 days. You committed, you showed up, you finished. This is what built different looks like.',
+      howToEarn:'Complete the full 30-day challenge from Day 1 to Day 30.',
+    },
   ];
 
   const TARTAN_THEMES = [
@@ -2918,6 +2989,29 @@
     popup.classList.add('show');
     setTimeout(()=>popup.classList.remove('show'), 2800);
   }
+
+  // Badge detail modal — shown when user taps any badge card
+  function showBadgeDetail(def, isEarned) {
+    const icon   = document.getElementById('badge-detail-big-icon');
+    const status = document.getElementById('badge-detail-status');
+    icon.textContent = def.icon;
+    icon.className   = isEarned ? '' : 'locked';
+    status.textContent = isEarned ? '✅ Earned' : '🔒 Not yet earned';
+    status.className   = isEarned ? 'earned' : 'locked';
+    document.getElementById('badge-detail-name').textContent     = def.name;
+    document.getElementById('badge-detail-desc').textContent     = def.desc;
+    document.getElementById('badge-detail-how-text').textContent = def.howToEarn;
+    document.getElementById('badge-detail-overlay').classList.add('show');
+  }
+
+  function closeBadgeDetail() {
+    document.getElementById('badge-detail-overlay').classList.remove('show');
+  }
+
+  document.getElementById('badge-detail-close').addEventListener('click', closeBadgeDetail);
+  document.getElementById('badge-detail-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('badge-detail-overlay')) closeBadgeDetail();
+  });
 
   // ─── Confetti ─────────────────────────────────────────
   let wasPerfect=false;
@@ -3772,8 +3866,8 @@
     BADGE_DEFS.forEach(b=>{
       const div=document.createElement('div');
       div.className='badge-card'+(earned.has(b.id)?' earned':'');
-      div.title=b.desc;
       div.innerHTML=`<div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div>`;
+      div.addEventListener('click', () => showBadgeDetail(b, earned.has(b.id)));
       bg.appendChild(div);
     });
 
