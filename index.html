@@ -3192,6 +3192,22 @@
     setTimeout(()=>popup.classList.remove('show'),3000);
   }
 
+  // Debounced render scheduler — collapses rapid back-to-back snapshot events
+  // (e.g. members + clans firing together on reconnect) into a single render frame,
+  // preventing the CPU spike that comes from running all four panel renders twice.
+  let _renderScheduled = false;
+  let _badgesPending   = false;
+  function scheduleRender(withBadges) {
+    if (withBadges) _badgesPending = true;
+    if (_renderScheduled) return;
+    _renderScheduled = true;
+    requestAnimationFrame(() => {
+      _renderScheduled = false;
+      renderAll();
+      if (_badgesPending) { _badgesPending = false; checkBadges(state.userId); checkClanTrophies(); }
+    });
+  }
+
   function subscribeAll() {
     state.unsubscribers.forEach(u=>u());
     state.unsubscribers=[];
@@ -3199,16 +3215,14 @@
     // Members
     state.unsubscribers.push(onSnapshot(collection(db,'campaigns',state.campaignId,'members'),(snap)=>{
       snap.forEach(d=>{ state.members[d.id]=d.data(); });
-      renderAll();
-      checkBadges(state.userId);
-      checkClanTrophies();
+      scheduleRender(true);
     }));
 
     // Clans
     state.unsubscribers.push(onSnapshot(collection(db,'campaigns',state.campaignId,'clans'),(snap)=>{
       state.clans={};
       snap.forEach(d=>{ state.clans[d.id]=d.data(); });
-      renderAll();
+      scheduleRender(false);
     }));
 
     // Messages (last 50)
