@@ -4051,24 +4051,46 @@
       const newName = snap.data().name || targetId;
       const targetCampaignId = sel.selectedOptions[0]?.dataset?.campaignId || '';
       const campaignChanging = targetCampaignId && targetCampaignId !== state.campaignId;
-      state.userId   = targetId;
-      state.userName = newName;
-      if (campaignChanging) {
-        state.campaignId   = targetCampaignId;
-        state.campaignData = null;
-        state.members      = {};
-        state.clans        = {};
-        state.voiceGreetingShown = false;
-      }
-      saveLocal();
-      // Reset switcher UI before any async work
+
+      // Reset switcher UI immediately
       sel.value = '';
       document.getElementById('switch-pin-wrap').style.display = 'none';
       document.getElementById('switch-pin-input').value = '';
+
       if (campaignChanging) {
+        // Fetch new campaign data upfront — no loading screen flash
         toast(`Switching to ${newName}…`, 1800);
-        await startApp();
+        try {
+          const [campSnap, membersSnap, clansSnap] = await Promise.all([
+            getDoc(doc(db, 'campaigns', targetCampaignId)),
+            getDocs(collection(db, 'campaigns', targetCampaignId, 'members')),
+            getDocs(collection(db, 'campaigns', targetCampaignId, 'clans')),
+          ]);
+          if (!campSnap.exists()) throw new Error('Campaign not found');
+          state.userId       = targetId;
+          state.userName     = newName;
+          state.campaignId   = targetCampaignId;
+          state.campaignData = campSnap.data();
+          state.members      = {};
+          state.clans        = {};
+          membersSnap.forEach(d => { state.members[d.id] = d.data(); });
+          clansSnap.forEach(d => { state.clans[d.id] = d.data(); });
+          state.voiceGreetingShown = false;
+          saveLocal();
+          subscribeAll(); // wire up real-time updates for new campaign
+          renderAll();    // render immediately with fresh data
+        } catch(e2) {
+          // Campaign fetch failed — just switch user within current campaign
+          console.warn('Campaign switch failed, staying in current campaign:', e2);
+          state.userId   = targetId;
+          state.userName = newName;
+          saveLocal();
+          renderAll();
+        }
       } else {
+        state.userId   = targetId;
+        state.userName = newName;
+        saveLocal();
         renderAll();
       }
       switchTab('today');
