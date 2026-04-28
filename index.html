@@ -3389,7 +3389,7 @@
       // ── Classic campaign rendering ──
       const comps = getCompletionsForDay(state.userId, day);
       const pts   = Object.values(comps).filter(Boolean).length;
-      const bonusEarned = pts >= 4;
+      const bonusEarned = pts >= 4 && wasDayCompletedOnTime(state.userId, day);
       const maxPts = bonusEarned ? 5 : 4;
       const score  = bonusEarned ? 5 : pts;
       document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
