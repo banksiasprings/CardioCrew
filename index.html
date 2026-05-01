@@ -2617,7 +2617,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v15';
+  const APP_VERSION = 'v16';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -3043,20 +3043,59 @@
     return { campaignId, userId };
   }
 
+  // Pretty-print a campaign day as a calendar date (e.g. "Wed, 1 May").
+  function formatDayDate(day) {
+    const start = state.campaignData?.startDate;
+    if (!start) return `Day ${day}`;
+    const d = new Date(start + 'T00:00:00');
+    d.setDate(d.getDate() + (day - 1));
+    return d.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
+  }
+
+  // True if the user is currently earning the +1 bonus for `day` — meaning
+  // unchecking ANY exercise on that day will drop them below the threshold
+  // and lose the bonus. Templates have no separate bonus, so always false.
+  function wouldLoseBonusByUnchecking(userId, day) {
+    if (isTemplateCampaign()) return false;
+    const m = state.members[userId]; if (!m) return false;
+    const pts = getDayPointsClassic(userId, day);
+    return pts >= 4 && wasDayCompletedOnTime(userId, day);
+  }
+
   async function toggleCompletion(day, challengeId) {
     const currentDay = getDayNumber(state.campaignData.startDate);
     if (!isEditableDay(day, currentDay)) { toast('🔒 This day is locked', 2000); return; }
-    const key=`d${day}_${challengeId}`;
-    const m=state.members[state.userId]; if(!m) return;
-    const current=m.completions?.[key]||false;
+    const key = `d${day}_${challengeId}`;
+    const firstAtKey = `d${day}_${challengeId}_firstAt`;
+    const m = state.members[state.userId]; if(!m) return;
+    const current = !!(m.completions?.[key]);
     const challenge = getActiveChallenges().find(c => c.id === challengeId);
-    if (!current && challenge) {
-      announceTaskComplete(challenge.name);
+    const memberRef = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
+
+    if (!current) {
+      // Ticking ON — confirm to guard against accidental taps (esp. on past days).
+      if (!confirm('Did you complete this exercise?')) return;
+      if (challenge) announceTaskComplete(challenge.name);
+      // Lock the completion date to the FIRST time it was confirmed. If the user
+      // unchecks and re-checks, reuse the original timestamp so date-based bonus
+      // calculations always reflect when the exercise was genuinely first done.
+      const existingFirstAt = m.completions?.[firstAtKey];
+      if (existingFirstAt) {
+        await updateDoc(memberRef, { [`completions.${key}`]: existingFirstAt });
+      } else {
+        const ts = serverTimestamp();
+        await updateDoc(memberRef, {
+          [`completions.${key}`]: ts,
+          [`completions.${firstAtKey}`]: ts,
+        });
+      }
+    } else {
+      // Ticking OFF — warn if it would forfeit a bonus point already earned.
+      if (wouldLoseBonusByUnchecking(state.userId, day)) {
+        if (!confirm(`You'll lose your bonus point for ${formatDayDate(day)} if you uncheck this. Are you sure?`)) return;
+      }
+      await updateDoc(memberRef, { [`completions.${key}`]: false });
     }
-    // Save a server timestamp when ticking ON so we can verify on-time completion later.
-    // Save false when un-ticking (boolean false = not done, no date needed).
-    const newVal = current ? false : serverTimestamp();
-    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: newVal });
     scheduleLocalNotifications(); // update SW with latest workoutComplete status
   }
 
