@@ -295,6 +295,23 @@
     .timer-btn.running { background: #DC3C3C; }
     .timer-btn.stop { background: rgba(139,148,158,0.4); color: var(--text-2); border: 1px solid rgba(139,148,158,0.6); }
 
+    /* ── Countdown Time Picker Modal ── */
+    #cd-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9000; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    #cd-picker-overlay.open { opacity:1; pointer-events:all; }
+    #cd-picker-sheet { background:#161B22; border-radius:20px 20px 0 0; padding:24px 24px 40px; width:100%; max-width:420px; border-top:1px solid var(--border); transform:translateY(20px); transition:transform 0.25s ease; }
+    #cd-picker-overlay.open #cd-picker-sheet { transform:translateY(0); }
+    #cd-picker-sheet h3 { margin:0 0 20px; font-size:15px; font-weight:800; color:#F5A623; text-align:center; letter-spacing:0.05em; text-transform:uppercase; }
+    .cd-picker-row { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:24px; }
+    .cd-picker-col { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .cd-picker-col label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-2); }
+    .cd-spin-btn { width:48px; height:48px; border:none; border-radius:50%; background:rgba(245,166,35,0.15); color:#F5A623; font-size:22px; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; user-select:none; -webkit-tap-highlight-color:transparent; }
+    .cd-spin-btn:active { background:rgba(245,166,35,0.35); }
+    .cd-value-display { font-size:2.8rem; font-family:monospace; font-weight:900; color:#E6EDF3; min-width:60px; text-align:center; }
+    .cd-picker-sep { font-size:2.4rem; font-weight:900; color:#E6EDF3; align-self:center; padding-top:20px; }
+    .cd-picker-btns { display:flex; gap:10px; }
+    .cd-picker-cancel { flex:1; padding:14px; border:1px solid var(--border); background:transparent; color:var(--text-2); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
+    .cd-picker-set { flex:2; padding:14px; border:none; background:#F5A623; color:#000; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; }
+
     /* ── Bottom nav (5 items) ── */
     #bottom-nav {
       position: absolute; bottom: 0; left: 0; right: 0;
@@ -3436,8 +3453,8 @@
     const rem = 30 - currentDay;
     document.getElementById('today-info').textContent = rem > 0 ? `${rem} days remaining` : '🎉 Challenge complete!';
 
-    // Update countdown default to match today's plank target (if timer not running)
-    if (window._cdInit) window._cdInit();
+    // Update countdown default to match the displayed day's plank target (if timer not running)
+    if (window._cdInit) window._cdInit(day);
   }
 
   let lbView = 'individual'; // 'individual' | 'clans'
@@ -7692,7 +7709,7 @@
   // ── Timers: Stopwatch (workout) + Countdown (interval) ──
   (function() {
 
-    function formatTime(seconds) {
+    function fmtTime(seconds) {
       const mm = String(Math.floor(Math.abs(seconds) / 60)).padStart(2, '0');
       const ss = String(Math.abs(seconds) % 60).padStart(2, '0');
       return mm + ':' + ss;
@@ -7701,93 +7718,75 @@
     // ── Stopwatch (workout) ──────────────────────────────
     const sw = { running: false, elapsed: 0, intervalId: null };
 
-    function swUpdateDisplay() {
+    function swDisplay() {
       const el = document.getElementById('workout-timer');
-      if (el) el.textContent = formatTime(sw.elapsed);
+      if (el) el.textContent = fmtTime(sw.elapsed);
     }
 
     function swToggle() {
       const btn = document.getElementById('workout-start');
       if (sw.running) {
-        clearInterval(sw.intervalId);
-        sw.running = false;
-        btn.textContent = 'Start';
-        btn.classList.remove('running');
+        clearInterval(sw.intervalId); sw.running = false;
+        btn.textContent = 'Start'; btn.classList.remove('running');
       } else {
-        sw.running = true;
-        btn.textContent = 'Stop';
-        btn.classList.add('running');
+        sw.running = true; btn.textContent = 'Stop'; btn.classList.add('running');
         const origin = Date.now() - sw.elapsed * 1000;
-        sw.intervalId = setInterval(() => {
-          sw.elapsed = Math.floor((Date.now() - origin) / 1000);
-          swUpdateDisplay();
-        }, 100);
+        sw.intervalId = setInterval(() => { sw.elapsed = Math.floor((Date.now() - origin) / 1000); swDisplay(); }, 100);
       }
     }
 
     function swReset() {
-      clearInterval(sw.intervalId);
-      sw.running = false;
-      sw.elapsed = 0;
+      clearInterval(sw.intervalId); sw.running = false; sw.elapsed = 0;
       const btn = document.getElementById('workout-start');
-      btn.textContent = 'Start';
-      btn.classList.remove('running');
-      swUpdateDisplay();
+      btn.textContent = 'Start'; btn.classList.remove('running'); swDisplay();
     }
 
     // ── Countdown (interval) ─────────────────────────────
-    // Default: read today's plank seconds if available, else 30s.
-    function getPlankDefault() {
-      try {
-        const day = state?.currentDay ?? 1;
-        const challenges = getActiveChallenges ? getActiveChallenges() : [];
-        const plank = challenges.find(c => c.id === 'plank');
-        if (plank) {
-          const v = plank.schedule[day - 1];
-          if (typeof v === 'number' && v > 0) return v;
-        }
-      } catch(e) {}
-      return 30;
-    }
-
     const cd = { running: false, remaining: 30, target: 30, intervalId: null };
 
-    function cdInit() {
-      cd.target = getPlankDefault();
-      cd.remaining = cd.target;
-      cdUpdateDisplay();
-    }
-
-    function cdUpdateDisplay() {
+    function cdDisplay() {
       const el = document.getElementById('interval-timer');
       if (!el) return;
-      el.textContent = formatTime(cd.remaining);
+      el.textContent = fmtTime(cd.remaining);
       el.classList.toggle('done', !cd.running && cd.remaining === 0);
+    }
+
+    // Called from renderToday(day) with the day number being displayed on screen.
+    // Updates the default only while the countdown is stopped.
+    function cdInit(day) {
+      if (cd.running) return; // don't interrupt a running countdown
+      try {
+        const challenges = getActiveChallenges();
+        const plank = challenges.find(c => c.id === 'plank');
+        if (plank && typeof day === 'number') {
+          const v = plank.schedule[day - 1];
+          if (typeof v === 'number' && v > 0) {
+            cd.target = v;
+            cd.remaining = v;
+            cdDisplay();
+            return;
+          }
+        }
+      } catch(e) {}
+      // Fallback: keep current target
+      cdDisplay();
     }
 
     function cdToggle() {
       const btn = document.getElementById('interval-start');
       if (cd.running) {
-        clearInterval(cd.intervalId);
-        cd.running = false;
-        btn.textContent = 'Start';
-        btn.classList.remove('running');
+        clearInterval(cd.intervalId); cd.running = false;
+        btn.textContent = 'Start'; btn.classList.remove('running');
       } else {
-        if (cd.remaining <= 0) { cdReset(); return; } // can't start at zero — reset first
-        cd.running = true;
-        btn.textContent = 'Stop';
-        btn.classList.add('running');
+        if (cd.remaining <= 0) { cdReset(); return; }
+        cd.running = true; btn.textContent = 'Stop'; btn.classList.add('running');
         const endTime = Date.now() + cd.remaining * 1000;
         cd.intervalId = setInterval(() => {
           const rem = Math.max(0, Math.round((endTime - Date.now()) / 1000));
-          cd.remaining = rem;
-          cdUpdateDisplay();
+          cd.remaining = rem; cdDisplay();
           if (rem <= 0) {
-            clearInterval(cd.intervalId);
-            cd.running = false;
-            btn.textContent = 'Start';
-            btn.classList.remove('running');
-            // Vibrate if supported
+            clearInterval(cd.intervalId); cd.running = false;
+            btn.textContent = 'Start'; btn.classList.remove('running');
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
           }
         }, 100);
@@ -7795,52 +7794,87 @@
     }
 
     function cdReset() {
-      clearInterval(cd.intervalId);
-      cd.running = false;
-      cd.remaining = cd.target;
+      clearInterval(cd.intervalId); cd.running = false; cd.remaining = cd.target;
       const btn = document.getElementById('interval-start');
-      btn.textContent = 'Start';
-      btn.classList.remove('running');
-      cdUpdateDisplay();
+      btn.textContent = 'Start'; btn.classList.remove('running'); cdDisplay();
     }
 
-    // Tap countdown display to set a custom time (when stopped)
-    function cdEditTime() {
+    // ── Time Picker Bottom Sheet ──────────────────────────
+    let pickerMins = 0, pickerSecs = 30;
+
+    function pickerSyncDisplay() {
+      document.getElementById('cd-min-val').textContent = String(pickerMins).padStart(2, '0');
+      document.getElementById('cd-sec-val').textContent = String(pickerSecs).padStart(2, '0');
+    }
+
+    function openPicker() {
       if (cd.running) return;
-      const totalSec = cd.target;
-      const curMins = Math.floor(totalSec / 60);
-      const curSecs = totalSec % 60;
-      const input = prompt(
-        'Set countdown time (mm:ss or seconds):\nCurrent: ' + formatTime(totalSec),
-        curMins > 0 ? `${curMins}:${String(curSecs).padStart(2,'0')}` : String(totalSec)
-      );
-      if (input === null) return; // cancelled
-      let secs = 0;
-      const mmss = input.match(/^(\d+):(\d{1,2})$/);
-      if (mmss) {
-        secs = parseInt(mmss[1], 10) * 60 + parseInt(mmss[2], 10);
-      } else {
-        secs = parseInt(input, 10);
-      }
-      if (!isNaN(secs) && secs > 0) {
-        cd.target = secs;
-        cd.remaining = secs;
-        cdUpdateDisplay();
-      }
+      pickerMins = Math.floor(cd.target / 60);
+      pickerSecs = cd.target % 60;
+      pickerSyncDisplay();
+      document.getElementById('cd-picker-overlay').classList.add('open');
     }
 
-    // Expose cdInit so renderDay can update the default after rendering
+    function closePicker() {
+      document.getElementById('cd-picker-overlay').classList.remove('open');
+    }
+
+    function commitPicker() {
+      const total = pickerMins * 60 + pickerSecs;
+      if (total > 0) { cd.target = total; cd.remaining = total; cdDisplay(); }
+      closePicker();
+    }
+
+    // Spin buttons with long-press repeat
+    function makeSpinner(upId, dnId, getValue, setValue, min, max, step) {
+      let repeatId = null;
+      function spin(delta) {
+        let v = getValue() + delta * step;
+        if (v < min) v = max;
+        if (v > max) v = min;
+        setValue(v); pickerSyncDisplay();
+      }
+      function startRepeat(delta) {
+        spin(delta);
+        repeatId = setInterval(() => spin(delta), 120);
+      }
+      function stopRepeat() { clearInterval(repeatId); repeatId = null; }
+      [upId, dnId].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const delta = i === 0 ? 1 : -1;
+        el.addEventListener('pointerdown', e => { e.stopPropagation(); startRepeat(delta); });
+        el.addEventListener('pointerup',   e => { e.stopPropagation(); stopRepeat(); });
+        el.addEventListener('pointerleave',e => { stopRepeat(); });
+        el.addEventListener('click',       e => { e.stopPropagation(); }); // already handled by pointerdown
+      });
+    }
+
+    makeSpinner('cd-min-up', 'cd-min-dn', () => pickerMins, v => { pickerMins = v; }, 0, 59, 1);
+    makeSpinner('cd-sec-up', 'cd-sec-dn', () => pickerSecs, v => { pickerSecs = v; }, 0, 55, 5);
+
+    document.getElementById('cd-picker-cancel')?.addEventListener('click', e => { e.stopPropagation(); closePicker(); });
+    document.getElementById('cd-picker-set')?.addEventListener('click',    e => { e.stopPropagation(); commitPicker(); });
+    // Tap overlay background to cancel
+    document.getElementById('cd-picker-overlay')?.addEventListener('click', e => { if (e.target.id === 'cd-picker-overlay') closePicker(); });
+
+    // Expose to renderToday
     window._cdInit = cdInit;
 
-    // Wire up buttons (stopPropagation prevents card-tap conflicts)
+    // Wire up timer buttons
     document.getElementById('workout-start')?.addEventListener('click', e => { e.stopPropagation(); swToggle(); });
     document.getElementById('workout-reset')?.addEventListener('click', e => { e.stopPropagation(); swReset(); });
     document.getElementById('interval-start')?.addEventListener('click', e => { e.stopPropagation(); cdToggle(); });
     document.getElementById('interval-reset')?.addEventListener('click', e => { e.stopPropagation(); cdReset(); });
-    document.getElementById('interval-timer')?.addEventListener('click', e => { e.stopPropagation(); cdEditTime(); });
+    document.getElementById('interval-timer')?.addEventListener('click', e => { e.stopPropagation(); openPicker(); });
 
-    // Initialise countdown once the app state is ready (slight delay so state.currentDay is populated)
-    setTimeout(cdInit, 500);
+    // Delay init until app state is loaded (renderToday will call cdInit with the right day after that)
+    setTimeout(() => {
+      try {
+        const day = getDayNumber(state.campaignData?.startDate) || 1;
+        cdInit(day);
+      } catch(e) { cdDisplay(); }
+    }, 600);
 
   })();
 
@@ -7865,5 +7899,31 @@
     navigator.serviceWorker.register(swPath, { updateViaCache: 'none' });
   }
 </script>
+
+<!-- Countdown time-picker bottom sheet -->
+<div id="cd-picker-overlay">
+  <div id="cd-picker-sheet">
+    <h3>Set Countdown</h3>
+    <div class="cd-picker-row">
+      <div class="cd-picker-col">
+        <label>Minutes</label>
+        <button class="cd-spin-btn" id="cd-min-up">▲</button>
+        <div class="cd-value-display" id="cd-min-val">00</div>
+        <button class="cd-spin-btn" id="cd-min-dn">▼</button>
+      </div>
+      <div class="cd-picker-sep">:</div>
+      <div class="cd-picker-col">
+        <label>Seconds</label>
+        <button class="cd-spin-btn" id="cd-sec-up">▲</button>
+        <div class="cd-value-display" id="cd-sec-val">30</div>
+        <button class="cd-spin-btn" id="cd-sec-dn">▼</button>
+      </div>
+    </div>
+    <div class="cd-picker-btns">
+      <button class="cd-picker-cancel" id="cd-picker-cancel">Cancel</button>
+      <button class="cd-picker-set" id="cd-picker-set">Set Timer</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
