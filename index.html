@@ -283,6 +283,10 @@
     }
     .timer-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #F5A623; }
     .timer-display { font-size: 1.6rem; font-family: monospace; font-weight: 900; color: #E6EDF3; }
+    .timer-display--countdown { cursor: pointer; border-bottom: 1.5px dashed rgba(245,166,35,0.5); transition: color 0.2s; }
+    .timer-display--countdown:hover { color: #F5A623; }
+    .timer-display--countdown.done { color: #DC3C3C; animation: timerDone 0.6s ease 3; }
+    @keyframes timerDone { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .timer-buttons { display: flex; gap: 8px; }
     .timer-btn { padding: 8px 14px; font-size: 12px; font-weight: 700; border: none; border-radius: 6px;
       background: #2EA043; color: #fff; cursor: pointer; transition: all 0.15s ease; user-select: none;
@@ -1613,7 +1617,7 @@
       <div class="challenges-list" id="challenges-list"></div>
       <div style="text-align:center;padding:4px 16px 8px;color:var(--text-2);font-size:12px" id="today-info"></div>
 
-      <!-- Dual Stopwatch Timer Bar (Today page only) -->
+      <!-- Timer Bar: Stopwatch + Countdown (Today page only) -->
       <div id="timer-bar">
         <div class="timer-widget">
           <div class="timer-label">Workout</div>
@@ -1624,8 +1628,8 @@
           </div>
         </div>
         <div class="timer-widget">
-          <div class="timer-label">Interval</div>
-          <div class="timer-display" id="interval-timer">00:00</div>
+          <div class="timer-label">Countdown</div>
+          <div class="timer-display timer-display--countdown" id="interval-timer" title="Tap to set time">00:30</div>
           <div class="timer-buttons">
             <button class="timer-btn" id="interval-start">Start</button>
             <button class="timer-btn stop" id="interval-reset">Reset</button>
@@ -3431,6 +3435,9 @@
 
     const rem = 30 - currentDay;
     document.getElementById('today-info').textContent = rem > 0 ? `${rem} days remaining` : '🎉 Challenge complete!';
+
+    // Update countdown default to match today's plank target (if timer not running)
+    if (window._cdInit) window._cdInit();
   }
 
   let lbView = 'individual'; // 'individual' | 'clans'
@@ -7682,77 +7689,159 @@
 
   })(); // end admin IIFE
 
-  // ── Dual Stopwatch Timers ──
+  // ── Timers: Stopwatch (workout) + Countdown (interval) ──
   (function() {
-    const timers = {
-      workout: { running: false, elapsed: 0, interval: null },
-      interval: { running: false, elapsed: 0, interval: null }
-    };
 
     function formatTime(seconds) {
-      const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
-      const ss = String(seconds % 60).padStart(2, '0');
+      const mm = String(Math.floor(Math.abs(seconds) / 60)).padStart(2, '0');
+      const ss = String(Math.abs(seconds) % 60).padStart(2, '0');
       return mm + ':' + ss;
     }
 
-    function updateDisplay(timerKey) {
-      const display = document.getElementById(timerKey + '-timer');
-      if (display) display.textContent = formatTime(timers[timerKey].elapsed);
+    // ── Stopwatch (workout) ──────────────────────────────
+    const sw = { running: false, elapsed: 0, intervalId: null };
+
+    function swUpdateDisplay() {
+      const el = document.getElementById('workout-timer');
+      if (el) el.textContent = formatTime(sw.elapsed);
     }
 
-    function toggleTimer(timerKey) {
-      const timer = timers[timerKey];
-      const startBtn = document.getElementById(timerKey + '-start');
-
-      if (timer.running) {
-        // Stop
-        clearInterval(timer.interval);
-        timer.running = false;
-        startBtn.textContent = 'Start';
-        startBtn.classList.remove('running');
+    function swToggle() {
+      const btn = document.getElementById('workout-start');
+      if (sw.running) {
+        clearInterval(sw.intervalId);
+        sw.running = false;
+        btn.textContent = 'Start';
+        btn.classList.remove('running');
       } else {
-        // Start
-        timer.running = true;
-        startBtn.textContent = 'Stop';
-        startBtn.classList.add('running');
-        const startTime = Date.now() - (timer.elapsed * 1000);
-        timer.interval = setInterval(() => {
-          timer.elapsed = Math.floor((Date.now() - startTime) / 1000);
-          updateDisplay(timerKey);
+        sw.running = true;
+        btn.textContent = 'Stop';
+        btn.classList.add('running');
+        const origin = Date.now() - sw.elapsed * 1000;
+        sw.intervalId = setInterval(() => {
+          sw.elapsed = Math.floor((Date.now() - origin) / 1000);
+          swUpdateDisplay();
         }, 100);
       }
     }
 
-    function resetTimer(timerKey) {
-      const timer = timers[timerKey];
-      clearInterval(timer.interval);
-      timer.running = false;
-      timer.elapsed = 0;
-      const startBtn = document.getElementById(timerKey + '-start');
-      startBtn.textContent = 'Start';
-      startBtn.classList.remove('running');
-      updateDisplay(timerKey);
+    function swReset() {
+      clearInterval(sw.intervalId);
+      sw.running = false;
+      sw.elapsed = 0;
+      const btn = document.getElementById('workout-start');
+      btn.textContent = 'Start';
+      btn.classList.remove('running');
+      swUpdateDisplay();
     }
 
-    // Attach event listeners with stopPropagation to prevent card tap conflicts
-    ['workout', 'interval'].forEach(key => {
-      const startBtn = document.getElementById(key + '-start');
-      const resetBtn = document.getElementById(key + '-reset');
+    // ── Countdown (interval) ─────────────────────────────
+    // Default: read today's plank seconds if available, else 30s.
+    function getPlankDefault() {
+      try {
+        const day = state?.currentDay ?? 1;
+        const challenges = getActiveChallenges ? getActiveChallenges() : [];
+        const plank = challenges.find(c => c.id === 'plank');
+        if (plank) {
+          const v = plank.schedule[day - 1];
+          if (typeof v === 'number' && v > 0) return v;
+        }
+      } catch(e) {}
+      return 30;
+    }
 
-      if (startBtn) {
-        startBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleTimer(key);
-        });
-      }
+    const cd = { running: false, remaining: 30, target: 30, intervalId: null };
 
-      if (resetBtn) {
-        resetBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          resetTimer(key);
-        });
+    function cdInit() {
+      cd.target = getPlankDefault();
+      cd.remaining = cd.target;
+      cdUpdateDisplay();
+    }
+
+    function cdUpdateDisplay() {
+      const el = document.getElementById('interval-timer');
+      if (!el) return;
+      el.textContent = formatTime(cd.remaining);
+      el.classList.toggle('done', !cd.running && cd.remaining === 0);
+    }
+
+    function cdToggle() {
+      const btn = document.getElementById('interval-start');
+      if (cd.running) {
+        clearInterval(cd.intervalId);
+        cd.running = false;
+        btn.textContent = 'Start';
+        btn.classList.remove('running');
+      } else {
+        if (cd.remaining <= 0) { cdReset(); return; } // can't start at zero — reset first
+        cd.running = true;
+        btn.textContent = 'Stop';
+        btn.classList.add('running');
+        const endTime = Date.now() + cd.remaining * 1000;
+        cd.intervalId = setInterval(() => {
+          const rem = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+          cd.remaining = rem;
+          cdUpdateDisplay();
+          if (rem <= 0) {
+            clearInterval(cd.intervalId);
+            cd.running = false;
+            btn.textContent = 'Start';
+            btn.classList.remove('running');
+            // Vibrate if supported
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          }
+        }, 100);
       }
-    });
+    }
+
+    function cdReset() {
+      clearInterval(cd.intervalId);
+      cd.running = false;
+      cd.remaining = cd.target;
+      const btn = document.getElementById('interval-start');
+      btn.textContent = 'Start';
+      btn.classList.remove('running');
+      cdUpdateDisplay();
+    }
+
+    // Tap countdown display to set a custom time (when stopped)
+    function cdEditTime() {
+      if (cd.running) return;
+      const totalSec = cd.target;
+      const curMins = Math.floor(totalSec / 60);
+      const curSecs = totalSec % 60;
+      const input = prompt(
+        'Set countdown time (mm:ss or seconds):\nCurrent: ' + formatTime(totalSec),
+        curMins > 0 ? `${curMins}:${String(curSecs).padStart(2,'0')}` : String(totalSec)
+      );
+      if (input === null) return; // cancelled
+      let secs = 0;
+      const mmss = input.match(/^(\d+):(\d{1,2})$/);
+      if (mmss) {
+        secs = parseInt(mmss[1], 10) * 60 + parseInt(mmss[2], 10);
+      } else {
+        secs = parseInt(input, 10);
+      }
+      if (!isNaN(secs) && secs > 0) {
+        cd.target = secs;
+        cd.remaining = secs;
+        cdUpdateDisplay();
+      }
+    }
+
+    // Expose cdInit so renderDay can update the default after rendering
+    window._cdInit = cdInit;
+
+    // Wire up buttons (stopPropagation prevents card-tap conflicts)
+    document.getElementById('workout-start')?.addEventListener('click', e => { e.stopPropagation(); swToggle(); });
+    document.getElementById('workout-reset')?.addEventListener('click', e => { e.stopPropagation(); swReset(); });
+    document.getElementById('interval-start')?.addEventListener('click', e => { e.stopPropagation(); cdToggle(); });
+    document.getElementById('interval-reset')?.addEventListener('click', e => { e.stopPropagation(); cdReset(); });
+    document.getElementById('interval-timer')?.addEventListener('click', e => { e.stopPropagation(); cdEditTime(); });
+
+    // Initialise countdown once the app state is ready (slight delay so state.currentDay is populated)
+    setTimeout(cdInit, 500);
+
   })();
 
   if ('serviceWorker' in navigator) {
