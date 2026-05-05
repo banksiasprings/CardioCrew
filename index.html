@@ -3355,6 +3355,120 @@
     return Math.floor(_pbStopwatchState.accumMs / 1000);
   }
 
+  // ── Slice 5 — Sydney-time helpers + daily judgment (Beast + MI) ─────
+  // The campaign's "current day" is anchored in Australia/Sydney time —
+  // a submission counts as on-time only if its timestamp falls within
+  // that campaign-day's Sydney calendar day (00:00 Sydney → 23:59 Sydney).
+  function getPBSydneyDayKey(date){
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Australia/Sydney',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(date || new Date());
+  }
+  function getPBCurrentDay(startDate){
+    if (!startDate) return 1;
+    const sydneyToday = getPBSydneyDayKey();
+    const [sy, sm, sd] = startDate.split('-').map(Number);
+    const [ty, tm, td] = sydneyToday.split('-').map(Number);
+    const startMs = Date.UTC(sy, sm-1, sd);
+    const todayMs = Date.UTC(ty, tm-1, td);
+    return Math.max(1, Math.floor((todayMs - startMs) / 86400000) + 1);
+  }
+  // Daily judgment for one specific past day. Idempotent — skips members
+  // who already have a day{N}_score field on their completions map.
+  async function runPBJudgmentForDay(day){
+    if (!state.campaignId || !state.campaignData) return;
+    const exId = getPBExerciseForDay(state.campaignId, day);
+    if (!exId) return;
+    // Collect submissions for that day, with each member's prior best for
+    // the SAME exercise (used to compute Most Improved).
+    const submissions = [];
+    Object.entries(state.members).forEach(([userId, m]) => {
+      const v = m.completions?.[`d${day}_${exId}_value`];
+      if (typeof v !== 'number') return;
+      // Find prior best: same exercise, day < this day.
+      let prior = null;
+      Object.keys(m.completions).forEach(k => {
+        const match = k.match(/^d(\d+)_(\w+)_value$/);
+        if (!match) return;
+        const dN = parseInt(match[1], 10);
+        if (dN >= day) return;
+        if (match[2] !== exId) return;
+        const v2 = m.completions[k];
+        if (typeof v2 === 'number' && (prior == null || v2 > prior)) prior = v2;
+      });
+      submissions.push({ userId, value: v, prior });
+    });
+    if (submissions.length === 0) return null;
+    // Beast = highest raw value. Ties = all winners.
+    const maxValue = Math.max.apply(null, submissions.map(s => s.value));
+    const beasts = submissions.filter(s => s.value === maxValue).map(s => s.userId);
+    // Most Improved = highest positive % delta over prior. Excludes
+    // members without a prior submission (no baseline = no MI race).
+    const withPrior = submissions.filter(s => s.prior != null && s.prior > 0);
+    let miWinners = [];
+    let maxDelta = 0;
+    if (withPrior.length > 0) {
+      withPrior.forEach(s => { s.delta = (s.value - s.prior) / s.prior; });
+      maxDelta = Math.max.apply(null, withPrior.map(s => s.delta));
+      if (maxDelta > 0) {
+        miWinners = withPrior.filter(s => Math.abs(s.delta - maxDelta) < 1e-9).map(s => s.userId);
+      }
+    }
+    // Write scores per submitting member (idempotent — skip already-judged).
+    let wroteCount = 0;
+    for (const sub of submissions) {
+      const m = state.members[sub.userId];
+      if (m.completions?.[`day${day}_score`] != null) continue;
+      const score = {
+        beast:        beasts.includes(sub.userId) ? 1 : 0,
+        mostImproved: miWinners.includes(sub.userId) ? 1 : 0,
+        judgedAt:     serverTimestamp(),
+      };
+      try {
+        await updateDoc(doc(db,'campaigns',state.campaignId,'members',sub.userId), {
+          [`completions.day${day}_score`]: score,
+        });
+        wroteCount++;
+      } catch (e) {
+        // Swallow per-member write failures so one bad doc doesn't block the rest.
+        console.warn('PB judgment write failed for', sub.userId, e);
+      }
+    }
+    return { day, exerciseId: exId, beasts, miWinners, maxValue, maxDelta, wroteCount };
+  }
+  // Walk recent past days and run judgment for any unsettled days. Only
+  // looks back 7 days as a safety bound (older days are locked anyway).
+  async function runPBDailyJudgment(){
+    if (getCampaignType() !== 'pb-maintenance') return;
+    if (!state.campaignData?.startDate) return;
+    const currentDay = getPBCurrentDay(state.campaignData.startDate);
+    const results = [];
+    for (let day = Math.max(1, currentDay - 7); day < currentDay; day++) {
+      const r = await runPBJudgmentForDay(day);
+      if (r && r.wroteCount > 0) results.push(r);
+    }
+    // Banner: announce the most recent settled day's Beast (if any new
+    // scoring landed this session).
+    if (results.length > 0) {
+      const r = results[results.length - 1];
+      const meta = getPBExerciseMeta(r.exerciseId);
+      const unit = meta?.metric === 'reps' ? 'reps' : 's';
+      if (r.beasts && r.beasts.length > 0) {
+        const names = r.beasts.map(uid => state.members[uid]?.name || '???').join(', ');
+        const tag = r.beasts.length > 1 ? ` (${r.beasts.length}-way tie)` : '';
+        toast(`🏆 Day ${r.day} Beast: ${names}${tag} · ${r.maxValue} ${unit} ${meta?.icon || ''}`, 4500);
+      }
+      if (r.miWinners && r.miWinners.length > 0) {
+        setTimeout(() => {
+          const miNames = r.miWinners.map(uid => state.members[uid]?.name || '???').join(', ');
+          const pct = (r.maxDelta * 100).toFixed(0);
+          toast(`🚀 Day ${r.day} Most Improved: ${miNames} · +${pct}%`, 4500);
+        }, 5000);
+      }
+    }
+  }
+
   // ── Slice 3 — Today UI hydration for PB Maintenance ─────────────────
   // Called from renderToday() when campaignType is 'pb-maintenance'.
   // Hydrates the placeholder DOM (Slice 1) + week strip (Slice 2) + the
@@ -3758,6 +3872,13 @@
     // placeholder body with a real submission card).
     if (getCampaignType() === 'pb-maintenance' && state.campaignId) {
       renderPBToday(currentDay);
+      // Slice 5 — fire daily judgment once per session (after members have
+      // loaded). Idempotent on the Firestore side; the flag here just
+      // avoids re-running on every render.
+      if (!state.pbJudgmentRan && Object.keys(state.members).length > 0) {
+        state.pbJudgmentRan = true;
+        setTimeout(() => { runPBDailyJudgment().catch(()=>{}); }, 800);
+      }
     }
 
     // If the 30-day window has fully elapsed, show completion screen instead
