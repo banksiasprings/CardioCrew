@@ -1639,12 +1639,45 @@
         <div id="today-catchup-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:#FFCA28;background:rgba(255,202,40,0.12);border:1px solid rgba(255,202,40,0.3);border-radius:999px;padding:3px 10px">⏪ Catch-up — max 4 pts</div>
         <div id="today-locked-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 10px">🔒 Locked</div>
       </div>
-      <!-- Slice 1 / 2 — pb-maintenance placeholder. Slice 3 replaces. -->
+      <!-- Slice 3 — PB Maintenance Today UI. Body class 'pb-mode' makes
+           this visible. Real submission card; renderPBToday() hydrates. -->
       <div id="today-pb-placeholder">
         <div class="pb-hero" id="today-pb-hero">🏋️</div>
         <div class="pb-headline" id="today-pb-headline">PB Maintenance</div>
-        <div class="pb-sub" id="today-pb-sub">PB submission UI lands in Slice 3.</div>
-        <!-- Slice 2 — week schedule strip. -->
+        <div class="pb-sub" id="today-pb-sub"></div>
+
+        <!-- Lifetime PB ribbon -->
+        <div id="today-pb-lifetime" style="margin-top:14px;font-size:13px;color:var(--text-2);font-weight:700"></div>
+
+        <!-- Submission area: number input OR stopwatch (chosen by metric) -->
+        <div id="today-pb-input-wrap" style="margin-top:14px;display:none">
+          <!-- Number input variant -->
+          <div id="today-pb-num-wrap" style="display:none;align-items:center;justify-content:center;gap:8px">
+            <input type="number" id="today-pb-num" min="1" max="9999" inputmode="numeric"
+              style="width:120px;padding:14px 12px;font-size:24px;font-weight:800;text-align:center;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text-1)">
+            <div id="today-pb-unit" style="font-size:14px;color:var(--text-2);font-weight:700">reps</div>
+          </div>
+          <!-- Stopwatch variant (plank) -->
+          <div id="today-pb-sw-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px">
+            <div id="today-pb-sw-display" style="font-family:monospace;font-size:38px;font-weight:800;color:var(--text-1);letter-spacing:2px">00:00</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" id="today-pb-sw-start" style="min-width:120px">▶ Start</button>
+              <button class="btn btn-secondary" id="today-pb-sw-reset" style="min-width:80px;display:none">↺</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit / current-day / delete row -->
+        <div id="today-pb-action-row" style="margin-top:14px;display:none;flex-direction:column;gap:8px;align-items:center">
+          <button class="btn btn-primary" id="today-pb-submit" style="min-width:200px">Submit PB</button>
+          <div id="today-pb-current" style="font-size:12px;color:var(--text-2);font-weight:700"></div>
+          <button class="btn btn-secondary" id="today-pb-delete" style="font-size:11px;padding:6px 14px;display:none">🗑 Clear today's entry</button>
+        </div>
+
+        <!-- Recent personal sessions (others hidden until midnight) -->
+        <div id="today-pb-recent" style="margin-top:18px"></div>
+
+        <!-- Week schedule strip (from Slice 2) -->
         <div id="today-pb-week" style="margin-top:18px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
@@ -3173,6 +3206,281 @@
   }
   function getPBExerciseMeta(id){ return PB_EXERCISES.find(e => e.id === id) || null; }
 
+  // ── Slice 3 — PB submission helpers ─────────────────────────────────
+  // Field naming on member.completions for a PB submission (one per day):
+  //   d{N}_{exerciseId}_value  : number (reps or seconds)
+  //   d{N}_{exerciseId}_at     : Firestore Timestamp
+  //   d{N}_{exerciseId}_status : 'on-time' | 'catch-up'
+  // Re-submission during a day uses RUNNING-BEST semantics (only overwrites
+  // if the new value is higher). Use deletePBEntry() to clear a typo.
+  function getPBSubmission(userId, day){
+    const m = state.members[userId];
+    if (!m) return null;
+    const exId = state.campaignId ? getPBExerciseForDay(state.campaignId, day) : null;
+    if (!exId) return null;
+    const k = `d${day}_${exId}`;
+    return {
+      exerciseId: exId,
+      value:  m.completions?.[k + '_value'],
+      at:     m.completions?.[k + '_at'],
+      status: m.completions?.[k + '_status'],
+    };
+  }
+  async function submitPB(day, value){
+    if (!state.campaignId || !state.userId) return;
+    if (!isFinite(value) || value <= 0) { toast('Enter a positive number', 2000); return; }
+    const exId = getPBExerciseForDay(state.campaignId, day);
+    if (!exId) return;
+    const meta = getPBExerciseMeta(exId);
+    const currentDay = getDayNumber(state.campaignData.startDate);
+    if (!isEditableDay(day, currentDay)) { toast('🔒 This day is locked', 2000); return; }
+    const status = (day === currentDay) ? 'on-time' : 'catch-up';
+    // Running-best: only overwrite if the new value is higher than what's there.
+    const cur = state.members[state.userId]?.completions?.[`d${day}_${exId}_value`];
+    if (typeof cur === 'number' && cur >= value) {
+      const unit = meta?.metric === 'reps' ? 'reps' : 's';
+      toast(`Today's best is still ${cur} ${unit}. Submit a higher number to beat it.`, 2800);
+      return;
+    }
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), {
+      [`completions.d${day}_${exId}_value`]:  value,
+      [`completions.d${day}_${exId}_at`]:     serverTimestamp(),
+      [`completions.d${day}_${exId}_status`]: status,
+    });
+    const unit = meta?.metric === 'reps' ? 'reps' : 's';
+    toast(`✓ Saved: ${value} ${unit}` + (status === 'catch-up' ? ' (catch-up)' : ''), 2200);
+    if (typeof launchConfetti === 'function' && (!cur || value > (cur || 0))) launchConfetti();
+  }
+  async function deletePBEntry(day){
+    if (!state.campaignId || !state.userId) return;
+    if (!confirm("Clear today's PB entry? You can re-submit.")) return;
+    const exId = getPBExerciseForDay(state.campaignId, day);
+    if (!exId) return;
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), {
+      [`completions.d${day}_${exId}_value`]:  deleteField(),
+      [`completions.d${day}_${exId}_at`]:     deleteField(),
+      [`completions.d${day}_${exId}_status`]: deleteField(),
+    });
+    toast('✓ Entry cleared', 1500);
+  }
+  function getRecentPBSubmissions(userId, currentDay, limit){
+    const out = [];
+    limit = limit || 3;
+    for (let d = currentDay; d >= 1 && out.length < limit; d--) {
+      const sub = getPBSubmission(userId, d);
+      if (sub && typeof sub.value === 'number') out.push(Object.assign({day: d}, sub));
+    }
+    return out;
+  }
+  // Lifetime PB read — Slice 4 writes the field; until then, falls back to
+  // scanning the user's completions across all PB-maintenance days.
+  function getLifetimePB(userId, exerciseId){
+    const u = state.users?.[userId];
+    if (u?.pbs?.[exerciseId]?.value != null) return u.pbs[exerciseId].value;
+    // Fallback scan (Slice 4 obviates this).
+    const m = state.members[userId];
+    if (!m?.completions) return null;
+    let best = null;
+    Object.keys(m.completions).forEach(k => {
+      const match = k.match(/^d(\d+)_(\w+)_value$/);
+      if (!match || match[2] !== exerciseId) return;
+      const v = m.completions[k];
+      if (typeof v === 'number' && (best == null || v > best)) best = v;
+    });
+    return best;
+  }
+
+  // ── Slice 3 — Stopwatch state machine for plank PB submissions ──────
+  let _pbStopwatchState = { running: false, startMs: null, accumMs: 0, intervalId: null };
+  function _pbSwUpdateDisplay(){
+    const d = document.getElementById('today-pb-sw-display');
+    if (!d) return;
+    const ms = _pbStopwatchState.running
+      ? Date.now() - _pbStopwatchState.startMs + _pbStopwatchState.accumMs
+      : _pbStopwatchState.accumMs;
+    const totalSec = Math.floor(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    d.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+  function startPBStopwatch(){
+    if (_pbStopwatchState.running) return;
+    _pbStopwatchState.running = true;
+    _pbStopwatchState.startMs = Date.now();
+    _pbStopwatchState.intervalId = setInterval(_pbSwUpdateDisplay, 200);
+    const startBtn = document.getElementById('today-pb-sw-start');
+    const resetBtn = document.getElementById('today-pb-sw-reset');
+    if (startBtn) startBtn.textContent = '⏸ Stop';
+    if (resetBtn) resetBtn.style.display = 'none';
+  }
+  function stopPBStopwatch(){
+    if (!_pbStopwatchState.running) return;
+    const elapsed = Date.now() - _pbStopwatchState.startMs;
+    _pbStopwatchState.accumMs += elapsed;
+    _pbStopwatchState.running = false;
+    if (_pbStopwatchState.intervalId) clearInterval(_pbStopwatchState.intervalId);
+    _pbStopwatchState.intervalId = null;
+    _pbSwUpdateDisplay();
+    const startBtn = document.getElementById('today-pb-sw-start');
+    const resetBtn = document.getElementById('today-pb-sw-reset');
+    if (startBtn) startBtn.textContent = '▶ Resume';
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+  }
+  function resetPBStopwatch(){
+    if (_pbStopwatchState.intervalId) clearInterval(_pbStopwatchState.intervalId);
+    _pbStopwatchState = { running: false, startMs: null, accumMs: 0, intervalId: null };
+    _pbSwUpdateDisplay();
+    const startBtn = document.getElementById('today-pb-sw-start');
+    const resetBtn = document.getElementById('today-pb-sw-reset');
+    if (startBtn) startBtn.textContent = '▶ Start';
+    if (resetBtn) resetBtn.style.display = 'none';
+  }
+  function getPBStopwatchSeconds(){
+    return Math.floor(_pbStopwatchState.accumMs / 1000);
+  }
+
+  // ── Slice 3 — Today UI hydration for PB Maintenance ─────────────────
+  // Called from renderToday() when campaignType is 'pb-maintenance'.
+  // Hydrates the placeholder DOM (Slice 1) + week strip (Slice 2) + the
+  // submission card / lifetime PB / recent sessions (this slice).
+  function renderPBToday(currentDay){
+    const day = viewDay !== null ? viewDay : currentDay;
+    const exId = getPBExerciseForDay(state.campaignId, day);
+    const meta = getPBExerciseMeta(exId);
+    if (!meta) return;
+    const isCurrent = (day === currentDay);
+    const isCatchup = !isCurrent && isEditableDay(day, currentDay);
+    const isLocked  = isLockedDay(day, currentDay) || day > currentDay;
+
+    // Hero + headline.
+    document.getElementById('today-pb-hero').textContent     = meta.icon;
+    document.getElementById('today-pb-headline').textContent = `Day ${day} — ${meta.name}`;
+    const stateLabel = isLocked ? '🔒 Locked' : isCatchup ? '⏪ Catch-up' : '';
+    document.getElementById('today-pb-sub').innerHTML =
+      `<b>${escHtml(meta.name)}</b> · PB metric: <b>${meta.metric === 'reps' ? 'max reps in one set' : 'longest single hold'}</b>` +
+      (stateLabel ? ` · <span style="color:#FFCA28">${stateLabel}</span>` : '');
+
+    // Lifetime PB ribbon.
+    const lifePB = getLifetimePB(state.userId, exId);
+    const unitWord = meta.metric === 'reps' ? 'reps' : 's';
+    const lifeEl = document.getElementById('today-pb-lifetime');
+    lifeEl.innerHTML = lifePB != null
+      ? `🏆 Your PB: <b style="color:var(--gold);font-size:15px">${lifePB} ${unitWord}</b> — beat it!`
+      : `<span style="color:var(--text-3)">No PB yet — first submission becomes your starting line.</span>`;
+
+    // Submission area: choose number input vs stopwatch.
+    const inputWrap = document.getElementById('today-pb-input-wrap');
+    const numWrap   = document.getElementById('today-pb-num-wrap');
+    const swWrap    = document.getElementById('today-pb-sw-wrap');
+    const actionRow = document.getElementById('today-pb-action-row');
+    if (isLocked) {
+      inputWrap.style.display = 'none';
+      actionRow.style.display = 'none';
+    } else {
+      inputWrap.style.display = '';
+      actionRow.style.display = 'flex';
+      if (meta.metric === 'reps') {
+        numWrap.style.display = 'flex';
+        swWrap.style.display  = 'none';
+        document.getElementById('today-pb-unit').textContent = 'reps';
+        // Reset input to blank for fresh attempt.
+        const numEl = document.getElementById('today-pb-num');
+        if (numEl && document.activeElement !== numEl) numEl.value = '';
+      } else {
+        // seconds → stopwatch
+        numWrap.style.display = 'none';
+        swWrap.style.display  = 'flex';
+        // Don't auto-reset stopwatch on every render (user may be mid-time).
+      }
+    }
+
+    // Today's stored value + delete button.
+    const sub = getPBSubmission(state.userId, day);
+    const curEl = document.getElementById('today-pb-current');
+    const delBtn = document.getElementById('today-pb-delete');
+    if (sub && typeof sub.value === 'number') {
+      const tag = sub.status === 'catch-up' ? ' (catch-up)' : '';
+      curEl.innerHTML = `Your best for Day ${day}: <b style="color:var(--gold)">${sub.value} ${unitWord}</b>${tag}`;
+      delBtn.style.display = isLocked ? 'none' : '';
+    } else {
+      curEl.innerHTML = isLocked ? '<span style="color:var(--text-3)">No submission for this day.</span>'
+                                  : '<span style="color:var(--text-3)">Submit your first attempt today.</span>';
+      delBtn.style.display = 'none';
+    }
+
+    // Recent personal sessions (own only — others hidden until Slice 5 judgment).
+    const recent = getRecentPBSubmissions(state.userId, currentDay, 4);
+    const recEl = document.getElementById('today-pb-recent');
+    if (recent.length === 0) {
+      recEl.innerHTML = '<div style="font-size:11px;color:var(--text-3);font-style:italic">No personal history yet — your submissions will show here.</div>';
+    } else {
+      recEl.innerHTML =
+        '<div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Your recent sessions</div>' +
+        recent.map(r => {
+          const m2 = getPBExerciseMeta(r.exerciseId);
+          const u = m2?.metric === 'reps' ? 'reps' : 's';
+          const tag = r.status === 'catch-up' ? ' <span style="font-size:10px;color:#FFCA28">(catch-up)</span>' : '';
+          const dayLabel = r.day === currentDay ? 'Today' : `D${r.day}`;
+          return `<div style="font-size:12px;color:var(--text-2);padding:3px 0;display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05)">
+            <span>${m2?.icon || ''} ${dayLabel} · ${escHtml(m2?.name || r.exerciseId)}</span>
+            <span style="font-weight:700;color:var(--text-1)">${r.value} ${u}${tag}</span>
+          </div>`;
+        }).join('');
+      recEl.innerHTML += '<div style="font-size:10px;color:var(--text-3);font-style:italic;margin-top:6px">Other crew members\' results stay hidden until midnight Sydney.</div>';
+    }
+
+    // Week strip (from Slice 2 — re-render to keep today highlighted).
+    const week = generatePBSchedule(state.campaignId, getPBWeekNumber(day));
+    const strip = document.getElementById('today-pb-week');
+    if (strip) {
+      const weekStartDay = getPBWeekNumber(day) * 7 + 1;
+      strip.innerHTML = week.map((id, i) => {
+        const m2 = getPBExerciseMeta(id);
+        const dayN = weekStartDay + i;
+        const isToday = (dayN === day);
+        const sub2 = getPBSubmission(state.userId, dayN);
+        const hasSub = sub2 && typeof sub2.value === 'number';
+        return `<div style="
+          min-width:54px;padding:8px 6px;border-radius:8px;
+          background:${isToday ? 'rgba(201,162,39,0.18)' : 'var(--surface)'};
+          border:2px solid ${isToday ? 'var(--gold)' : (hasSub ? 'rgba(102,200,255,0.5)' : 'var(--border)')};
+          text-align:center;font-size:11px;font-weight:700;
+        "><div style="font-size:20px;line-height:1.2">${m2 ? m2.icon : '?'}</div>
+        <div style="color:${isToday ? 'var(--gold)' : 'var(--text-2)'};margin-top:2px">D${dayN}</div>
+        ${hasSub ? '<div style="font-size:9px;color:#66c8ff;margin-top:2px">✓</div>' : ''}</div>`;
+      }).join('');
+    }
+
+    // Wire button handlers (idempotent — set onclick directly each render).
+    const submitBtn = document.getElementById('today-pb-submit');
+    submitBtn.onclick = () => {
+      if (isLocked) return;
+      let value;
+      if (meta.metric === 'reps') {
+        const inp = document.getElementById('today-pb-num');
+        value = parseInt(inp?.value, 10);
+      } else {
+        value = getPBStopwatchSeconds();
+        if (value <= 0) { toast('Stopwatch reads 00:00 — start it first', 2000); return; }
+      }
+      submitPB(day, value).then(() => {
+        if (meta.metric === 'reps') {
+          const inp = document.getElementById('today-pb-num');
+          if (inp) inp.value = '';
+        } else {
+          resetPBStopwatch();
+        }
+      });
+    };
+    delBtn.onclick = () => deletePBEntry(day);
+    const swStart = document.getElementById('today-pb-sw-start');
+    if (swStart) swStart.onclick = () => {
+      _pbStopwatchState.running ? stopPBStopwatch() : startPBStopwatch();
+    };
+    const swReset = document.getElementById('today-pb-sw-reset');
+    if (swReset) swReset.onclick = () => resetPBStopwatch();
+  }
+
   async function toggleCompletion(day, challengeId) {
     const currentDay = getDayNumber(state.campaignData.startDate);
     if (!isEditableDay(day, currentDay)) { toast('🔒 This day is locked', 2000); return; }
@@ -3420,41 +3728,10 @@
     // can hide classic-only elements + show the pb-maintenance placeholder.
     document.body.classList.toggle('pb-mode', getCampaignType() === 'pb-maintenance');
 
-    // Slice 2 — populate the week-schedule strip + today's exercise hero
-    // for pb-maintenance campaigns. Slice 3 will replace the placeholder
-    // body with a real submission card; the week strip likely stays.
+    // Slice 3 — render PB Maintenance Today UI (replaces Slice 2's
+    // placeholder body with a real submission card).
     if (getCampaignType() === 'pb-maintenance' && state.campaignId) {
-      const day = viewDay !== null ? viewDay : currentDay;
-      const week = generatePBSchedule(state.campaignId, getPBWeekNumber(day));
-      const dayInWeek = getPBDayInWeek(day);
-      const todayId = week[dayInWeek];
-      const todayMeta = getPBExerciseMeta(todayId);
-      // Hero: today's exercise icon + name.
-      const hero = document.getElementById('today-pb-hero');
-      const headline = document.getElementById('today-pb-headline');
-      const sub = document.getElementById('today-pb-sub');
-      if (hero) hero.textContent = todayMeta ? todayMeta.icon : '🏋️';
-      if (headline) headline.textContent = todayMeta ? `Day ${day} — ${todayMeta.name}` : `Day ${day}`;
-      if (sub) sub.innerHTML = todayMeta
-        ? `Today: <b>${escHtml(todayMeta.name)}</b> · PB metric: <b>${todayMeta.metric === 'reps' ? 'max reps in one set' : 'longest single hold (s)'}</b>.<br><span style="font-size:11px;color:var(--text-3)">Submission UI lands in Slice 3.</span>`
-        : 'PB submission UI lands in Slice 3.';
-      // Week strip: 7 mini-tiles, today highlighted.
-      const strip = document.getElementById('today-pb-week');
-      if (strip) {
-        const weekStartDay = getPBWeekNumber(day) * 7 + 1;
-        strip.innerHTML = week.map((id, i) => {
-          const meta = getPBExerciseMeta(id);
-          const dayN = weekStartDay + i;
-          const isToday = (dayN === day);
-          return `<div style="
-            min-width:54px;padding:8px 6px;border-radius:8px;
-            background:${isToday ? 'rgba(201,162,39,0.18)' : 'var(--surface)'};
-            border:2px solid ${isToday ? 'var(--gold)' : 'var(--border)'};
-            text-align:center;font-size:11px;font-weight:700;
-          "><div style="font-size:20px;line-height:1.2">${meta ? meta.icon : '?'}</div>
-          <div style="color:${isToday ? 'var(--gold)' : 'var(--text-2)'};margin-top:2px">D${dayN}</div></div>`;
-        }).join('');
-      }
+      renderPBToday(currentDay);
     }
 
     // If the 30-day window has fully elapsed, show completion screen instead
