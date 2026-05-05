@@ -3248,7 +3248,20 @@
       [`completions.d${day}_${exId}_status`]: status,
     });
     const unit = meta?.metric === 'reps' ? 'reps' : 's';
-    toast(`✓ Saved: ${value} ${unit}` + (status === 'catch-up' ? ' (catch-up)' : ''), 2200);
+    // Slice 4 — bump lifetime PB on user doc when this attempt beats it.
+    const lifeBefore = getLifetimePB(state.userId, exId);
+    const isLifetimePB = (lifeBefore == null || value > lifeBefore);
+    if (isLifetimePB) {
+      await setDoc(doc(db,'users',state.userId), {
+        pbs: { [exId]: { value, at: serverTimestamp(), campaignId: state.campaignId, day } }
+      }, { merge: true });
+    }
+    toast(
+      isLifetimePB
+        ? `🏆 New lifetime PB: ${value} ${unit}!`
+        : `✓ Saved: ${value} ${unit}` + (status === 'catch-up' ? ' (catch-up)' : ''),
+      isLifetimePB ? 3500 : 2200
+    );
     if (typeof launchConfetti === 'function' && (!cur || value > (cur || 0))) launchConfetti();
   }
   async function deletePBEntry(day){
@@ -3272,12 +3285,15 @@
     }
     return out;
   }
-  // Lifetime PB read — Slice 4 writes the field; until then, falls back to
-  // scanning the user's completions across all PB-maintenance days.
+  // Lifetime PB read. Primary source: the user's own doc (Slice 4
+  // writes lifetime PBs to users/{uid}.pbs.{exerciseId}). Subscribed via
+  // subscribeAll() into state.myUser. Fallback: scan member completions
+  // (covers users without a populated pbs map yet, and other crew
+  // members on the leaderboard until Slice 7 fetches their docs).
   function getLifetimePB(userId, exerciseId){
-    const u = state.users?.[userId];
-    if (u?.pbs?.[exerciseId]?.value != null) return u.pbs[exerciseId].value;
-    // Fallback scan (Slice 4 obviates this).
+    if (userId === state.userId && state.myUser?.pbs?.[exerciseId]?.value != null) {
+      return state.myUser.pbs[exerciseId].value;
+    }
     const m = state.members[userId];
     if (!m?.completions) return null;
     let best = null;
@@ -3643,6 +3659,16 @@
       snap.forEach(d=>{ state.clans[d.id]=d.data(); });
       scheduleRender(false);
     }));
+
+    // Slice 4 — own user doc (carries lifetime PBs in users/{uid}.pbs).
+    if (state.userId) {
+      state.unsubscribers.push(onSnapshot(doc(db,'users',state.userId),(snap)=>{
+        if (snap.exists()) {
+          state.myUser = snap.data();
+          scheduleRender(false);
+        }
+      }));
+    }
 
   }
 
