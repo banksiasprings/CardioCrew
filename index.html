@@ -784,13 +784,16 @@
     /* ── Wager / Prize Pool ── */
     .wager-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
     .wager-btn.active { border-color: var(--gold); background: rgba(201,162,39,0.12); color: var(--gold); }
-    /* Slice 1 — placeholder for pb-maintenance Today UI (Slice 3 replaces). */
+    /* Slice 1/8 — pb-mode hides the classic Today UI elements. */
     body.pb-mode .progress-bar-wrap,
     body.pb-mode .progress-label,
     body.pb-mode .daily-score,
     body.pb-mode #challenge-list,
     body.pb-mode #today-catchup-badge,
-    body.pb-mode #today-locked-badge { display: none !important; }
+    body.pb-mode #today-locked-badge,
+    body.pb-mode #today-day-num,
+    body.pb-mode #today-date-str,
+    body.pb-mode .today-label { display: none !important; }
     body.pb-mode #today-pb-placeholder { display: block !important; }
     #today-pb-placeholder { display: none; padding: 24px 16px; text-align: center; }
     #today-pb-placeholder .pb-hero { font-size: 56px; margin-bottom: 8px; }
@@ -2746,6 +2749,8 @@
 
   // Returns true when 30+ days have elapsed since campaign start (i.e. day 31+)
   function isCampaignOver() {
+    // Slice 8 — pb-maintenance is open-ended; it never "completes" by date.
+    if (getCampaignType() === 'pb-maintenance') return false;
     if (!state.campaignData?.startDate) return false;
     const start = new Date(state.campaignData.startDate + 'T00:00:00');
     if (isNaN(start.getTime())) return false;
@@ -3742,6 +3747,24 @@
     const isCurrent = (day === currentDay);
     const isCatchup = !isCurrent && isEditableDay(day, currentDay);
     const isLocked  = isLockedDay(day, currentDay) || day > currentDay;
+
+    // Slice 8 — wire prev/next day navigation (catch-up). Same rules as
+    // classic campaign: prev enabled within the catch-up window; next
+    // enabled when viewing a past day.
+    const prevBtn = document.getElementById('btn-day-prev');
+    const nextBtn = document.getElementById('btn-day-next');
+    if (prevBtn) {
+      const canPrev = (day > Math.max(1, currentDay - CATCHUP_DAYS) && day > 1);
+      prevBtn.style.opacity = canPrev ? '1' : '0.2';
+      prevBtn.style.pointerEvents = canPrev ? 'auto' : 'none';
+    }
+    if (nextBtn) {
+      const canNext = (day < currentDay);
+      nextBtn.style.opacity = canNext ? '1' : '0.2';
+      nextBtn.style.pointerEvents = canNext ? 'auto' : 'none';
+    }
+    // Existing day-num element is hidden in pb-mode (the headline below
+    // shows "Day N — Exercise"), so no need to update today-day-num.
 
     // Hero + headline.
     document.getElementById('today-pb-hero').textContent     = meta.icon;
