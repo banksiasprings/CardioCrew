@@ -1674,6 +1674,9 @@
           <button class="btn btn-secondary" id="today-pb-delete" style="font-size:11px;padding:6px 14px;display:none">🗑 Clear today's entry</button>
         </div>
 
+        <!-- Slice 6 — weekly consistency tracker -->
+        <div id="today-pb-week-tracker" style="margin-top:18px"></div>
+
         <!-- Recent personal sessions (others hidden until midnight) -->
         <div id="today-pb-recent" style="margin-top:18px"></div>
 
@@ -2943,6 +2946,12 @@
   }
 
   function getTotalPoints(userId) {
+    // Slice 6 — pb-maintenance campaigns score via getPBTotalPoints
+    // (settled-week consistency + Beast + MI) instead of the classic
+    // 5-pt-per-day path. Keeps the leaderboard correct without extra wiring.
+    if (getCampaignType() === 'pb-maintenance') {
+      return (typeof getPBTotalPoints === 'function') ? getPBTotalPoints(userId) : 0;
+    }
     const cur = getDayNumber(state.campaignData.startDate);
     let t = 0;
     for (let d = 1; d <= cur; d++) t += getDayScore(userId, d, cur);
@@ -3437,6 +3446,71 @@
     }
     return { day, exerciseId: exId, beasts, miWinners, maxValue, maxDelta, wroteCount };
   }
+  // ── Slice 6 — Weekly consistency + cliff scoring ───────────────────
+  // Per-week tally:
+  //   - Every day must have a submission (on-time OR catch-up).
+  //   - Score = 7 − count(catch-up days).
+  //   - Cliff: any day fully missed (no submission, catch-up window
+  //     expired) → 0 for the entire week.
+  // Weeks aren't scored until the week's last day's catch-up window
+  // closes (week's last day + CATCHUP_DAYS). Until then the week is
+  // 'pending' (we display running tallies but don't award points).
+  function getPBWeekConsistencyDetail(userId, weekNumber, currentDay){
+    const m = state.members[userId];
+    const startDay = weekNumber * 7 + 1;
+    const endDay   = startDay + 7;
+    let onTime = 0, catchUp = 0, missedHard = 0, missedSoft = 0, future = 0;
+    for (let d = startDay; d < endDay; d++) {
+      if (d > currentDay) { future++; continue; }
+      const exId = state.campaignId ? getPBExerciseForDay(state.campaignId, d) : null;
+      const v = exId ? m?.completions?.[`d${d}_${exId}_value`] : undefined;
+      const status = exId ? m?.completions?.[`d${d}_${exId}_status`] : undefined;
+      if (typeof v !== 'number') {
+        // No submission. Hard miss only when the catch-up window has closed.
+        if (currentDay - d > CATCHUP_DAYS) missedHard++; else missedSoft++;
+      } else if (status === 'catch-up') {
+        catchUp++;
+      } else {
+        onTime++;
+      }
+    }
+    return { weekNumber, onTime, catchUp, missedHard, missedSoft, future, weekLastDay: endDay - 1 };
+  }
+  // Returns the awarded consistency score for the week, or null if the
+  // week hasn't settled yet (still pending — catch-up window open).
+  function getPBWeekConsistency(userId, weekNumber, currentDay){
+    const detail = getPBWeekConsistencyDetail(userId, weekNumber, currentDay);
+    // Settled when currentDay > week's last day + catch-up window.
+    const isSettled = currentDay > detail.weekLastDay + CATCHUP_DAYS;
+    if (!isSettled) return null;
+    if (detail.missedHard > 0) return 0;          // cliff
+    return Math.max(0, 7 - detail.catchUp);
+  }
+  // Total points for a pb-maintenance member: settled-weeks consistency
+  // + lifetime Beast + Most Improved wins.
+  function getPBTotalPoints(userId){
+    const startDate = state.campaignData?.startDate;
+    if (!startDate) return 0;
+    const currentDay = getPBCurrentDay(startDate);
+    let total = 0;
+    // Consistency: walk weeks; only settled weeks contribute.
+    const totalWeeks = Math.ceil(currentDay / 7);
+    for (let w = 0; w < totalWeeks; w++) {
+      const cons = getPBWeekConsistency(userId, w, currentDay);
+      if (cons != null) total += cons;
+    }
+    // Beast + MI from per-day score fields written by Slice 5.
+    const m = state.members[userId];
+    if (m?.completions) {
+      Object.keys(m.completions).forEach(k => {
+        if (!/^day\d+_score$/.test(k)) return;
+        const sc = m.completions[k];
+        total += (sc?.beast || 0) + (sc?.mostImproved || 0);
+      });
+    }
+    return total;
+  }
+
   // Walk recent past days and run judgment for any unsettled days. Only
   // looks back 7 days as a safety bound (older days are locked anyway).
   async function runPBDailyJudgment(){
@@ -3536,6 +3610,33 @@
       curEl.innerHTML = isLocked ? '<span style="color:var(--text-3)">No submission for this day.</span>'
                                   : '<span style="color:var(--text-3)">Submit your first attempt today.</span>';
       delBtn.style.display = 'none';
+    }
+
+    // Slice 6 — Weekly consistency tracker. Show this week's running tally
+    // (on-time / catch-up / pending / missed) + earned points if settled.
+    const weekNum = getPBWeekNumber(day);
+    const detail = getPBWeekConsistencyDetail(state.userId, weekNum, currentDay);
+    const settledScore = getPBWeekConsistency(state.userId, weekNum, currentDay);
+    const trackEl = document.getElementById('today-pb-week-tracker');
+    if (trackEl) {
+      const cliffWarn = detail.missedHard > 0;
+      const stateLabel = settledScore == null
+        ? `<span style="color:var(--text-3)">Pending — settles after catch-up window closes</span>`
+        : cliffWarn
+          ? `<span style="color:#ef4444;font-weight:800">⚠ Cliff hit — 0 pts (${detail.missedHard} day${detail.missedHard>1?'s':''} missed)</span>`
+          : `<span style="color:var(--gold);font-weight:800">${settledScore} / 7 pts earned</span>`;
+      trackEl.innerHTML = `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Week ${weekNum + 1} consistency</div>
+          <div style="display:flex;gap:14px;justify-content:space-around;font-size:11px;font-weight:700;margin-bottom:6px">
+            <div style="color:#22c55e">✓ ${detail.onTime} on-time</div>
+            <div style="color:#FFCA28">⏪ ${detail.catchUp} catch-up</div>
+            ${detail.missedSoft > 0 ? `<div style="color:var(--text-3)">… ${detail.missedSoft} pending</div>` : ''}
+            ${detail.missedHard > 0 ? `<div style="color:#ef4444">✗ ${detail.missedHard} missed</div>` : ''}
+            ${detail.future > 0 ? `<div style="color:var(--text-3)">${detail.future} to come</div>` : ''}
+          </div>
+          <div style="font-size:12px;text-align:center">${stateLabel}</div>
+        </div>`;
     }
 
     // Recent personal sessions (own only — others hidden until Slice 5 judgment).
