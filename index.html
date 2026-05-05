@@ -793,7 +793,11 @@
     body.pb-mode #today-locked-badge,
     body.pb-mode #today-day-num,
     body.pb-mode #today-date-str,
-    body.pb-mode .today-label { display: none !important; }
+    body.pb-mode .today-label,
+    /* PB campaigns track per-exercise progress via PB RECORDS, so the
+       classic "My Challenges" tick-box / X-of-30 strip is redundant. */
+    body.pb-mode .psec-hdr[data-sec="challenges"],
+    body.pb-mode #psec-challenges { display: none !important; }
     body.pb-mode #today-pb-placeholder { display: block !important; }
     #today-pb-placeholder { display: none; padding: 24px 16px; text-align: center; }
     #today-pb-placeholder .pb-hero { font-size: 56px; margin-bottom: 8px; }
