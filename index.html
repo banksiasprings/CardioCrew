@@ -1826,6 +1826,16 @@
           </div>
         </div>
 
+        <!-- ── PB Records (Slice 7) — visible only for pb-maintenance campaigns -->
+        <div class="psec-hdr" data-sec="pbrecords" id="psec-hdr-pbrecords" style="display:none">
+          <span class="psec-label">🏆 PB Records</span>
+          <span class="psec-arrow">▾</span>
+        </div>
+        <div class="psec-body" id="psec-pbrecords" style="display:none">
+          <div id="profile-pb-records" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+          <div style="font-size:10px;color:var(--text-3);font-style:italic;margin-top:8px;text-align:center">Tap a record to see your full PB history.</div>
+        </div>
+
         <!-- ── Badges ── -->
         <div class="psec-hdr" data-sec="badges">
           <span class="psec-label">🏅 Badges</span>
@@ -3446,6 +3456,183 @@
     }
     return { day, exerciseId: exId, beasts, miWinners, maxValue, maxDelta, wroteCount };
   }
+  // ── Slice 7 — PB graph + records UI ─────────────────────────────────
+  // Returns chronological [{day, value}] for the user's submissions of
+  // a single exercise across the current campaign.
+  function getPBHistoryForUser(userId, exerciseId){
+    const m = state.members[userId];
+    if (!m?.completions) return [];
+    const out = [];
+    Object.keys(m.completions).forEach(k => {
+      const match = k.match(/^d(\d+)_(\w+)_value$/);
+      if (!match) return;
+      if (match[2] !== exerciseId) return;
+      const day = parseInt(match[1], 10);
+      const value = m.completions[k];
+      if (typeof value === 'number') out.push({ day, value });
+    });
+    out.sort((a, b) => a.day - b.day);
+    return out;
+  }
+  // SVG sparkline: tiny polyline of value-over-day, no axes/labels.
+  function renderPBSparkline(history, width, height){
+    if (!history || history.length < 2) {
+      return `<div style="height:${height}px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-3);font-style:italic">${history && history.length === 1 ? '1 entry' : 'no history'}</div>`;
+    }
+    const maxV = Math.max.apply(null, history.map(h => h.value));
+    const minV = Math.min.apply(null, history.map(h => h.value));
+    const rangeV = Math.max(1, maxV - minV);
+    const minD = history[0].day;
+    const maxD = history[history.length - 1].day;
+    const rangeD = Math.max(1, maxD - minD);
+    const padding = 4;
+    const points = history.map(h => {
+      const x = padding + ((h.day - minD) / rangeD) * (width - 2*padding);
+      const y = height - padding - ((h.value - minV) / rangeV) * (height - 2*padding);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="display:block">
+      <polyline points="${points}" fill="none" stroke="#FFCA28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+  // Full-screen graph modal for one exercise. Toggle Just Me / Compare.
+  let _pbGraphMode = 'me';
+  function openPBGraphModal(exerciseId){
+    let modal = document.getElementById('pb-graph-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'pb-graph-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:20px';
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
+    }
+    _pbGraphMode = 'me';
+    _pbGraphRender(exerciseId);
+  }
+  function _pbGraphRender(exerciseId){
+    const modal = document.getElementById('pb-graph-modal');
+    if (!modal) return;
+    const meta = getPBExerciseMeta(exerciseId);
+    const unit = meta?.metric === 'reps' ? 'reps' : 's';
+    const currentDay = state.campaignData?.startDate ? getPBCurrentDay(state.campaignData.startDate) : 0;
+    // Settled means the day's catch-up window has closed.
+    const settledThrough = Math.max(0, currentDay - CATCHUP_DAYS - 1);
+    const isMe = _pbGraphMode === 'me';
+    // Collect series: { userId, name, history }
+    const series = [];
+    if (isMe) {
+      const me = state.members[state.userId];
+      series.push({ userId: state.userId, name: me?.name || 'You', history: getPBHistoryForUser(state.userId, exerciseId) });
+    } else {
+      Object.entries(state.members).forEach(([uid, m]) => {
+        const hist = getPBHistoryForUser(uid, exerciseId).filter(h => h.day <= settledThrough);
+        if (hist.length === 0) return;
+        series.push({ userId: uid, name: m.name || 'Member', history: hist });
+      });
+    }
+    // SVG bounds.
+    const W = 600, H = 360, padL = 50, padR = 14, padT = 30, padB = 40;
+    let minV = Infinity, maxV = -Infinity, minD = Infinity, maxD = -Infinity;
+    series.forEach(s => s.history.forEach(h => {
+      if (h.value < minV) minV = h.value; if (h.value > maxV) maxV = h.value;
+      if (h.day < minD) minD = h.day;     if (h.day > maxD) maxD = h.day;
+    }));
+    if (!isFinite(minV)) { minV = 0; maxV = 1; minD = 1; maxD = 7; }
+    if (minV === maxV) { minV = Math.max(0, minV - 1); maxV = maxV + 1; }
+    if (minD === maxD) { maxD = minD + 1; }
+    const rangeV = maxV - minV, rangeD = maxD - minD;
+    const x = d => padL + ((d - minD) / rangeD) * (W - padL - padR);
+    const y = v => H - padB - ((v - minV) / rangeV) * (H - padT - padB);
+    const colors = ['#FFCA28', '#66c8ff', '#ff7043', '#27ae60', '#a78bfa', '#ec4899'];
+    // Y-axis grid lines (5 levels).
+    const gridLines = [0, 0.25, 0.5, 0.75, 1].map(t => {
+      const v = minV + t * rangeV;
+      const yy = y(v);
+      return `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              <text x="${padL - 6}" y="${yy + 3}" text-anchor="end" font-size="10" fill="#7a8a9a">${Math.round(v)}</text>`;
+    }).join('');
+    // X-axis day labels.
+    const dayLabels = (() => {
+      const labels = [];
+      const stepCount = Math.min(rangeD, 7);
+      for (let i = 0; i <= stepCount; i++) {
+        const d = Math.round(minD + (i / stepCount) * rangeD);
+        labels.push(`<text x="${x(d)}" y="${H - padB + 14}" text-anchor="middle" font-size="10" fill="#7a8a9a">D${d}</text>`);
+      }
+      return labels.join('');
+    })();
+    // Series polylines + dots.
+    const seriesSvg = series.map((s, i) => {
+      const c = colors[i % colors.length];
+      if (s.history.length === 0) return '';
+      const pts = s.history.map(h => `${x(h.day)},${y(h.value)}`).join(' ');
+      const dots = s.history.map(h => `<circle cx="${x(h.day)}" cy="${y(h.value)}" r="3" fill="${c}"/>`).join('');
+      return `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+    }).join('');
+    // Legend (only for compare mode).
+    const legend = isMe ? '' : `<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px;font-size:11px">${
+      series.map((s, i) => `<span style="display:inline-flex;align-items:center;gap:4px;color:#dce8f5">
+        <span style="width:10px;height:10px;background:${colors[i % colors.length]};border-radius:2px;display:inline-block"></span>
+        ${escHtml(s.name)}
+      </span>`).join('')
+    }</div>`;
+    modal.innerHTML = `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:18px;font-weight:800;color:var(--text-1)">${meta?.icon || ''} ${escHtml(meta?.name || exerciseId)} — PB History</div>
+          <button onclick="document.getElementById('pb-graph-modal').remove()" style="background:none;border:none;color:var(--text-2);font-size:22px;cursor:pointer;padding:0 8px;line-height:1">×</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="wager-btn ${isMe?'active':''}" onclick="(function(){_pbGraphMode='me';_pbGraphRender('${exerciseId}');})()" style="flex:1">Just me</button>
+          <button class="wager-btn ${!isMe?'active':''}" onclick="(function(){_pbGraphMode='all';_pbGraphRender('${exerciseId}');})()" style="flex:1">Compare crew</button>
+        </div>
+        ${series.every(s => s.history.length === 0) ? `<div style="text-align:center;padding:30px 10px;color:var(--text-3);font-size:13px">No PB history yet for ${escHtml(meta?.name || exerciseId)}.${!isMe ? '<br><span style="font-size:11px;font-style:italic">Compare mode shows only days that have been settled (catch-up window closed).</span>' : ''}</div>` : `
+        <svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block;background:var(--surface);border:1px solid var(--border);border-radius:6px">
+          ${gridLines}
+          ${dayLabels}
+          ${seriesSvg}
+        </svg>
+        <div style="font-size:10px;color:var(--text-3);text-align:center;margin-top:6px">Y axis: ${unit} · X axis: campaign day</div>
+        ${legend}`}
+      </div>`;
+  }
+  // Render the 4-card records strip on the profile page.
+  function renderPBRecords(){
+    const grid = document.getElementById('profile-pb-records');
+    const hdr  = document.getElementById('psec-hdr-pbrecords');
+    const body = document.getElementById('psec-pbrecords');
+    if (!grid || !hdr || !body) return;
+    if (getCampaignType() !== 'pb-maintenance') {
+      hdr.style.display = 'none';
+      body.style.display = 'none';
+      return;
+    }
+    hdr.style.display = '';
+    body.style.display = '';
+    grid.innerHTML = PB_EXERCISES.map(ex => {
+      const pb = getLifetimePB(state.userId, ex.id);
+      const history = getPBHistoryForUser(state.userId, ex.id);
+      const unit = ex.metric === 'reps' ? 'reps' : 's';
+      return `<div onclick="openPBGraphModal('${ex.id}')" style="
+        background:var(--surface);border:1px solid var(--border);border-radius:10px;
+        padding:10px 12px;cursor:pointer;transition:transform 0.1s
+      " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:24px">${ex.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1)">${ex.name}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--gold);line-height:1.1">${pb != null ? pb : '—'} <span style="font-size:11px;color:var(--text-3);font-weight:400">${pb != null ? unit : ''}</span></div>
+          </div>
+        </div>
+        ${renderPBSparkline(history, 180, 32)}
+      </div>`;
+    }).join('');
+  }
+  // Expose for inline onclick handlers (assigned in modal HTML).
+  window._pbGraphMode = 'me';
+  window._pbGraphRender = _pbGraphRender;
+  window.openPBGraphModal = openPBGraphModal;
+
   // ── Slice 6 — Weekly consistency + cliff scoring ───────────────────
   // Per-week tally:
   //   - Every day must have a submission (on-time OR catch-up).
@@ -4449,6 +4636,8 @@
     document.getElementById('stat-days-done').textContent=getPerfectDays(state.userId);
     document.getElementById('stat-streak').textContent=getStreak(state.userId);
     document.getElementById('stat-pct').textContent=Math.min(100,Math.round((day/30)*100))+'%';
+    // Slice 7 — render PB records strip (visible only for pb-maintenance).
+    if (typeof renderPBRecords === 'function') renderPBRecords();
     document.getElementById('prof-campaign-name').textContent=state.campaignData?.name||'—';
     document.getElementById('prof-start').textContent=state.campaignData?.startDate
       ?new Date(state.campaignData.startDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'—';
