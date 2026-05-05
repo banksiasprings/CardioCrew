@@ -784,6 +784,18 @@
     /* ── Wager / Prize Pool ── */
     .wager-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
     .wager-btn.active { border-color: var(--gold); background: rgba(201,162,39,0.12); color: var(--gold); }
+    /* Slice 1 — placeholder for pb-maintenance Today UI (Slice 3 replaces). */
+    body.pb-mode .progress-bar-wrap,
+    body.pb-mode .progress-label,
+    body.pb-mode .daily-score,
+    body.pb-mode #challenge-list,
+    body.pb-mode #today-catchup-badge,
+    body.pb-mode #today-locked-badge { display: none !important; }
+    body.pb-mode #today-pb-placeholder { display: block !important; }
+    #today-pb-placeholder { display: none; padding: 24px 16px; text-align: center; }
+    #today-pb-placeholder .pb-hero { font-size: 56px; margin-bottom: 8px; }
+    #today-pb-placeholder .pb-headline { font-size: 18px; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+    #today-pb-placeholder .pb-sub { font-size: 13px; color: var(--text-2); line-height: 1.6; max-width: 320px; margin: 0 auto; }
     /* Profile wager card */
     .profile-wager-card { margin:0 16px 12px; background:linear-gradient(135deg,#1a1400,#2a1f00); border:1px solid var(--gold); border-radius:var(--radius); padding:12px 14px; }
     .profile-wager-pool { font-size:14px; font-weight:800; color:var(--gold); margin-bottom:3px; }
@@ -1563,6 +1575,19 @@
         <input class="input" id="create-start-date" type="date">
       </div>
       <div class="input-group">
+        <label>Campaign Type</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="campaign-type-selector">
+          <button type="button" class="wager-btn active" data-ctype="classic" style="flex:1 1 100%;padding:12px 10px;text-align:left;line-height:1.4">
+            <div style="font-weight:800;font-size:14px">🏃 Four Ways in 30 Days</div>
+            <div style="font-size:11px;font-weight:400;color:var(--text-2);margin-top:2px">Daily checkbox campaign — tick all 4 exercises each day for max points.</div>
+          </button>
+          <button type="button" class="wager-btn" data-ctype="pb-maintenance" style="flex:1 1 100%;padding:12px 10px;text-align:left;line-height:1.4">
+            <div style="font-weight:800;font-size:14px">🏋️ PB Maintenance</div>
+            <div style="font-size:11px;font-weight:400;color:var(--text-2);margin-top:2px">Lock-in campaign — 7 random PB sessions/week. Daily Beast + Most Improved + consistency pts.</div>
+          </button>
+        </div>
+      </div>
+      <div class="input-group">
         <label>💰 Sweeten the pot? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-2)">(optional — settled in person)</span></label>
         <div style="display:flex;gap:8px" id="wager-selector">
           <button type="button" class="wager-btn active" data-wager="0">None</button>
@@ -1613,6 +1638,13 @@
         <div class="today-date" id="today-date-str"></div>
         <div id="today-catchup-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:#FFCA28;background:rgba(255,202,40,0.12);border:1px solid rgba(255,202,40,0.3);border-radius:999px;padding:3px 10px">⏪ Catch-up — max 4 pts</div>
         <div id="today-locked-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px 10px">🔒 Locked</div>
+      </div>
+      <!-- Slice 1 — pb-maintenance placeholder. Body class 'pb-mode' makes
+           this visible and hides the classic Today UI. Slice 3 replaces. -->
+      <div id="today-pb-placeholder">
+        <div class="pb-hero">🏋️</div>
+        <div class="pb-headline">PB Maintenance</div>
+        <div class="pb-sub">Today's PB submission card lands in <b>Slice 3</b>. Schedule generator next (Slice 2). Lifetime PB tracking + daily Beast/Most Improved judgment + weekly consistency cliff all queued.</div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
       <div class="progress-label"><span id="progress-text">Day 1 of 30</span><span id="progress-pct">0%</span></div>
@@ -3063,15 +3095,24 @@
   }
 
   // ─── Firebase operations ──────────────────────────────
-  async function createCampaign(cName, yourName, startDate, wagerAmount) {
+  // Slice 1 — campaignType added; legacy callers default to 'classic'.
+  async function createCampaign(cName, yourName, startDate, wagerAmount, campaignType) {
     const campaignId=genId(6);
     const userId = state.userId || genId(8);
-    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0 });
+    const ctype = (campaignType==='pb-maintenance' || campaignType==='template') ? campaignType : 'classic';
+    await setDoc(doc(db,'campaigns',campaignId),{ name:cName, startDate, createdBy:userId, createdAt:serverTimestamp(), wagerAmount:wagerAmount||0, campaignType:ctype });
     // Creator auto-opts in to their own wager
     await setDoc(doc(db,'campaigns',campaignId,'members',userId),{ name:yourName, avatar:selectedAvatar, joinedAt:serverTimestamp(), completions:{}, wagerOptIn: (wagerAmount||0)>0 });
     // Ensure a users doc exists so they appear in the login dropdown
     await setDoc(doc(db,'users',userId),{ name:yourName, nameLower:yourName.toLowerCase(), createdAt:serverTimestamp() },{ merge:true });
     return { campaignId, userId };
+  }
+
+  // Slice 1 — campaign type accessor with backward-compat default.
+  // Existing campaigns (created before this slice) have no campaignType
+  // field — they default to 'classic'.
+  function getCampaignType(){
+    return state.campaignData?.campaignType || 'classic';
   }
 
   async function toggleCompletion(day, challengeId) {
@@ -3317,6 +3358,11 @@
   }
 
   function renderToday(currentDay) {
+    // Slice 1 — toggle body.pb-mode whenever Today renders so the CSS
+    // can hide classic-only elements + show the pb-maintenance placeholder.
+    // Slice 3 will replace this branch with a real PB submission card.
+    document.body.classList.toggle('pb-mode', getCampaignType() === 'pb-maintenance');
+
     // If the 30-day window has fully elapsed, show completion screen instead
     if (viewDay === null && isCampaignOver()) { renderCampaignComplete(); return; }
 
@@ -4757,6 +4803,15 @@
     document.querySelectorAll('#wager-selector .wager-btn').forEach(b=>b.classList.toggle('active',b===btn));
   });
 
+  // Slice 1 — campaign type picker. Default 'classic' for backward compat.
+  let selectedCampaignType='classic';
+  document.getElementById('campaign-type-selector').addEventListener('click',e=>{
+    const btn=e.target.closest('.wager-btn');
+    if(!btn)return;
+    selectedCampaignType=btn.dataset.ctype||'classic';
+    document.querySelectorAll('#campaign-type-selector .wager-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  });
+
   document.getElementById('btn-create-go').addEventListener('click',async()=>{
     const cName=document.getElementById('create-campaign-name').value.trim();
     const yourName=document.getElementById('create-your-name').value.trim();
@@ -4767,13 +4822,14 @@
     if(!startDate){err.textContent='Choose a start date';return;}
     err.textContent='';
     try {
-      const {campaignId,userId}=await createCampaign(cName,yourName,startDate,selectedWager);
+      const {campaignId,userId}=await createCampaign(cName,yourName,startDate,selectedWager,selectedCampaignType);
       state.userId=userId; state.campaignId=campaignId;
-      state.campaignData={name:cName,startDate,wagerAmount:selectedWager};
+      state.campaignData={name:cName,startDate,wagerAmount:selectedWager,campaignType:selectedCampaignType};
       saveLocal();
       initClanScreen(); showScreen('screen-clan');
       const wagerMsg=selectedWager>0?` 💰 Wager: $${selectedWager}/person`:'';
-      toast(`🎉 "${cName}" is live! Share the app link to invite others.${wagerMsg}`,4500);
+      const typeMsg=selectedCampaignType==='pb-maintenance'?' 🏋️ PB Maintenance mode':'';
+      toast(`🎉 "${cName}" is live! Share the app link to invite others.${typeMsg}${wagerMsg}`,4500);
     } catch(e2) { err.textContent=e2.message; }
   });
 
