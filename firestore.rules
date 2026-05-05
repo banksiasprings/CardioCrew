@@ -1,0 +1,73 @@
+// CardioCrew Firestore security rules
+//
+// 2026-05-06 — replaces the default 30-day test-mode rules that Firebase
+// auto-generates on project create. Those expired and the console started
+// warning that requests would be denied.
+//
+// CONTEXT
+//   CardioCrew is a single-file PWA. No Firebase Auth — identity is a
+//   client-supplied userId stored in localStorage (state.userId).
+//   That means we CANNOT use request.auth.uid to enforce ownership.
+//
+// STRATEGY
+//   - Public read across the whole data model (it's a social leaderboard
+//     app — names, completions, chat, clans are designed to be visible).
+//   - Open write to KNOWN paths with a 100 KB doc-size cap as a safety
+//     net against blob-stuffing abuse.
+//   - Deny on unknown paths so a typo in the client doesn't accidentally
+//     create wide-open storage we don't expect.
+//   - Allow deletes (the app does cascade-delete campaigns, leave-clan,
+//     kick-member, etc. — line refs in index.html: 6988, 6997, 7000,
+//     7498, 7690-7691).
+//
+// FUTURE HARDENING (post-anonymous-auth migration)
+//   - Switch to Firebase Anonymous Auth so each user has a real auth.uid.
+//   - Tighten "members/{userId}" so only the user themselves (or the
+//     campaign owner) can write their member doc.
+//   - Tighten "messages/{msgId}" so only the author can edit/delete.
+//   - Add rate-limiting via Firebase App Check.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 100 KB cap. On delete, request.resource is null, so short-circuit
+    // to allow.
+    function smallDoc() {
+      return request.resource == null || request.resource.size() < 100000;
+    }
+
+    // Top-level user profiles.
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if smallDoc();
+    }
+
+    // Campaigns + their three subcollections.
+    match /campaigns/{campaignId} {
+      allow read: if true;
+      allow write: if smallDoc();
+
+      match /members/{memberId} {
+        allow read: if true;
+        allow write: if smallDoc();
+      }
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow write: if smallDoc();
+      }
+
+      match /clans/{clanId} {
+        allow read: if true;
+        allow write: if smallDoc();
+      }
+    }
+
+    // Deny anything else by default. Catches typos in the client and
+    // any future collection added without a matching rule above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
