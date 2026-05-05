@@ -12,9 +12,11 @@
 
 `squats · push-ups · plank · crunches`. No run.
 
-PB metric:
+PB metric (**one shot, single attempt** — NOT cumulative across the day):
 - **Squats / Push-ups / Crunches** — max reps in one unbroken set.
-- **Plank** — longest hold time (seconds).
+- **Plank** — longest single hold time (seconds).
+
+Multiple attempts during the day are allowed (see B2 below — retry as many times as you want), but each attempt is an independent single-set / single-hold number. Your day's PB = highest single attempt. Adding multiple sets together does NOT count (3 × 30 push-ups ≠ 90 PB).
 
 ### Weekly rhythm
 
@@ -37,7 +39,7 @@ PB metric:
 **Weekly consistency cap (separate from daily):**
 - All 7 days submitted (on-time OR catch-up) → consistency score = `7 − count(catch-up days)`.
 - Any day fully missed (no submission, catch-up window expired) → **cliff: 0 consistency points for the entire week.**
-- Catch-up window: same 3-day window as the existing classic campaign (verify in code).
+- Catch-up window: 3 days max. Reuses the existing `CATCHUP_DAYS` constant from the classic campaign. Beyond 3 days a missed day is locked; if there's no submission for it, the cliff fires.
 
 So:
 | Submission pattern | Consistency pts |
