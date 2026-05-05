@@ -2831,6 +2831,14 @@
   // Completions are saved as Firestore Timestamps (new) or boolean true (legacy).
   // Legacy booleans get the benefit of the doubt and are treated as on-time.
   function wasDayCompletedOnTime(userId, day) {
+    // 2026-05-06 — Day 29 grace window. The app wasn't updating properly
+    // on day 29's calendar window, so users who fill it in within the
+    // catch-up window still deserve the full 5-pt bonus + streak credit.
+    // The catch-up window naturally limits this to within 3 days of day 29,
+    // after which day 29 is locked anyway. Remove this clause once the
+    // current campaign has rolled past day 32.
+    if (day === 29) return true;
+
     const m = state.members[userId];
     if (!m) return false;
     const startStr = state.campaignData?.startDate;
