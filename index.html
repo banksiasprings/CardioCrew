@@ -3202,23 +3202,49 @@
   }
   // Returns an array of 7 exercise IDs, one per day in the given campaign week.
   // Index 0 = first day of that week (campaign-day = weekNumber*7 + 1).
+  //
+  // Muscle-recovery rule: the same muscle group should NEVER appear two
+  // days in a row, and pairs should sit ~3 days apart so each group gets
+  // ~72h to recover (the sweet spot for hypertrophy).
+  //
+  // We fix the slot template to [A,B,C,A,B,C,D]:
+  //   • A pair → slots 0,3 (gap = 3 days)
+  //   • B pair → slots 1,4 (gap = 3 days)
+  //   • C pair → slots 2,5 (gap = 3 days)
+  //   • D solo → slot  6 (single session this week)
+  // Then we randomize which exercise gets which role (A/B/C/D) per week,
+  // so over consecutive weeks every exercise rotates through the solo slot
+  // and through each pair-position. Determinism is preserved because the
+  // role shuffle is seeded by (campaignId, weekNumber).
+  // Memoize per (campaignId, weekNumber) — keeps the cross-week recursion
+  // O(N) instead of exponential, and re-uses the same array refs across
+  // renders within a session.
+  const _pbScheduleCache = new Map();
   function generatePBSchedule(campaignId, weekNumber){
+    const cacheKey = String(campaignId) + ':wk' + weekNumber;
+    if (_pbScheduleCache.has(cacheKey)) return _pbScheduleCache.get(cacheKey);
     const ids = PB_EXERCISES.map(e => e.id);
-    const rand = _pbMulberry32(_pbStrHash(String(campaignId) + ':wk' + weekNumber));
-    // Pick which exercise gets 1 session this week (others get 2 each).
-    const oneSessionIdx = Math.floor(rand() * ids.length);
-    const sessions = [];
-    ids.forEach((id, i) => {
-      sessions.push(id);
-      if (i !== oneSessionIdx) sessions.push(id);
-    });
-    // sessions.length === 7 (3×2 + 1×1)
-    // Fisher-Yates shuffle to distribute across the 7 day slots.
-    for (let i = sessions.length - 1; i > 0; i--) {
+    const rand = _pbMulberry32(_pbStrHash(cacheKey));
+    // Fisher-Yates the role assignment.
+    const roles = [...ids];
+    for (let i = roles.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
-      const tmp = sessions[i]; sessions[i] = sessions[j]; sessions[j] = tmp;
+      const tmp = roles[i]; roles[i] = roles[j]; roles[j] = tmp;
     }
-    return sessions;
+    let [A, B, C, D] = roles;
+    // Cross-week boundary: if A (this week's Day 1) matches the previous
+    // week's Day 7 (D of prev week), swap A with B (and C if needed) so
+    // we never repeat the same muscle group across the week boundary.
+    if (weekNumber > 0) {
+      const prevLast = generatePBSchedule(campaignId, weekNumber - 1)[6];
+      if (A === prevLast) {
+        [A, B] = [B, A];
+        if (A === prevLast) [A, C] = [C, A]; // belt-and-braces
+      }
+    }
+    const schedule = [A, B, C, A, B, C, D];
+    _pbScheduleCache.set(cacheKey, schedule);
+    return schedule;
   }
   // Lookup helpers tying campaign-day numbers (1-indexed) to schedule slots.
   function getPBWeekNumber(campaignDay){ return Math.max(0, Math.floor((campaignDay - 1) / 7)); }
