@@ -3137,8 +3137,15 @@
         .map(id => ({ id, pts: getTotalPoints(id), name: state.members[id].name }))
         .sort((a,b) => b.pts - a.pts || a.name.localeCompare(b.name));
       if (scores.length === 0) return;
-      const winnerId = scores[0].id;
-      const top3Ids = new Set(scores.slice(0, 3).map(s => s.id));
+      // Tie handling — if multiple players share the top score, they ALL get
+      // G.O.A.T. (Steven's call: "if two people tie they both receive the
+      // badge"). Same logic for top-3: anyone whose points ≥ the 3rd-place
+      // score qualifies (competition ranking — ties at the boundary share).
+      const topScore = scores[0].pts;
+      if (topScore <= 0) return; // nobody actually scored — no badges this campaign
+      const winnerIds = new Set(scores.filter(s => s.pts === topScore).map(s => s.id));
+      const top3Threshold = scores.length >= 3 ? scores[2].pts : scores[scores.length-1].pts;
+      const top3Ids = new Set(scores.filter(s => s.pts >= top3Threshold && s.pts > 0).map(s => s.id));
       const winningClanId = _winningClanIdForCampaign();
       const campaignName = state.campaignData.name || 'Untitled Campaign';
       const campaignId = state.campaignId;
@@ -3147,7 +3154,7 @@
         const m = state.members[userId];
         // Compute eligibility for this user
         const eligible = {};
-        if (userId === winnerId) eligible.goat = true;
+        if (winnerIds.has(userId)) eligible.goat = true;
         if (_isFlawlessForCampaign(userId)) eligible.flawless = true;
         if (_isLockInLegendForCampaign(userId)) eligible.lock_in_legend = true;
         if (top3Ids.has(userId) && winningClanId && m.clanId === winningClanId) eligible.clan_conqueror = true;
