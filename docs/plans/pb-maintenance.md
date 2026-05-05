@@ -1,6 +1,6 @@
 # PB Maintenance campaign — plan
 
-**Status:** Locked 2026-05-06. Designed in conversation with Steven; all 18 grilling questions answered. Ready to implement; slice plan at the bottom.
+**Status:** **COMPLETE 2026-05-06.** All 8 slices shipped (SW v31 → v38). PB Maintenance campaigns are fully functional end-to-end: campaign type picker → schedule generator → submission card → lifetime PBs → midnight judgment (Beast + Most Improved) → weekly consistency cliff → records + graph UI → catch-up window. Math seam: schedule deterministic from (campaignId, weekNumber); scoring deterministic from member submissions; lifetime PBs lift to user docs.
 
 **Why:** the 30-day "Four Ways" campaign builds the habit; this campaign locks in the gains afterwards. Different game (PBs not check-boxes), different rhythm (weekly schedule rotation), different scoring (multi-axis: consistency / Beast / Most Improved).
 
