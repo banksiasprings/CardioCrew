@@ -445,8 +445,9 @@
     .badge-icon { font-size: 28px; margin-bottom: 5px; filter: grayscale(1) opacity(0.3); transition: filter 0.3s; }
     .badge-name { font-size: 10px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2; }
     .badge-card.earned .badge-name { color: var(--gold); }
-    .badge-card { cursor: pointer; }
+    .badge-card { cursor: pointer; position: relative; }
     .badge-card:active { transform: scale(0.94); }
+    .badge-stack-count { position: absolute; top: 4px; right: 6px; font-size: 11px; font-weight: 900; color: #000; background: linear-gradient(135deg,#FFD700,#FFA500); padding: 1px 6px; border-radius: 999px; letter-spacing: 0.02em; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 
     /* ── Badge detail modal ── */
     #badge-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:9600; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.25s; }
@@ -1984,7 +1985,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v16</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v17</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2170,7 +2171,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, deleteField, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, deleteField, collection, onSnapshot, serverTimestamp, Timestamp, query, orderBy, limit, getDocs, where, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey:            "AIzaSyARd79y3L8Bfew1ubdJVaY7zsIULJUf4Bs",
@@ -2627,51 +2628,46 @@
   ];
 
   const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🐼','🦅','🦆','🐲','🦈','🐊','🦄','🔥','⚡','💎','🌊','🚀','🌟','💪','🥊','👑','😈','🤖','🎯'];
+  // ── Badge overhaul (May 2026) ─────────────────────────────────
+  // Five EPIC, end-of-campaign-only badges. No participation trophies, no
+  // mid-campaign popups, no "you showed up on Day 1" filler. Earn them at
+  // the close-out, or you don't earn them at all.
+  //
+  // Stackable badges (goat / flawless / lock_in_legend / clan_conqueror)
+  // accumulate across campaigns — each entry stamps {campaignId, name,
+  // earnedAt} so a profile can show "G.O.A.T. ×3" with a tap-to-list of
+  // the campaigns where it was earned. Multi-Champ is a one-time career
+  // award that fires when the goat array first reaches 3.
   const BADGE_DEFS = [
     {
-      id:'first_blood', icon:'🔥', name:'First Rep',
-      desc:'You showed up on Day 1 — the hardest step is always the first.',
-      howToEarn:'Complete at least one challenge on Day 1 of the campaign.',
+      id:'goat', icon:'🐐', name:'G.O.A.T.',
+      desc:'Crowned #1 at the end of a campaign. Top of the leaderboard, undisputed champion.',
+      howToEarn:'Finish #1 on a campaign leaderboard at close-out.',
+      stackable:true,
     },
     {
-      id:'perfect_day', icon:'⭐', name:'Perfect Day',
-      desc:'Every single challenge ticked off in one day. No excuses, no shortcuts — pure consistency.',
-      howToEarn:'Complete all active challenges in a single day.',
+      id:'flawless', icon:'💯', name:'Flawless',
+      desc:'Every rep, every day, zero misses. Pure consistency from Day 1 to Day 30.',
+      howToEarn:'Tick every active challenge on every day of a 30-day classic campaign.',
+      stackable:true,
     },
     {
-      id:'week_warrior', icon:'💪', name:'Week Warrior',
-      desc:'Seven days in the game. The habit is forming — keep pushing.',
-      howToEarn:'Stay active for 7 days of the challenge (complete at least one challenge each day for 7 days).',
+      id:'lock_in_legend', icon:'⚔️', name:'Lock-In Legend',
+      desc:'Perfect weekly consistency every week of a PB Maintenance campaign — never missed a session.',
+      howToEarn:'Hit a clean 7/7 every week (no catch-ups, no misses) across the full PB Maintenance run.',
+      stackable:true,
     },
     {
-      id:'halfway', icon:'🎯', name:'Halfway Hero',
-      desc:'Fifteen days down, fifteen to go. You\'re past the point of no return.',
-      howToEarn:'Reach Day 15 of the 30-day campaign.',
+      id:'multi_champ', icon:'🐉', name:'Multi-Champ',
+      desc:'Won three campaigns. Long-term dominance — this isn\'t luck.',
+      howToEarn:'Earn three G.O.A.T. badges total across any campaigns.',
+      stackable:false,
     },
     {
-      id:'squat_star', icon:'🏋️', name:'Squat Star',
-      desc:'Legs of steel — you completed every single squat session without skipping a day.',
-      howToEarn:'Complete every scheduled squat day in the campaign.',
-    },
-    {
-      id:'pushup_pro', icon:'🤜', name:'Push-Up Pro',
-      desc:'Upper body locked in. You nailed every push-up day from start to finish.',
-      howToEarn:'Complete every scheduled push-up day in the campaign.',
-    },
-    {
-      id:'plank_king', icon:'🧘', name:'Plank King',
-      desc:'Core of iron. Not a single plank session missed — you held the line every time.',
-      howToEarn:'Complete every scheduled plank day in the campaign.',
-    },
-    {
-      id:'crunch_champ', icon:'💥', name:'Crunch Champ',
-      desc:'Every crunch, every rep, every day. Your core strength speaks for itself.',
-      howToEarn:'Complete every scheduled crunch day in the campaign.',
-    },
-    {
-      id:'champion', icon:'🏆', name:'30-Day Champ',
-      desc:'30 days. You committed, you showed up, you finished. This is what built different looks like.',
-      howToEarn:'Complete the full 30-day challenge from Day 1 to Day 30.',
+      id:'clan_conqueror', icon:'👑', name:'Clan Conqueror',
+      desc:'Personally finished top-3 AND your clan won. Stars don\'t carry losing teams — and you didn\'t need to.',
+      howToEarn:'Finish top-3 individually in a campaign where your clan ranked #1 by total clan points.',
+      stackable:true,
     },
   ];
 
@@ -2724,7 +2720,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v16';
+  const APP_VERSION = 'v17';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -2753,13 +2749,24 @@
 
   // Returns true when 30+ days have elapsed since campaign start (i.e. day 31+)
   function isCampaignOver() {
-    // Slice 8 — pb-maintenance is open-ended; it never "completes" by date.
+    // Classic-only "campaign closed" check — gates the renderCampaignComplete
+    // hero. PB Maintenance keeps the Today UI live indefinitely.
     if (getCampaignType() === 'pb-maintenance') return false;
     if (!state.campaignData?.startDate) return false;
     const start = new Date(state.campaignData.startDate + 'T00:00:00');
     if (isNaN(start.getTime())) return false;
     const today = new Date(); today.setHours(0,0,0,0);
     return Math.floor((today - start) / 86400000) >= 30;
+  }
+  // Separate flag used ONLY by end-of-campaign award judgment. PB
+  // Maintenance hits this once Day 28 settles (all 4 weeks judged).
+  function isCampaignFinalizedForAwards() {
+    if (!state.campaignData?.startDate) return false;
+    if (getCampaignType() === 'pb-maintenance') {
+      try { return getPBCurrentDay(state.campaignData.startDate) > 28; }
+      catch { return false; }
+    }
+    return isCampaignOver();
   }
 
   function formatTarget(ch, dayIndex) {
@@ -3039,52 +3046,154 @@
   }
 
   // ─── Badge calculation ────────────────────────────────
+  // Badges are now PERSISTED on users/{uid}.badges — the source of truth
+  // is the user doc, written once at end-of-campaign judgment. We don't
+  // recompute eligibility on every render anymore.
   function getEarnedBadges(userId) {
-    const cur = getDayNumber(state.campaignData.startDate);
-    const m   = state.members[userId]; if(!m) return new Set();
+    if (userId !== state.userId) return new Set(); // we only subscribe to own user doc
+    const userBadges = state.myUser?.badges || {};
     const earned = new Set();
-    const isTemplate = isTemplateCampaign();
+    Object.keys(userBadges).forEach(id => {
+      const v = userBadges[id];
+      if (Array.isArray(v) ? v.length > 0 : !!v?.earnedAt) earned.add(id);
+    });
+    return earned;
+  }
+  // Returns the count for stackable badges (number of campaigns earned)
+  // or 1/0 for one-time career badges. Used by the profile UI to show "×3".
+  function getBadgeCount(badgeId) {
+    const v = state.myUser?.badges?.[badgeId];
+    if (Array.isArray(v)) return v.length;
+    if (v?.earnedAt) return 1;
+    return 0;
+  }
 
-    // First Rep — any completion on day 1
-    if(getDayPoints(userId,1) > 0) earned.add('first_blood');
-
-    // Perfect Day — for classic: ≥4 pts; for template: mission complete
-    for(let d=1;d<=cur;d++) if(isMissionComplete(userId,d)){ earned.add('perfect_day'); break; }
-
-    // Week Warrior — any 7 days with ≥1 point
-    let activeDays=0; for(let d=1;d<=cur;d++) if(getDayPoints(userId,d)>0)activeDays++;
-    if(activeDays>=7) earned.add('week_warrior');
-
-    // Halfway Hero
-    if(cur>=15) earned.add('halfway');
-
-    // Per-challenge completion badges — only for classic campaigns
-    if (!isTemplate) {
-      const chBadges = {squats:'squat_star',pushups:'pushup_pro',plank:'plank_king',crunches:'crunch_champ'};
-      getActiveChallenges().forEach(ch=>{
-        let allDone=true;
-        for(let d=1;d<=cur;d++){
-          const isRest=ch.schedule[d-1]===null;
-          if(!isRest && !m.completions?.[`d${d}_${ch.id}`]){ allDone=false; break; }
-        }
-        if(allDone && cur>0) earned.add(chBadges[ch.id]);
-      });
+  // ── End-of-campaign award eligibility checks ───────────────────────
+  // _isFlawlessForCampaign: classic-only. Every active challenge ticked
+  // on every non-rest day from Day 1 → Day 30.
+  function _isFlawlessForCampaign(userId) {
+    if (getCampaignType() === 'pb-maintenance') return false;
+    if (isTemplateCampaign()) {
+      // template campaigns: every day's mission must be complete
+      for (let d = 1; d <= 30; d++) if (!isMissionComplete(userId, d)) return false;
+      return true;
     }
-
-    // 30-Day Champion — adjust threshold for template campaigns (80% of missions complete)
-    if (cur >= 30) {
-      if (isTemplate) {
-        let doneDays=0; for(let d=1;d<=30;d++) if(isMissionComplete(userId,d)) doneDays++;
-        if(doneDays >= 24) earned.add('champion'); // ≥80% of 30 days
-      } else {
-        if(getTotalPoints(userId) >= 30*4*0.8) earned.add('champion');
+    const m = state.members[userId];
+    if (!m) return false;
+    const chs = getActiveChallenges();
+    for (let d = 1; d <= 30; d++) {
+      for (const ch of chs) {
+        const isRest = ch.schedule[d-1] === null;
+        if (!isRest && !m.completions?.[`d${d}_${ch.id}`]) return false;
       }
     }
+    return true;
+  }
+  // _isLockInLegendForCampaign: pb-maintenance only. Settled consistency
+  // for every week must be max (7) — i.e. no catch-ups, no missed-hards.
+  function _isLockInLegendForCampaign(userId) {
+    if (getCampaignType() !== 'pb-maintenance') return false;
+    const startDate = state.campaignData?.startDate;
+    if (!startDate) return false;
+    const currentDay = getPBCurrentDay(startDate);
+    if (currentDay < 28) return false; // 4-week campaign minimum to qualify
+    for (let w = 0; w < 4; w++) {
+      const cons = getPBWeekConsistency(userId, w, currentDay);
+      if (cons !== 7) return false; // must be settled AND a clean 7
+    }
+    return true;
+  }
+  // _winningClanIdForCampaign: returns the clanId with the highest total
+  // points across its members at campaign end, or null if no clans.
+  function _winningClanIdForCampaign() {
+    const clanIds = Object.keys(state.clans || {});
+    if (clanIds.length === 0) return null;
+    const totals = {};
+    Object.keys(state.members).forEach(uid => {
+      const c = state.members[uid].clanId;
+      if (!c) return;
+      totals[c] = (totals[c] || 0) + getTotalPoints(uid);
+    });
+    let best = null, bestPts = -1;
+    Object.keys(totals).forEach(c => {
+      if (totals[c] > bestPts) { bestPts = totals[c]; best = c; }
+    });
+    return best;
+  }
 
-    return earned;
+  // ── End-of-campaign award judgment ─────────────────────────────────
+  // Idempotent: skips members whose user doc already has a badge entry
+  // referencing this campaignId. Fires once per (campaignId, userId)
+  // pair globally — the first user to open the app post-close-out
+  // writes everyone's badges. Same pattern as runPBJudgmentForDay.
+  let _eocAwardsRunning = false;
+  async function runEndOfCampaignAwards() {
+    if (_eocAwardsRunning) return;
+    if (!state.campaignId || !state.campaignData) return;
+    if (!isCampaignFinalizedForAwards()) return;
+    _eocAwardsRunning = true;
+    try {
+      const scores = Object.keys(state.members)
+        .map(id => ({ id, pts: getTotalPoints(id), name: state.members[id].name }))
+        .sort((a,b) => b.pts - a.pts || a.name.localeCompare(b.name));
+      if (scores.length === 0) return;
+      const winnerId = scores[0].id;
+      const top3Ids = new Set(scores.slice(0, 3).map(s => s.id));
+      const winningClanId = _winningClanIdForCampaign();
+      const campaignName = state.campaignData.name || 'Untitled Campaign';
+      const campaignId = state.campaignId;
+
+      for (const userId of Object.keys(state.members)) {
+        const m = state.members[userId];
+        // Compute eligibility for this user
+        const eligible = {};
+        if (userId === winnerId) eligible.goat = true;
+        if (_isFlawlessForCampaign(userId)) eligible.flawless = true;
+        if (_isLockInLegendForCampaign(userId)) eligible.lock_in_legend = true;
+        if (top3Ids.has(userId) && winningClanId && m.clanId === winningClanId) eligible.clan_conqueror = true;
+        if (Object.keys(eligible).length === 0) continue;
+
+        // Read existing user doc to enforce idempotency
+        let existing = {};
+        try {
+          const snap = await getDoc(doc(db, 'users', userId));
+          existing = snap.exists() ? (snap.data().badges || {}) : {};
+        } catch { existing = {}; }
+
+        const updates = {};
+        Object.keys(eligible).forEach(badgeId => {
+          const arr = existing[badgeId] || [];
+          if (Array.isArray(arr) && arr.some(b => b?.campaignId === campaignId)) return; // already awarded
+          const entry = { campaignId, campaignName, earnedAt: new Date().toISOString() };
+          updates['badges.' + badgeId] = arrayUnion(entry);
+        });
+
+        // Multi-Champ check: if THIS goat would push the array length to ≥3,
+        // also write the multi_champ one-time award.
+        if (eligible.goat && !existing.multi_champ?.earnedAt) {
+          const goatArr = existing.goat || [];
+          const wouldBeCount = goatArr.some(b => b?.campaignId === campaignId) ? goatArr.length : goatArr.length + 1;
+          if (wouldBeCount >= 3) {
+            updates['badges.multi_champ'] = { earnedAt: new Date().toISOString(), count: wouldBeCount };
+          }
+        }
+
+        if (Object.keys(updates).length === 0) continue;
+        try {
+          await setDoc(doc(db, 'users', userId), {}, { merge: true }); // ensure doc exists
+          await updateDoc(doc(db, 'users', userId), updates);
+        } catch (err) {
+          console.warn('Badge award write failed for', userId, err);
+        }
+      }
+    } finally {
+      _eocAwardsRunning = false;
+    }
   }
 
   // ─── Badge popup ──────────────────────────────────────
+  // Suppressed mid-campaign — popups now only fire when the persisted
+  // badge set on the user doc grows (i.e. fresh end-of-campaign award).
   let lastBadgeSet = new Set();
   function checkBadges(userId) {
     const now = getEarnedBadges(userId);
@@ -3105,17 +3214,37 @@
     setTimeout(()=>popup.classList.remove('show'), 2800);
   }
 
-  // Badge detail modal — shown when user taps any badge card
+  // Badge detail modal — shown when user taps any badge card.
+  // For stackable badges with multiple earns, lists every campaign where
+  // it was earned so you can scroll the receipts.
   function showBadgeDetail(def, isEarned) {
     const icon   = document.getElementById('badge-detail-big-icon');
     const status = document.getElementById('badge-detail-status');
     icon.textContent = def.icon;
     icon.className   = isEarned ? '' : 'locked';
-    status.textContent = isEarned ? '✅ Earned' : '🔒 Not yet earned';
+    const count = getBadgeCount(def.id);
+    status.textContent = isEarned ? (def.stackable && count > 1 ? `✅ Earned ×${count}` : '✅ Earned') : '🔒 Not yet earned';
     status.className   = isEarned ? 'earned' : 'locked';
     document.getElementById('badge-detail-name').textContent     = def.name;
     document.getElementById('badge-detail-desc').textContent     = def.desc;
     document.getElementById('badge-detail-how-text').textContent = def.howToEarn;
+    // Append the campaign-history list for stackable badges
+    const howWrap = document.getElementById('badge-detail-how-wrap');
+    const existing = howWrap.querySelector('.badge-detail-history');
+    if (existing) existing.remove();
+    if (isEarned && def.stackable) {
+      const arr = state.myUser?.badges?.[def.id];
+      if (Array.isArray(arr) && arr.length > 0) {
+        const list = document.createElement('div');
+        list.className = 'badge-detail-history';
+        list.innerHTML = '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--gold);margin:10px 0 4px">Earned in</div>'
+          + arr.slice().reverse().map(e => {
+              const when = e.earnedAt ? new Date(e.earnedAt).toLocaleDateString('en-AU', {month:'short', year:'numeric'}) : '';
+              return `<div style="font-size:12px;color:var(--text-2);padding:3px 0">• ${escHtml(e.campaignName || 'Campaign')}${when ? ` <span style="opacity:0.6">· ${when}</span>` : ''}</div>`;
+            }).join('');
+        howWrap.appendChild(list);
+      }
+    }
     document.getElementById('badge-detail-overlay').classList.add('show');
   }
 
@@ -4095,6 +4224,11 @@
       _renderScheduled = false;
       renderAll();
       if (_badgesPending) { _badgesPending = false; checkBadges(state.userId); checkClanTrophies(); }
+      // End-of-campaign judgment — fires (idempotently) once the
+      // campaign passes its close-out date. First user to open the app
+      // post-Day-30 (or post-Day-28 for PB Maintenance) writes
+      // everyone's badges.
+      if (isCampaignFinalizedForAwards()) runEndOfCampaignAwards();
     });
   }
 
@@ -4797,14 +4931,16 @@
       });
     }
 
-    // Badges
+    // Badges — show stacked counts (×N) for stackable badges earned multiple times.
     const earned=getEarnedBadges(state.userId);
     const bg=document.getElementById('badges-grid');
     bg.innerHTML='';
     BADGE_DEFS.forEach(b=>{
       const div=document.createElement('div');
+      const count = getBadgeCount(b.id);
       div.className='badge-card'+(earned.has(b.id)?' earned':'');
-      div.innerHTML=`<div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div>`;
+      const stackTag = (b.stackable && count > 1) ? `<span class="badge-stack-count">×${count}</span>` : '';
+      div.innerHTML=`<div class="badge-icon">${b.icon}${stackTag}</div><div class="badge-name">${b.name}</div>`;
       div.addEventListener('click', () => showBadgeDetail(b, earned.has(b.id)));
       bg.appendChild(div);
     });
