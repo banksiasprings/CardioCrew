@@ -1014,8 +1014,49 @@
 
     /* ─── Theme toggle pill ───────────────────────────── */
     .theme-toggle-pill { display:flex; background:var(--surface); border-radius:10px; padding:4px; gap:4px; margin-bottom:8px; border:1px solid var(--border); }
-    .theme-btn { flex:1; padding:9px 4px; border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.2s; }
+    .theme-btn { flex:1; padding:11px 4px; border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.2s; }
     .theme-btn.active { background:linear-gradient(135deg,#C9A227,#8B6914); color:#000; }
+
+    /* ─── Settings groups (redesigned May 2026) ─────────── */
+    .settings-group { margin: 0 0 22px; }
+    .settings-group-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-2); margin: 0 0 10px; }
+    .settings-btn {
+      display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      cursor: pointer; color: var(--text); text-align: left;
+      transition: border-color 0.15s, background 0.15s, transform 0.08s;
+      margin-bottom: 8px;
+    }
+    .settings-btn:hover { border-color: rgba(255,255,255,0.22); background: var(--surface-2); }
+    .settings-btn:active { transform: scale(0.99); }
+    html.theme-day .settings-btn:hover { border-color: rgba(44,24,16,0.32); }
+    .settings-btn-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
+    .settings-btn-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .settings-btn-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .settings-btn-sub { font-size: 11px; color: var(--text-2); line-height: 1.3; }
+    .settings-btn-admin { border-color: rgba(201,162,39,0.35); }
+    .settings-btn-admin:hover { border-color: rgba(201,162,39,0.6); }
+
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 16px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+    }
+    .settings-row-text { flex: 1; min-width: 0; }
+    .settings-row-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .settings-row-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; letter-spacing: 0.03em; }
+    .settings-secondary-btn {
+      font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.22); background: transparent;
+      color: var(--text); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .settings-secondary-btn:hover { border-color: var(--primary); color: var(--primary); }
+    html.theme-day .settings-secondary-btn { border-color: rgba(44,24,16,0.28); }
+    html.theme-day .settings-secondary-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .settings-danger { padding-top: 16px; border-top: 1px solid var(--border); }
+    .settings-danger-label { color: #f47373 !important; }
+    html.theme-day .settings-danger-label { color: #B0341A !important; }
 
     /* ── Admin Button (subtle) ── */
     .admin-link-wrap { text-align: center; margin-top: 14px; }
@@ -1996,37 +2037,58 @@
           </div>
         </div>
 
-        <!-- ── Settings ── -->
+        <!-- ── Settings (redesigned 2026-05-06) ── -->
         <div class="psec-hdr" data-sec="settings">
           <span class="psec-label">⚙️ Settings</span>
           <span class="psec-arrow">▸</span>
         </div>
         <div class="psec-body hidden" id="psec-settings">
-          <div style="margin:10px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">Appearance</div>
-          <div class="theme-toggle-pill" id="theme-toggle">
-            <button class="theme-btn" data-theme="day">☀️ Day</button>
-            <button class="theme-btn" data-theme="night">🌙 Night</button>
-            <button class="theme-btn" data-theme="auto">🔄 Auto</button>
+
+          <div class="settings-group">
+            <div class="settings-group-label">🎨 Appearance</div>
+            <div class="theme-toggle-pill" id="theme-toggle">
+              <button class="theme-btn" data-theme="day">☀️ Day</button>
+              <button class="theme-btn" data-theme="night">🌙 Night</button>
+              <button class="theme-btn" data-theme="auto">🔄 Auto</button>
+            </div>
           </div>
-          <div style="margin:10px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">Voice Coach</div>
-          <div class="voice-toggle-pill" id="voice-toggle">
-            <button class="voice-btn" data-voice="off">🔇 Off</button>
-            <button class="voice-btn" data-voice="on">🔊 On</button>
+
+          <div class="settings-group">
+            <div class="settings-group-label">🔐 Account</div>
+            <div id="pin-section"></div>
+            <button class="settings-btn" id="btn-logout-app">
+              <span class="settings-btn-icon">🚪</span>
+              <span class="settings-btn-text">
+                <span class="settings-btn-title">Log out</span>
+                <span class="settings-btn-sub">Switch user — your campaign progress stays put</span>
+              </span>
+            </button>
           </div>
-          <button class="btn-admin-panel" id="btn-profile-admin">⚙️ Admin Panel</button>
-          <div style="margin:14px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)">🔐 Login &amp; Security</div>
-          <div id="profile-account-section"></div>
-          <div id="pin-section" style="margin-bottom:10px"></div>
-          <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v24</div>
-            <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
+
+          <div class="settings-group">
+            <div class="settings-group-label">📱 App</div>
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <div class="settings-row-title">Version</div>
+                <div id="app-version-tag" class="settings-row-sub">CardioCrew v25</div>
+              </div>
+              <button id="update-btn" onclick="forceAppUpdate()" class="settings-secondary-btn">Check for update</button>
+            </div>
+            <button class="settings-btn settings-btn-admin" id="btn-profile-admin">
+              <span class="settings-btn-icon">🛠️</span>
+              <span class="settings-btn-text">
+                <span class="settings-btn-title">Admin panel</span>
+                <span class="settings-btn-sub">Crew, campaigns, clans</span>
+              </span>
+            </button>
           </div>
-          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:8px">⚠️ Danger Zone</div>
+
+          <div class="settings-group settings-danger">
+            <div class="settings-group-label settings-danger-label">⚠️ Danger zone</div>
             <div id="leave-clan-settings-wrap"></div>
           </div>
-          <div style="height:8px"></div>
+
+          <div style="height:24px"></div>
         </div>
 
         <!-- ── Community (chat moved to Leaderboard tab) ── -->
@@ -2927,7 +2989,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v24';
+  const APP_VERSION = 'v25';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -5669,19 +5731,8 @@
       cpList.appendChild(row);
     });
 
-    // Account security section (async — checks Firestore for PIN setup status)
-    renderAccountSection();
-  }
-
-  async function renderAccountSection() {
-    const sec = document.getElementById('profile-account-section');
-    if (!sec) return;
-    const savedName = state.members[state.userId]?.name || state.userName || '';
-    sec.innerHTML = `
-      <div style="margin:0 16px 12px;padding:12px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">👤 Logged in</div>
-        <div style="font-size:12px;color:var(--text-2)">Signed in as <strong>${escHtml(savedName)}</strong>.</div>
-      </div>`;
+    // ('Logged in as <name>' card removed 2026-05-06 — already shown
+    //  on the Today header banner, was redundant in Settings.)
   }
 
 
@@ -8738,22 +8789,10 @@
     });
   })();
 
-  // ─── Voice Coach toggle ──────────────────────────────
-  (function(){
-    function activateVoiceBtn(enabled){
-      document.querySelectorAll('.voice-btn').forEach(b=>
-        b.classList.toggle('active',b.dataset.voice===(enabled?'on':'off')));
-    }
-    activateVoiceBtn(isVoiceEnabled());
-    document.getElementById('voice-toggle')?.addEventListener('click',e=>{
-      const btn=e.target.closest('.voice-btn');
-      if(!btn) return;
-      const enabled=btn.dataset.voice==='on';
-      setVoiceEnabled(enabled);
-      activateVoiceBtn(enabled);
-      toast(enabled ? '🔊 Voice coach enabled' : '🔇 Voice coach disabled', 1800);
-    });
-  })();
+  // (Voice Coach toggle UI removed 2026-05-06 per Steven's request.
+  //  isVoiceEnabled() / setVoiceEnabled() helpers are kept since other
+  //  call sites may reference them; the localStorage value persists if
+  //  set previously.)
 
   // ─── App startup ──────────────────────────────────────
   async function startApp() {
