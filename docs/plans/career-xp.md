@@ -1,8 +1,9 @@
 # Career XP & Public Profiles
 
-**Status**: in progress (Slice 1)
+**Status**: ✅ COMPLETE — all 4 slices live (2026-05-06)
 **Owner**: Steven + Claude
 **Created**: 2026-05-06
+**Shipped**: SW v44 → v48, APP_VERSION v18 → v21
 
 ## Goal
 
@@ -77,7 +78,7 @@ Note: we do **not** store `xpHistory[id].finalAt` — points just stop increment
 
 ## Slice plan
 
-### Slice 1 — Total XP + auto-assigned tier (this slice)
+### Slice 1 — Total XP + auto-assigned tier ✅
 
 **Scope:**
 - Compute `getCareerXP(userId)` — sum of `state.myUser.xpHistory[*].points` + live points from current campaign
@@ -97,7 +98,7 @@ Note: we do **not** store `xpHistory[id].finalAt` — points just stop increment
 
 ---
 
-### Slice 2 — All-Time toggle on Board
+### Slice 2 — All-Time toggle on Board ✅
 
 **Scope:**
 - Add toggle to Board page: "This Campaign" (current) vs "All-Time XP" (new)
@@ -110,7 +111,7 @@ Note: we do **not** store `xpHistory[id].finalAt` — points just stop increment
 
 ---
 
-### Slice 3 — Public profile modal
+### Slice 3 — Public profile modal ✅
 
 **Scope:**
 - Tap any user name (in any leaderboard, in-campaign or All-Time) → modal opens
@@ -124,7 +125,7 @@ Note: we do **not** store `xpHistory[id].finalAt` — points just stop increment
 
 ---
 
-### Slice 4 — XP-over-time graph + comparison
+### Slice 4 — XP-over-time graph + comparison ✅
 
 **Scope:**
 - Last 30 days of daily XP earned (cumulative line)
