@@ -2042,7 +2042,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v22</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v23</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2954,7 +2954,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v22';
+  const APP_VERSION = 'v23';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -6259,6 +6259,7 @@
     }
     data = data || {};
     const tpl = data.templateId ? CAMPAIGN_TEMPLATES.find(t => t.id === data.templateId) : null;
+    const isPB = (data.campaignType === 'pb-maintenance');
     const wager = data.wagerAmount || 0;
     const memberCount = (() => {
       // Try to get from rendered cards
@@ -6268,8 +6269,16 @@
       return m ? parseInt(m[1]) : '?';
     })();
 
-    // Build rules list
-    const rules = tpl ? [
+    // Build rules list — three flavours: PB Maintenance, template, classic.
+    const rules = isPB ? [
+      { icon: '🏋️', text: 'Lock-in campaign — 7 random PB sessions per week (4 weeks)' },
+      { icon: '🎯', text: 'Each session = max reps in one set (or max plank seconds)' },
+      { icon: '📈', text: 'Beast (raw best) + Most Improved crowned daily at midnight (1 pt each)' },
+      { icon: '⚡', text: 'Weekly consistency: clean 7/7 = 7 pts. Catch-ups cost 1 pt each. Miss any session = 0 pts' },
+      { icon: '🔄', text: 'Catch-up window: you can submit the past 3 days if you missed them' },
+      { icon: '🏆', text: 'Leaderboard ranks by total points — Beast + MI + weekly consistency' },
+      wager > 0 ? { icon: '💰', text: `$${wager}/person prize pool — winner takes all` } : null,
+    ].filter(Boolean) : tpl ? [
       { icon: '📅', text: '30-day challenge — one mission per day' },
       { icon: '✅', text: 'Tap the mission card to mark it complete each day' },
       { icon: '⭐', text: `Points per task range from 5 to 30 — harder days = more points` },
@@ -6313,6 +6322,17 @@
           <div class="camp-stat"><div class="camp-stat-val">${totalPts}</div><div class="camp-stat-lbl">Max pts</div></div>
           <div class="camp-stat"><div class="camp-stat-val">${memberCount}</div><div class="camp-stat-lbl">Members</div></div>
         </div>`;
+    } else if (isPB) {
+      // PB Maintenance: 4-week lock-in campaign. Max points are the
+      // theoretical perfect (4 weeks × 7 consistency + ~28 daily Beast/MI bonuses)
+      // but we just show the consistency total here for clarity.
+      dayPreviewHtml = `
+        <div class="camp-detail-section">Stats</div>
+        <div class="camp-detail-stats">
+          <div class="camp-stat"><div class="camp-stat-val">28</div><div class="camp-stat-lbl">Days</div></div>
+          <div class="camp-stat"><div class="camp-stat-val">7/wk</div><div class="camp-stat-lbl">Sessions</div></div>
+          <div class="camp-stat"><div class="camp-stat-val">${memberCount}</div><div class="camp-stat-lbl">Members</div></div>
+        </div>`;
     } else {
       dayPreviewHtml = `
         <div class="camp-detail-section">Stats</div>
@@ -6327,15 +6347,21 @@
       ? new Date(data.startDate + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})
       : 'Date TBC';
 
+    const subtitle = isPB ? 'PB Maintenance — Lock-in' : (tpl ? tpl.name : 'Classic Highland Warrior');
+    const heroEmoji = isPB ? '🏋️' : (tpl ? tpl.emoji : '⚔️');
+    const description = isPB
+      ? 'Lock in the gains from your 30-day challenge. Random schedule of 7 PB sessions per week — squats, push-ups, plank, crunches — same muscle group never twice in a row. Score Beast (raw best) and Most Improved crowns daily, plus weekly consistency bonuses. Hold your gains, beat your past self.'
+      : (tpl ? tpl.desc : 'The original CardioCrew challenge. Hit squats, push-ups, plank and crunches every day with progressive targets. Build a streak, climb the leaderboard, and earn your place as a Highland Warrior.');
+
     document.getElementById('camp-detail-scroll').innerHTML = `
       <div class="camp-detail-hero">
-        <div class="camp-detail-emoji">${tpl ? tpl.emoji : '⚔️'}</div>
+        <div class="camp-detail-emoji">${heroEmoji}</div>
         <div>
           <div class="camp-detail-title">${escHtml(data.name || 'Unnamed Campaign')}</div>
-          <div class="camp-detail-subtitle">${tpl ? escHtml(tpl.name) : 'Classic Highland Warrior'} · Starts ${escHtml(startLabel)}</div>
+          <div class="camp-detail-subtitle">${escHtml(subtitle)} · Starts ${escHtml(startLabel)}</div>
         </div>
       </div>
-      <div class="camp-detail-desc">${tpl ? escHtml(tpl.desc) : 'The original CardioCrew challenge. Hit squats, push-ups, plank and crunches every day with progressive targets. Build a streak, climb the leaderboard, and earn your place as a Highland Warrior.'}</div>
+      <div class="camp-detail-desc">${escHtml(description)}</div>
       <div class="camp-detail-section">How it works</div>
       <div class="camp-detail-rules">
         ${rules.map(r => `<div class="camp-detail-rule"><div class="camp-detail-rule-icon">${r.icon}</div><div>${r.text}</div></div>`).join('')}
