@@ -1774,11 +1774,11 @@
         <!-- Slice 6 — weekly consistency tracker -->
         <div id="today-pb-week-tracker" style="margin-top:18px"></div>
 
-        <!-- Recent personal sessions (others hidden until midnight) -->
-        <div id="today-pb-recent" style="margin-top:18px"></div>
-
         <!-- Week schedule strip (from Slice 2) -->
-        <div id="today-pb-week" style="margin-top:18px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap"></div>
+        <div id="today-pb-week" style="margin-top:18px"></div>
+
+        <!-- Recent personal sessions — full history section at bottom -->
+        <div id="today-pb-recent" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border)"></div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
       <div class="progress-label"><span id="progress-text">Day 1 of 30</span><span id="progress-pct">0%</span></div>
@@ -2989,7 +2989,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v25';
+  const APP_VERSION = 'v26';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4288,24 +4288,45 @@
     }
 
     // Recent personal sessions (own only — others hidden until Slice 5 judgment).
-    const recent = getRecentPBSubmissions(state.userId, currentDay, 4);
+    const recent = getRecentPBSubmissions(state.userId, currentDay, 14);
     const recEl = document.getElementById('today-pb-recent');
     if (recent.length === 0) {
-      recEl.innerHTML = '<div style="font-size:11px;color:var(--text-3);font-style:italic">No personal history yet — your submissions will show here.</div>';
+      recEl.innerHTML = `
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:10px">📅 Your History</div>
+        <div style="font-size:12px;color:var(--text-3);font-style:italic;text-align:center;padding:16px 0">No personal history yet — your submissions will appear here.</div>`;
     } else {
+      // Group by week for better readability
+      const startDate = new Date(state.campaignData?.startDate || Date.now());
       recEl.innerHTML =
-        '<div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📅 History</div>' +
+        `<div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:12px">📅 Your History</div>` +
         recent.map(r => {
           const m2 = getPBExerciseMeta(r.exerciseId);
           const u = m2?.metric === 'reps' ? 'reps' : 's';
-          const tag = r.status === 'catch-up' ? ' <span style="font-size:10px;color:#FFCA28">(catch-up)</span>' : '';
-          const dayLabel = r.day === currentDay ? 'Today' : `D${r.day}`;
-          return `<div style="font-size:12px;color:var(--text-2);padding:5px 0;display:flex;justify-content:space-between;border-bottom:1px solid var(--border)">
-            <span>${m2?.icon || ''} ${dayLabel} · ${escHtml(m2?.name || r.exerciseId)}</span>
-            <span style="font-weight:700;color:var(--text-1)">${r.value} ${u}${tag}</span>
+          const isCatchUp = r.status === 'catch-up';
+          const isToday = r.day === currentDay;
+          const dayLabel = isToday ? 'Today' : `Day ${r.day}`;
+          // Compute actual date label
+          const cardDate = new Date(startDate);
+          cardDate.setDate(startDate.getDate() + r.day - 1);
+          const dateStr = cardDate.toLocaleDateString('en-AU', { weekday: 'short', month: 'short', day: 'numeric' });
+          return `<div style="
+            display:flex;align-items:center;gap:12px;
+            padding:10px 12px;margin-bottom:6px;border-radius:8px;
+            background:${isToday ? 'rgba(201,162,39,0.08)' : 'var(--surface)'};
+            border:1px solid ${isToday ? 'rgba(201,162,39,0.4)' : 'var(--border)'};
+          ">
+            <div style="font-size:24px;line-height:1">${m2?.icon || '💪'}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700;color:${isToday ? 'var(--gold)' : 'var(--text-1)'}">${escHtml(m2?.name || r.exerciseId)}</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:1px">${dateStr} · ${dayLabel}${isCatchUp ? ' · <span style="color:#FFCA28">catch-up</span>' : ''}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:18px;font-weight:800;color:${isToday ? 'var(--gold)' : '#66c8ff'}">${r.value}</div>
+              <div style="font-size:10px;color:var(--text-3)">${u}</div>
+            </div>
           </div>`;
-        }).join('');
-      recEl.innerHTML += '<div style="font-size:10px;color:var(--text-3);font-style:italic;margin-top:6px">Other crew members\' results stay hidden until midnight Sydney.</div>';
+        }).join('') +
+        `<div style="font-size:10px;color:var(--text-3);font-style:italic;text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">Crew results stay hidden until midnight Sydney time</div>`;
     }
 
     // Week strip (from Slice 2 — re-render to keep today highlighted).
@@ -4313,21 +4334,52 @@
     const strip = document.getElementById('today-pb-week');
     if (strip) {
       const weekStartDay = getPBWeekNumber(day) * 7 + 1;
-      strip.innerHTML = week.map((id, i) => {
-        const m2 = getPBExerciseMeta(id);
-        const dayN = weekStartDay + i;
-        const isToday = (dayN === day);
-        const sub2 = getPBSubmission(state.userId, dayN);
-        const hasSub = sub2 && typeof sub2.value === 'number';
-        return `<div style="
-          min-width:54px;padding:8px 6px;border-radius:8px;
-          background:${isToday ? 'rgba(201,162,39,0.18)' : 'var(--surface)'};
-          border:2px solid ${isToday ? 'var(--gold)' : (hasSub ? 'rgba(102,200,255,0.5)' : 'var(--border)')};
-          text-align:center;font-size:11px;font-weight:700;
-        "><div style="font-size:20px;line-height:1.2">${m2 ? m2.icon : '?'}</div>
-        <div style="color:${isToday ? 'var(--gold)' : 'var(--text-2)'};margin-top:2px">D${dayN}</div>
-        ${hasSub ? '<div style="font-size:9px;color:#66c8ff;margin-top:2px">✓</div>' : ''}</div>`;
-      }).join('');
+      const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      strip.innerHTML =
+        '<div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;width:100%;text-align:center">This Week\'s Schedule</div>' +
+        '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;width:100%">' +
+        week.map((id, i) => {
+          const m2 = getPBExerciseMeta(id);
+          const dayN = weekStartDay + i;
+          const isToday = (dayN === day);
+          const sub2 = getPBSubmission(state.userId, dayN);
+          const hasSub = sub2 && typeof sub2.value === 'number';
+          // Calculate day-of-week from campaign start
+          const startDate = new Date(state.campaignData?.startDate || Date.now());
+          const cardDate = new Date(startDate);
+          cardDate.setDate(startDate.getDate() + dayN - 1);
+          const dowName = dayNames[cardDate.getDay() === 0 ? 6 : cardDate.getDay() - 1];
+          const exerciseName = m2?.name || id;
+          const shortName = exerciseName.length > 9 ? exerciseName.slice(0, 8) + '…' : exerciseName;
+          if (isToday) {
+            // Today's card is larger and more prominent
+            return `<div style="
+              min-width:80px;max-width:90px;padding:12px 8px;border-radius:10px;
+              background:rgba(201,162,39,0.18);
+              border:2px solid var(--gold);
+              text-align:center;
+              box-shadow:0 0 12px rgba(201,162,39,0.25);
+            ">
+              <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">${dowName}</div>
+              <div style="font-size:26px;line-height:1.2;margin:4px 0">${m2 ? m2.icon : '?'}</div>
+              <div style="font-size:11px;font-weight:700;color:var(--gold);margin-top:3px">${shortName}</div>
+              ${hasSub ? `<div style="font-size:11px;color:#66c8ff;margin-top:4px;font-weight:700">✓ Done</div>` : `<div style="font-size:10px;color:var(--gold);margin-top:4px;opacity:0.7">Today</div>`}
+            </div>`;
+          } else {
+            return `<div style="
+              min-width:64px;max-width:74px;padding:8px 6px;border-radius:8px;
+              background:var(--surface);
+              border:2px solid ${hasSub ? 'rgba(102,200,255,0.5)' : 'var(--border)'};
+              text-align:center;opacity:${dayN > day ? '0.6' : '1'};
+            ">
+              <div style="font-size:10px;font-weight:600;color:var(--text-3);margin-bottom:2px">${dowName}</div>
+              <div style="font-size:20px;line-height:1.2;margin:2px 0">${m2 ? m2.icon : '?'}</div>
+              <div style="font-size:10px;color:var(--text-2);margin-top:2px">${shortName}</div>
+              ${hasSub ? '<div style="font-size:10px;color:#66c8ff;margin-top:3px;font-weight:700">✓</div>' : ''}
+            </div>`;
+          }
+        }).join('') +
+        '</div>';
     }
 
     // Wire button handlers (idempotent — set onclick directly each render).
@@ -4638,6 +4690,7 @@
         state.pbJudgmentRan = true;
         setTimeout(() => { runPBDailyJudgment().catch(()=>{}); }, 800);
       }
+      return; // PB mode renders its own full UI — don't fall through to classic
     }
 
     // If the 30-day window has fully elapsed, show completion screen instead
