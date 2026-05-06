@@ -2024,7 +2024,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v20</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v21</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2189,7 +2189,7 @@
     </div>
     <div class="ppc-section">
       <div class="ppc-section-label">📈 30-Day XP</div>
-      <div class="ppc-graph-placeholder">Graph coming next slice — me vs them comparison overlay 📊</div>
+      <div id="ppc-graph" class="ppc-graph"></div>
     </div>
   </div>
 </div>
@@ -2939,7 +2939,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v20';
+  const APP_VERSION = 'v21';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -5293,11 +5293,183 @@
     const fitEl = document.getElementById('ppc-fitness');
     const gym = user.profile?.gym;
     fitEl.innerHTML = `<span>${tier.icon} ${tier.label}</span><span>${gym ? '🏋️‍♂️ Has gym access' : '🏃 No gym'}</span>`;
+
+    // XP timeline graph (Slice 4) — fires async, fills in once data loaded
+    renderXPTimelineGraph(userId);
   }
   document.getElementById('ppc-close')?.addEventListener('click', _ppcHide);
   document.getElementById('public-profile-overlay')?.addEventListener('click', e => {
     if (e.target.id === 'public-profile-overlay') _ppcHide();
   });
+
+  // ── XP-over-time timeline (Slice 4) ───────────────────────────
+  // Walk a user's member docs, compute their daily points earned per
+  // campaign, bucket by calendar date, then build a 30-day cumulative
+  // line ending today. For other-user profiles we also compute the
+  // viewer's line and overlay both for direct comparison.
+  function _msToDateStr(ms) {
+    const d = new Date(ms);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  }
+  function _computeMemberDailyPointsByDate(campData, memberData, todayMs) {
+    if (!memberData || !campData?.startDate) return {};
+    const completions = memberData.completions || {};
+    const ctype = campData.campaignType || 'classic';
+    const result = {};
+    const parts = String(campData.startDate).split('-').map(Number);
+    if (parts.length !== 3 || isNaN(parts[0])) return {};
+    const startMs = Date.UTC(parts[0], parts[1] - 1, parts[2]);
+    const currentDay = Math.max(1, Math.floor((todayMs - startMs) / 86400000) + 1);
+    const maxDay = ctype === 'pb-maintenance' ? Math.min(28, currentDay) : Math.min(30, currentDay);
+
+    if (ctype === 'pb-maintenance') {
+      Object.keys(completions).forEach(k => {
+        const m = k.match(/^d(\d+)_score$/);
+        if (!m || typeof completions[k] !== 'number') return;
+        const day = +m[1];
+        if (day < 1 || day > maxDay) return;
+        const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+        result[dateStr] = (result[dateStr] || 0) + completions[k];
+      });
+      return result;
+    }
+
+    // Classic / kids classic — group by day, apply 5-pt perfect bonus.
+    const dayCounts = {};
+    Object.keys(completions).forEach(k => {
+      if (k.endsWith('_value') || k.endsWith('_at') || k.endsWith('_status') || k.endsWith('_score')) return;
+      if (k.endsWith('_mission')) return;
+      if (!completions[k]) return;
+      const m = k.match(/^d(\d+)_/);
+      if (!m) return;
+      const day = +m[1];
+      if (day < 1 || day > maxDay) return;
+      dayCounts[day] = (dayCounts[day] || 0) + 1;
+    });
+    Object.keys(dayCounts).forEach(dayStr => {
+      const day = +dayStr;
+      const pts = dayCounts[day] >= 4 ? 5 : dayCounts[day];
+      const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+      result[dateStr] = (result[dateStr] || 0) + pts;
+    });
+    // Template missions (5 pts each)
+    Object.keys(completions).forEach(k => {
+      if (!k.endsWith('_mission') || !completions[k]) return;
+      const m = k.match(/^d(\d+)_mission$/);
+      if (!m) return;
+      const day = +m[1];
+      if (day < 1 || day > maxDay) return;
+      const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+      result[dateStr] = (result[dateStr] || 0) + 5;
+    });
+    return result;
+  }
+  // Cache compiled timelines per (userId) for the session. Skip the
+  // viewer themselves so their graph stays live as they tick boxes.
+  const _xpTimelineCache = {};
+  async function _computeDailyXPTimeline(userId) {
+    const useCache = userId !== state.userId;
+    if (useCache && _xpTimelineCache[userId]) return _xpTimelineCache[userId];
+    let xpHistory = {};
+    try {
+      if (userId === state.userId && state.myUser?.xpHistory) {
+        xpHistory = state.myUser.xpHistory;
+      } else if (state.publicProfiles?.[userId]?.user?.xpHistory) {
+        xpHistory = state.publicProfiles[userId].user.xpHistory;
+      } else {
+        const snap = await getDoc(doc(db, 'users', userId));
+        if (snap.exists()) xpHistory = snap.data().xpHistory || {};
+      }
+    } catch (e) { return {}; }
+    const todayMs = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+    const allDaily = {};
+    for (const cid of Object.keys(xpHistory)) {
+      try {
+        // Fast path: current campaign uses state cache
+        let memData = (cid === state.campaignId) ? state.members[userId] : null;
+        let campData = (cid === state.campaignId) ? state.campaignData : null;
+        if (!memData) {
+          const memSnap = await getDoc(doc(db, 'campaigns', cid, 'members', userId));
+          if (!memSnap.exists()) continue;
+          memData = memSnap.data();
+        }
+        if (!campData) {
+          const campSnap = await getDoc(doc(db, 'campaigns', cid));
+          if (!campSnap.exists()) continue;
+          campData = campSnap.data();
+        }
+        const daily = _computeMemberDailyPointsByDate(campData, memData, todayMs);
+        Object.entries(daily).forEach(([d, pts]) => { allDaily[d] = (allDaily[d] || 0) + pts; });
+      } catch (e) { /* skip campaign */ }
+    }
+    if (useCache) _xpTimelineCache[userId] = allDaily;
+    return allDaily;
+  }
+  function _buildLast30DaysCumulative(dailyMap) {
+    const today = new Date();
+    const todayMs = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    const windowStartMs = todayMs - 29 * 86400000;
+    const windowStartStr = _msToDateStr(windowStartMs);
+    let cumulative = 0;
+    Object.entries(dailyMap).forEach(([d, pts]) => { if (d < windowStartStr) cumulative += pts; });
+    const out = [];
+    for (let i = 0; i < 30; i++) {
+      const ms = windowStartMs + i * 86400000;
+      const dateStr = _msToDateStr(ms);
+      const dailyXP = dailyMap[dateStr] || 0;
+      cumulative += dailyXP;
+      const d = new Date(ms);
+      out.push({
+        date: dateStr,
+        dayLabel: `${d.getUTCDate()}/${d.getUTCMonth()+1}`,
+        totalXP: cumulative,
+        dailyXP,
+      });
+    }
+    return out;
+  }
+  async function renderXPTimelineGraph(targetUserId) {
+    const container = document.getElementById('ppc-graph');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:24px 12px;text-align:center;font-size:12px;color:var(--text-3);background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:10px;font-style:italic">Loading 30-day XP curve…</div>';
+
+    const isOther = targetUserId !== state.userId;
+    const targetDaily = await _computeDailyXPTimeline(targetUserId);
+    const targetLine = _buildLast30DaysCumulative(targetDaily);
+    const series = [];
+    if (isOther) {
+      const myDaily = await _computeDailyXPTimeline(state.userId);
+      series.push({ name: 'You', color: '#66c8ff', data: _buildLast30DaysCumulative(myDaily) });
+    }
+    const targetName = state.publicProfiles?.[targetUserId]?.user?.name || (state.members[targetUserId]?.name) || (isOther ? 'Them' : 'You');
+    series.push({ name: targetName, color: isOther ? '#FFCA28' : '#66c8ff', data: targetLine });
+
+    const W = 580, H = 240, padL = 40, padR = 12, padT = 14, padB = 24;
+    let maxXP = 1;
+    series.forEach(s => s.data.forEach(d => { if (d.totalXP > maxXP) maxXP = d.totalXP; }));
+    maxXP = Math.max(50, Math.ceil(maxXP / 50) * 50);
+    const xAt = i => padL + (i / 29) * (W - padL - padR);
+    const yAt = v => H - padB - (v / maxXP) * (H - padT - padB);
+
+    const gridY = [0, 0.25, 0.5, 0.75, 1].map(t => {
+      const v = Math.round(t * maxXP);
+      const y = yAt(v);
+      return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(255,255,255,0.07)"/><text x="${padL-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#7a8a9a">${v}</text>`;
+    }).join('');
+    const xLabels = [0, 5, 10, 15, 20, 25, 29].map(i => `<text x="${xAt(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#7a8a9a">${targetLine[i].dayLabel}</text>`).join('');
+    const seriesSvg = series.map(s => {
+      const pts = s.data.map((d, i) => `${xAt(i)},${yAt(d.totalXP)}`).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }).join('');
+    const legend = `<div style="display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:11px;flex-wrap:wrap">${
+      series.map(s => `<span style="display:inline-flex;align-items:center;gap:5px;color:#dce8f5"><span style="width:10px;height:10px;background:${s.color};border-radius:2px;display:inline-block"></span><strong>${escHtml(s.name)}</strong> · ${s.data[s.data.length-1].totalXP.toLocaleString()} XP</span>`).join('')
+    }</div>`;
+    container.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;background:rgba(0,0,0,0.25);border-radius:8px">
+        ${gridY}${xLabels}${seriesSvg}
+      </svg>${legend}
+    `;
+  }
 
   function renderHistory(day) {
     const list=document.getElementById('hist-list');
