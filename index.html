@@ -1936,40 +1936,16 @@
           <div style="height:8px"></div>
         </div>
 
-        <!-- ── Personal Settings ── -->
+        <!-- ── Reminders ──
+             (Fitness Profile + Gym Membership card removed 2026-05-06 —
+              tier is auto-assigned by XP and shown on the profile pill,
+              gym membership wasn't being used anywhere. Section now hosts
+              just the notification reminders.) -->
         <div class="psec-hdr" data-sec="personal">
-          <span class="psec-label">🏋️ Fitness Profile</span>
+          <span class="psec-label">🔔 Reminders</span>
           <span class="psec-arrow">▸</span>
         </div>
         <div class="psec-body hidden" id="psec-personal">
-          <!-- Fitness Profile card -->
-          <div class="me-card">
-            <div class="me-form-grid">
-              <div class="me-field me-field-full">
-                <label class="me-label">Fitness Level <span style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:0">— auto-assigned by your XP</span></label>
-                <div class="me-fitness-btns" id="me-fitness-btns">
-                  <button class="me-fit-btn" data-level="beginner">🌱 Beginner</button>
-                  <button class="me-fit-btn" data-level="intermediate">💪 Intermediate</button>
-                  <button class="me-fit-btn" data-level="advanced">🔥 Advanced</button>
-                  <button class="me-fit-btn" data-level="athlete">⚡ Athlete</button>
-                </div>
-              </div>
-              <div class="me-field me-field-full">
-                <label class="me-label">Gym Membership</label>
-                <div class="me-toggle-row">
-                  <span class="me-toggle-lbl">I have access to a gym</span>
-                  <label class="me-switch">
-                    <input type="checkbox" id="me-gym-toggle">
-                    <span class="me-slider"></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <button class="me-save-btn" id="btn-me-save-stats">Save ✓</button>
-            <div id="me-stats-saved" class="me-save-confirm hidden">✅ Saved!</div>
-          </div>
-          <!-- Reminders card -->
-          <div class="me-section-header">🔔 Reminders</div>
           <div class="me-card" id="me-notif-card">
             <div id="me-notif-blocked" class="hidden" style="font-size:13px;color:var(--text-2);padding:4px 0 8px">
               Notifications are blocked. Enable them in your device settings to use reminders.
@@ -2198,10 +2174,6 @@
     <div class="ppc-section">
       <div class="ppc-section-label">🏆 Lifetime PBs</div>
       <div id="ppc-pbs" class="ppc-pb-list"></div>
-    </div>
-    <div class="ppc-section">
-      <div class="ppc-section-label">🏋️ Fitness Profile</div>
-      <div id="ppc-fitness" class="ppc-fitness"></div>
     </div>
     <div class="ppc-section">
       <div class="ppc-section-label">📈 30-Day XP</div>
@@ -5168,7 +5140,6 @@
     document.getElementById('ppc-campaigns').innerHTML = '<div class="ppc-empty-section">Loading campaigns…</div>';
     document.getElementById('ppc-badges').innerHTML = '';
     document.getElementById('ppc-pbs').innerHTML = '<div class="ppc-pb-empty">Loading…</div>';
-    document.getElementById('ppc-fitness').innerHTML = '<span style="color:var(--text-3)">Loading…</span>';
   }
   async function openPublicProfile(userId) {
     if (!userId) return;
@@ -5315,12 +5286,10 @@
       pbsEl.appendChild(card);
     });
 
-    // Fitness
-    const fitEl = document.getElementById('ppc-fitness');
-    const gym = user.profile?.gym;
-    fitEl.innerHTML = `<span>${tier.icon} ${tier.label}</span><span>${gym ? '🏋️‍♂️ Has gym access' : '🏃 No gym'}</span>`;
+    // (Fitness Profile section + gym membership removed 2026-05-06 —
+    //  tier already shows in the XP pill at the top of this modal.)
 
-    // XP timeline graph (Slice 4) — fires async, fills in once data loaded
+    // XP timeline graph — fires async, fills in once data loaded
     renderXPTimelineGraph(userId);
   }
   document.getElementById('ppc-close')?.addEventListener('click', _ppcHide);
@@ -5534,8 +5503,7 @@
   function renderProfile(day) {
     const me=state.members[state.userId]; if(!me) return;
     document.getElementById('profile-name').textContent=me.name;
-    // XP + Tier pill — and keep the fitness tier buttons in sync with
-    // the live XP total (they re-render every time XP changes).
+    // XP + Tier pill (live — updates with every XP change)
     const xpEl = document.getElementById('profile-xp-tier');
     const xp = getCareerXP(state.userId);
     const tier = getXPTier(xp);
@@ -5543,9 +5511,6 @@
       xpEl.innerHTML = `<span class="profile-xp-pill"><span class="xp-tier-icon">${tier.icon}</span><span class="xp-tier-name">${tier.label}</span><span class="xp-divider">·</span><span class="xp-amount">${xp.toLocaleString()} XP</span></span>`;
       xpEl.style.display = 'block';
     }
-    document.querySelectorAll('.me-fit-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.level === tier.id);
-    });
     // Show/hide admin badge
     const adminBadge=document.getElementById('profile-admin-badge');
     if(adminBadge) adminBadge.style.display=sessionStorage.getItem('cardioAdminUnlocked')==='true'?'inline-flex':'none';
@@ -7137,58 +7102,17 @@
       } catch(e) { portrait.textContent = '⚔️'; }
     }
 
-    // Load profile data from Firestore users doc
-    try {
-      const userSnap = await getDoc(doc(db, 'users', state.userId));
-      const profile = userSnap.exists() ? (userSnap.data().profile || {}) : {};
-
-      document.getElementById('me-gym-toggle').checked = !!profile.gym;
-
-      // Fitness level buttons — auto-assigned by career XP, no longer
-      // user-selectable. We still highlight the active tier so the UI
-      // reads as "this is where you stand" rather than empty.
-      const xp = getCareerXP(state.userId);
-      const tier = getXPTier(xp);
-      document.querySelectorAll('.me-fit-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.level === tier.id);
-      });
-
-    } catch(e) { console.warn('Me tab profile load error:', e); }
-
-    // Notification prefs
+    // Fitness Profile + Gym Membership card removed 2026-05-06 — only
+    // notification prefs remain in this section.
     renderMeNotifPrefs();
   }
 
   // (drawWeightSparkline removed 2026-05-06 — was retained for
   //  compatibility but no callers existed. Use git history to recover.)
 
-  // ── Body stats save ───────────────────────────────────────
-  // Fitness level is now auto-assigned from career XP (May 2026).
-  // The four buttons are kept in the DOM purely as a tier display —
-  // clicking them does nothing user-visible. The save button only
-  // persists `gym` since that's still user-input.
-  document.querySelectorAll('.me-fit-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      toast('Tier is auto-assigned by your XP — keep training to level up!', 2400);
-    });
-  });
-
-  document.getElementById('btn-me-save-stats').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-me-save-stats');
-    btn.textContent = '…'; btn.disabled = true;
-    try {
-      const profile = {
-        // fitnessLevel intentionally NOT written — derived from XP at read time.
-        gym: document.getElementById('me-gym-toggle').checked,
-      };
-      await setDoc(doc(db, 'users', state.userId), { profile }, { merge: true });
-      const confirmEl = document.getElementById('me-stats-saved');
-      confirmEl.classList.remove('hidden');
-      setTimeout(() => confirmEl.classList.add('hidden'), 2500);
-    } catch(e) { toast('Error: ' + e.message, 3000); }
-    finally { btn.textContent = 'Save ✓'; btn.disabled = false; }
-  });
+  // (Body stats / fitness-level / gym save handlers removed
+  //  2026-05-06 — those UI elements are gone. Tier is auto-assigned
+  //  from XP, gym membership wasn't being used anywhere.)
 
 
   // ── Notifications ─────────────────────────────────────────
