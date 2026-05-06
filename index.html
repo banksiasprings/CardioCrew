@@ -449,6 +449,38 @@
     .badge-card:active { transform: scale(0.94); }
     .badge-stack-count { position: absolute; top: 4px; right: 6px; font-size: 11px; font-weight: 900; color: #000; background: linear-gradient(135deg,#FFD700,#FFA500); padding: 1px 6px; border-radius: 999px; letter-spacing: 0.02em; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
 
+    /* ── Public Profile modal (Slice 3) ── */
+    #public-profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:9700; display:flex; align-items:flex-start; justify-content:center; padding:20px; padding-top:5vh; opacity:0; pointer-events:none; transition:opacity 0.25s; overflow-y:auto; }
+    #public-profile-overlay.show { opacity:1; pointer-events:auto; }
+    #public-profile-card { background:linear-gradient(160deg,#1C2128,#22272E); border:2px solid var(--gold); border-radius:20px; padding:0 0 24px; max-width:420px; width:100%; box-shadow:0 24px 80px rgba(0,0,0,0.7), 0 0 40px rgba(201,162,39,0.18); transform:translateY(20px) scale(0.96); transition:transform 0.3s cubic-bezier(0.34,1.4,0.64,1); position:relative; max-height:90vh; overflow-y:auto; }
+    #public-profile-overlay.show #public-profile-card { transform:translateY(0) scale(1); }
+    .ppc-close { position:absolute; top:12px; right:12px; z-index:2; width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,0.4); color:#F5E6B3; font-size:22px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
+    .ppc-close:active { background:rgba(0,0,0,0.6); transform:scale(0.92); }
+    .ppc-header { padding:24px 22px 16px; text-align:center; border-bottom:1px solid rgba(201,162,39,0.18); background:radial-gradient(circle at top,rgba(201,162,39,0.06),transparent 60%); }
+    .ppc-warrior { width:120px; height:160px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border:1px solid rgba(201,162,39,0.25); border-radius:12px; overflow:hidden; }
+    .ppc-warrior canvas { width:100%; height:100%; image-rendering:pixelated; }
+    .ppc-warrior .ppc-warrior-fallback { font-size:64px; }
+    .ppc-name { font-size:22px; font-weight:900; color:#F5E6B3; margin-bottom:4px; }
+    .ppc-clan { font-size:12px; color:var(--text-2); margin-bottom:10px; }
+    #ppc-xp { display:flex; justify-content:center; }
+    .ppc-section { padding:16px 22px 0; }
+    .ppc-section-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; color:var(--gold); margin-bottom:10px; }
+    .ppc-camp-list { display:flex; flex-direction:column; gap:8px; }
+    .ppc-camp-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; font-size:13px; }
+    .ppc-camp-name { color:var(--text-1); font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ppc-camp-pts { color:var(--gold); font-weight:800; font-size:13px; }
+    .ppc-camp-meta { font-size:10px; color:var(--text-3); margin-top:2px; }
+    .ppc-pb-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .ppc-pb-card { padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; }
+    .ppc-pb-name { font-size:11px; color:var(--text-3); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }
+    .ppc-pb-val { font-size:18px; color:var(--gold); font-weight:900; margin-top:2px; }
+    .ppc-pb-empty { font-size:11px; color:var(--text-3); }
+    .ppc-fitness { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; font-size:13px; color:var(--text-1); }
+    .ppc-graph-placeholder { padding:24px 12px; text-align:center; font-size:12px; color:var(--text-3); background:rgba(255,255,255,0.03); border:1px dashed var(--border); border-radius:10px; font-style:italic; }
+    .ppc-empty-section { font-size:12px; color:var(--text-3); padding:12px 0; text-align:center; }
+    /* Make leaderboard rows tappable */
+    .lb-row { cursor:pointer; }
+    .lb-row:active { transform:scale(0.99); }
     /* ── Badge detail modal ── */
     #badge-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:9600; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.25s; }
     #badge-detail-overlay.show { opacity:1; pointer-events:auto; }
@@ -1992,7 +2024,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v19</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v20</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2126,6 +2158,39 @@
       <div id="badge-detail-how-text"></div>
     </div>
     <button id="badge-detail-close">Got it</button>
+  </div>
+</div>
+
+<!-- ── Public Profile modal (Slice 3 — tap any user name) ── -->
+<div id="public-profile-overlay">
+  <div id="public-profile-card">
+    <button class="ppc-close" id="ppc-close" aria-label="Close">×</button>
+    <div class="ppc-header">
+      <div class="ppc-warrior" id="ppc-warrior"></div>
+      <div class="ppc-name" id="ppc-name">—</div>
+      <div class="ppc-clan" id="ppc-clan"></div>
+      <div id="ppc-xp"></div>
+    </div>
+    <div class="ppc-section">
+      <div class="ppc-section-label">📅 Campaigns</div>
+      <div id="ppc-campaigns" class="ppc-camp-list"></div>
+    </div>
+    <div class="ppc-section">
+      <div class="ppc-section-label">🏅 Badges</div>
+      <div class="badges-grid" id="ppc-badges"></div>
+    </div>
+    <div class="ppc-section">
+      <div class="ppc-section-label">🏆 Lifetime PBs</div>
+      <div id="ppc-pbs" class="ppc-pb-list"></div>
+    </div>
+    <div class="ppc-section">
+      <div class="ppc-section-label">🏋️ Fitness Profile</div>
+      <div id="ppc-fitness" class="ppc-fitness"></div>
+    </div>
+    <div class="ppc-section">
+      <div class="ppc-section-label">📈 30-Day XP</div>
+      <div class="ppc-graph-placeholder">Graph coming next slice — me vs them comparison overlay 📊</div>
+    </div>
   </div>
 </div>
 
@@ -2874,7 +2939,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v19';
+  const APP_VERSION = 'v20';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4811,6 +4876,8 @@
           <div class="lb-pts-label">pts</div>
         </div>`;
       list.appendChild(row);
+      // Tap → public profile modal (Slice 3)
+      row.addEventListener('click', () => openPublicProfile(m.id));
       // Render warrior canvas into the avatar slot
       // Use devicePixelRatio so warriors are crisp on high-DPI mobile screens
       const avatarSlot=row.querySelector('.lb-avatar');
@@ -5034,6 +5101,8 @@
           <div class="lb-pts-label">XP</div>
         </div>`;
       list.appendChild(row);
+      // Tap → public profile modal (Slice 3)
+      row.addEventListener('click', () => openPublicProfile(u.id));
       // Try to render the in-campaign warrior; fall back to a generic glyph
       const avatarSlot = row.querySelector('.lb-avatar');
       try {
@@ -5053,6 +5122,182 @@
     const totalXP = users.reduce((s,u) => s+u.xp, 0);
     document.getElementById('lb-footer').textContent = `${users.length} warrior${users.length!==1?'s':''} · ${totalXP.toLocaleString()} XP earned across all campaigns`;
   }
+
+  // ── Public Profile modal (Slice 3) ───────────────────────────
+  // Tap any user row in any leaderboard → modal opens with their public
+  // stats. Reads:
+  //   • users/{uid}              — name, profile.gym, badges, xpHistory, pbs
+  //   • campaigns/{cid}/members/{uid}  for one campaign — to grab their
+  //     warriorConfig (used to render the portrait). One read per modal
+  //     open, cached in state.publicProfiles for the session.
+  // Results cached so re-tapping the same user reopens instantly.
+  state.publicProfiles = state.publicProfiles || {};
+  function _ppcShow() { document.getElementById('public-profile-overlay').classList.add('show'); }
+  function _ppcHide() { document.getElementById('public-profile-overlay').classList.remove('show'); }
+  function _ppcLoadingState(name) {
+    document.getElementById('ppc-name').textContent = name || 'Loading…';
+    document.getElementById('ppc-clan').textContent = '';
+    document.getElementById('ppc-xp').innerHTML = '';
+    document.getElementById('ppc-warrior').innerHTML = '<div class="ppc-warrior-fallback">⚔️</div>';
+    document.getElementById('ppc-campaigns').innerHTML = '<div class="ppc-empty-section">Loading campaigns…</div>';
+    document.getElementById('ppc-badges').innerHTML = '';
+    document.getElementById('ppc-pbs').innerHTML = '<div class="ppc-pb-empty">Loading…</div>';
+    document.getElementById('ppc-fitness').innerHTML = '<span style="color:var(--text-3)">Loading…</span>';
+  }
+  async function openPublicProfile(userId) {
+    if (!userId) return;
+    _ppcShow();
+    // Optimistic render from in-memory state.members if available
+    const memberSnap = state.members[userId];
+    _ppcLoadingState(memberSnap?.name);
+    let cached = state.publicProfiles[userId];
+    if (cached) renderPublicProfile(userId, cached);
+    // Fetch fresh user doc
+    let userData = null;
+    try {
+      const snap = await getDoc(doc(db, 'users', userId));
+      if (snap.exists()) userData = snap.data();
+    } catch (e) { console.warn('Public profile user fetch failed:', e); }
+    if (!userData) {
+      document.getElementById('ppc-name').textContent = memberSnap?.name || 'Unknown warrior';
+      document.getElementById('ppc-campaigns').innerHTML = '<div class="ppc-empty-section">No public data yet — this user hasn\'t opened the latest version.</div>';
+      document.getElementById('ppc-pbs').innerHTML = '<div class="ppc-pb-empty">—</div>';
+      return;
+    }
+    // Pull warriorConfig from any of their member docs (they're all the same).
+    // Pick the most recently updated campaign in xpHistory for clan info too.
+    let warriorConfig = null;
+    let clanName = null;
+    const histEntries = Object.entries(userData.xpHistory || {})
+      .sort((a,b) => (b[1]?.lastUpdatedAt || '').localeCompare(a[1]?.lastUpdatedAt || ''));
+    for (const [cid, entry] of histEntries.slice(0, 3)) {
+      try {
+        const m = await getDoc(doc(db, 'campaigns', cid, 'members', userId));
+        if (!m.exists()) continue;
+        const md = m.data();
+        if (!warriorConfig && md.warriorConfig) warriorConfig = md.warriorConfig;
+        if (!clanName && md.clanId) {
+          // Fetch clan name from this campaign
+          try {
+            const cl = await getDoc(doc(db, 'campaigns', cid, 'clans', md.clanId));
+            if (cl.exists()) clanName = cl.data().name || null;
+          } catch {}
+        }
+        if (warriorConfig && clanName) break;
+      } catch {}
+    }
+    cached = { user: userData, warriorConfig, clanName, fetchedAt: Date.now() };
+    state.publicProfiles[userId] = cached;
+    renderPublicProfile(userId, cached);
+  }
+  function renderPublicProfile(userId, data) {
+    const { user, warriorConfig, clanName } = data;
+    const isMe = userId === state.userId;
+
+    // Name
+    document.getElementById('ppc-name').textContent = (user.name || 'Warrior') + (isMe ? ' (you)' : '');
+    // Clan
+    document.getElementById('ppc-clan').textContent = clanName ? `🏰 ${clanName}` : '';
+
+    // Warrior portrait — install warriorConfig into a tmp member if needed
+    const warriorEl = document.getElementById('ppc-warrior');
+    warriorEl.innerHTML = '';
+    if (warriorConfig) {
+      try {
+        const cvs = document.createElement('canvas');
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
+        cvs.width = 120 * dpr; cvs.height = 160 * dpr;
+        cvs.style.width = '100%'; cvs.style.height = '100%';
+        const full = document.createElement('canvas');
+        full.width = 260; full.height = 340;
+        WC.draw(full, warriorConfig, 0, false);
+        cvs.getContext('2d').drawImage(full, 0, 0, cvs.width, cvs.height);
+        warriorEl.appendChild(cvs);
+      } catch (e) {
+        warriorEl.innerHTML = '<div class="ppc-warrior-fallback">⚔️</div>';
+      }
+    } else {
+      warriorEl.innerHTML = '<div class="ppc-warrior-fallback">⚔️</div>';
+    }
+
+    // XP + Tier — for self, use live getCareerXP; for others use snapshot total
+    let xp = 0;
+    if (isMe) {
+      xp = getCareerXP(state.userId);
+    } else {
+      xp = Object.values(user.xpHistory || {}).reduce((s,e) => s + (e?.points || 0), 0);
+    }
+    const tier = getXPTier(xp);
+    document.getElementById('ppc-xp').innerHTML = `<span class="profile-xp-pill"><span class="xp-tier-icon">${tier.icon}</span><span class="xp-tier-name">${tier.label}</span><span class="xp-divider">·</span><span class="xp-amount">${xp.toLocaleString()} XP</span></span>`;
+
+    // Campaigns
+    const campsEl = document.getElementById('ppc-campaigns');
+    campsEl.innerHTML = '';
+    const hist = user.xpHistory || {};
+    const histList = Object.entries(hist)
+      .map(([cid, e]) => ({ cid, ...e }))
+      .sort((a,b) => (b.lastUpdatedAt || '').localeCompare(a.lastUpdatedAt || ''));
+    if (histList.length === 0) {
+      campsEl.innerHTML = '<div class="ppc-empty-section">No campaigns yet.</div>';
+    } else {
+      histList.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'ppc-camp-row';
+        const typeLabel = c.campaignType === 'pb-maintenance' ? '🏋️ PB' : '🏃 Classic';
+        row.innerHTML = `
+          <div style="flex:1;min-width:0">
+            <div class="ppc-camp-name">${escHtml(c.campaignName || 'Untitled')}</div>
+            <div class="ppc-camp-meta">${typeLabel}${c.startDate ? ' · started ' + new Date(c.startDate + 'T00:00:00').toLocaleDateString('en-AU', {day:'numeric',month:'short'}) : ''}</div>
+          </div>
+          <div class="ppc-camp-pts">${(c.points || 0).toLocaleString()} pts</div>
+        `;
+        campsEl.appendChild(row);
+      });
+    }
+
+    // Badges
+    const badgesEl = document.getElementById('ppc-badges');
+    badgesEl.innerHTML = '';
+    const earnedBadges = user.badges || {};
+    BADGE_DEFS.forEach(b => {
+      const v = earnedBadges[b.id];
+      const isEarned = Array.isArray(v) ? v.length > 0 : !!v?.earnedAt;
+      const count = Array.isArray(v) ? v.length : (v?.earnedAt ? 1 : 0);
+      const card = document.createElement('div');
+      card.className = 'badge-card' + (isEarned ? ' earned' : '');
+      const stackTag = (b.stackable && count > 1) ? `<span class="badge-stack-count">×${count}</span>` : '';
+      card.innerHTML = `<div class="badge-icon">${b.icon}${stackTag}</div><div class="badge-name">${b.name}</div>`;
+      badgesEl.appendChild(card);
+    });
+
+    // PBs
+    const pbsEl = document.getElementById('ppc-pbs');
+    pbsEl.innerHTML = '';
+    const pbs = user.pbs || {};
+    const pbExercises = (typeof PB_EXERCISES !== 'undefined') ? PB_EXERCISES : [
+      {id:'pushups',name:'Push-ups',metric:'reps',icon:'🏋️'},
+      {id:'squats',name:'Squats',metric:'reps',icon:'🦵'},
+      {id:'plank',name:'Plank',metric:'seconds',icon:'⏱'},
+      {id:'crunches',name:'Crunches',metric:'reps',icon:'✊'},
+    ];
+    pbExercises.forEach(ex => {
+      const v = pbs[ex.id]?.value;
+      const label = (typeof v === 'number') ? `${v} ${ex.metric === 'reps' ? 'reps' : 's'}` : '—';
+      const card = document.createElement('div');
+      card.className = 'ppc-pb-card';
+      card.innerHTML = `<div class="ppc-pb-name">${ex.icon} ${ex.name}</div><div class="ppc-pb-val">${label}</div>`;
+      pbsEl.appendChild(card);
+    });
+
+    // Fitness
+    const fitEl = document.getElementById('ppc-fitness');
+    const gym = user.profile?.gym;
+    fitEl.innerHTML = `<span>${tier.icon} ${tier.label}</span><span>${gym ? '🏋️‍♂️ Has gym access' : '🏃 No gym'}</span>`;
+  }
+  document.getElementById('ppc-close')?.addEventListener('click', _ppcHide);
+  document.getElementById('public-profile-overlay')?.addEventListener('click', e => {
+    if (e.target.id === 'public-profile-overlay') _ppcHide();
+  });
 
   function renderHistory(day) {
     const list=document.getElementById('hist-list');
