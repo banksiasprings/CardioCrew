@@ -1843,17 +1843,7 @@
       </div>
     </div>
 
-    <!-- HISTORY TAB -->
-    <div id="tab-history" class="tab-page">
-      <div class="hist-header"><div class="hist-title">📅 My History</div></div>
-      <div style="display:flex;gap:10px;padding:0 16px 10px;font-size:11px;color:var(--text-2);flex-wrap:wrap">
-        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-squats);display:inline-block"></span>Squats</span>
-        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
-        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
-        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
-      </div>
-      <div class="hist-list" id="hist-list"></div>
-    </div>
+    <!-- (HISTORY TAB removed 2026-05-06 — folded into Today as a collapsible section) -->
 
     <!-- PROFILE TAB (merged with Personal Tracking) -->
     <div id="tab-profile" class="tab-page">
@@ -5508,11 +5498,10 @@
   }
 
   function renderHistory(day) {
-    // History was folded into Today (May 2026) — render into both the
-    // Today section's list AND the legacy hist-list if either exists.
-    const targets = ['today-history-list', 'hist-list']
-      .map(id => document.getElementById(id)).filter(Boolean);
-    if (targets.length === 0) return;
+    // History was folded into Today (May 2026) — renders into the
+    // Today's collapsible section.
+    const target = document.getElementById('today-history-list');
+    if (!target) return;
     if (!state.campaignData?.startDate) return;
     // Hide the whole Today history section for PB Maintenance — PB has
     // its own "Your Recent Sessions" / week-strip stack which is the PB
@@ -5539,8 +5528,7 @@
         </div>
         <div class="hist-pts">${pts}</div></div>`);
     }
-    const out = html.join('');
-    targets.forEach(el => { el.innerHTML = out; });
+    target.innerHTML = html.join('');
   }
 
   function renderProfile(day) {
@@ -7171,55 +7159,8 @@
     renderMeNotifPrefs();
   }
 
-  function drawWeightSparkline(canvas, log) {
-    // Retained for compatibility — no longer called
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width  = canvas.offsetWidth  * dpr || 300 * dpr;
-    canvas.height = 70 * dpr;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-    const W = canvas.offsetWidth || 300;
-    const H = 70;
-    const pad = { top: 8, bottom: 18, left: 8, right: 8 };
-
-    const vals = log.map(e => e.kg);
-    const minV = Math.min(...vals) - 1;
-    const maxV = Math.max(...vals) + 1;
-    const range = maxV - minV || 1;
-    const toY = v => pad.top + (H - pad.top - pad.bottom) * (1 - (v - minV) / range);
-    const toX = i => pad.left + i * (W - pad.left - pad.right) / Math.max(1, vals.length - 1);
-
-    // Fill area under line
-    ctx.beginPath();
-    ctx.moveTo(toX(0), H - pad.bottom);
-    vals.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
-    ctx.lineTo(toX(vals.length - 1), H - pad.bottom);
-    ctx.closePath();
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, 'rgba(201,162,39,0.3)');
-    grad.addColorStop(1, 'rgba(201,162,39,0.02)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Line
-    ctx.beginPath();
-    vals.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
-    ctx.strokeStyle = '#C9A227';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    // Latest point dot
-    const lx = toX(vals.length - 1), ly = toY(vals[vals.length - 1]);
-    ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#C9A227'; ctx.fill();
-
-    // Latest value label
-    ctx.fillStyle = '#F5E6B3';
-    ctx.font = `bold ${11 * dpr / dpr}px sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText(vals[vals.length - 1] + 'kg', W - pad.right, ly - 7);
-  }
+  // (drawWeightSparkline removed 2026-05-06 — was retained for
+  //  compatibility but no callers existed. Use git history to recover.)
 
   // ── Body stats save ───────────────────────────────────────
   // Fitness level is now auto-assigned from career XP (May 2026).
