@@ -2042,7 +2042,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v23</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v24</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2954,7 +2954,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v23';
+  const APP_VERSION = 'v24';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4834,32 +4834,42 @@
     document.getElementById('lb-subtitle').textContent=`Day ${day} of 30 · ${scores.length} crew member${scores.length!==1?'s':''}`;
 
     // ── Prize pool banner ──
+    // Winner-banner gating fixed 2026-05-06:
+    //   1. Don't crown anyone until the campaign has actually CLOSED
+    //      (Day 31+ Sydney). On Day 30 the leaderboard is still settling,
+    //      so the banner now only appears post-close.
+    //   2. Wager winner = top-scoring OPT-IN member (was: top-scoring
+    //      member regardless of opt-in). Steven flagged: Julia was
+    //      showing as $25 pot winner despite opting out of the pool.
     const wager=state.campaignData?.wagerAmount||0;
     const poolBanner=document.getElementById('prize-pool-banner');
     const winnerWrap=document.getElementById('winner-banner-wrap');
     winnerWrap.innerHTML='';
+    const closed = isCampaignOver();
+    const overallWinner = scores.length > 0 ? scores[0] : null;
     if(wager>0){
-      const optInCount=Object.values(state.members).filter(m=>m.wagerOptIn===true).length;
-      const pool=optInCount*wager;
+      const optInScores = scores.filter(s => state.members[s.id]?.wagerOptIn === true);
+      const optInCount = optInScores.length;
+      const pool = optInCount * wager;
       document.getElementById('prize-pool-amount').textContent=`💰 Prize Pool: $${pool}`;
       document.getElementById('prize-pool-sub').textContent=`${optInCount} warrior${optInCount!==1?'s':''} × $${wager} each — winner takes all!`;
       poolBanner.classList.add('show');
-      // Day 30+ winner announcement
-      if(day>=30&&scores.length>0){
-        const winner=scores[0];
+      // Post-close winner announcement (wagered crew)
+      if(closed && optInScores.length > 0) {
+        const wagerWinner = optInScores[0]; // top-scoring opt-in
         winnerWrap.innerHTML=`<div class="winner-banner">
-          <h2>🏆 ${winner.name} wins the $${pool} pot! 🐐</h2>
-          <p>Crowned G.O.A.T. with ${winner.pts} points — sort it out in person! 🤝</p>
+          <h2>🏆 ${escHtml(wagerWinner.name)} wins the $${pool} pot! 🐐</h2>
+          <p>Top of the wagered crew with ${wagerWinner.pts} points — sort it out in person! 🤝</p>
+          ${overallWinner && overallWinner.id !== wagerWinner.id ? `<p style="margin-top:8px;font-size:12px;color:rgba(245,230,179,0.65)">Overall G.O.A.T.: ${escHtml(overallWinner.name)} (${overallWinner.pts} pts) — opted out of the pool</p>` : ''}
         </div>`;
       }
     }else{
       poolBanner.classList.remove('show');
-      // Day 30 no-wager celebration
-      if(day>=30&&scores.length>0){
-        const winner=scores[0];
+      // Post-close no-wager celebration
+      if(closed && overallWinner) {
         winnerWrap.innerHTML=`<div class="winner-banner">
-          <h2>🐐 ${winner.name} is the G.O.A.T.!</h2>
-          <p>30 days done — ${winner.pts} points, undisputed champion 🏆</p>
+          <h2>🐐 ${escHtml(overallWinner.name)} is the G.O.A.T.!</h2>
+          <p>30 days done — ${overallWinner.pts} points, undisputed champion 🏆</p>
         </div>`;
       }
     }
