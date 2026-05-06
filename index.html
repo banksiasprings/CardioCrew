@@ -1767,6 +1767,24 @@
           </div>
         </div>
       </div>
+
+      <!-- History (folded in from removed History tab — classic only) -->
+      <div id="today-history-section" style="display:none;margin-top:8px">
+        <div class="psec-hdr" data-sec="today-history">
+          <span class="psec-label">📅 History</span>
+          <span class="psec-arrow">▸</span>
+        </div>
+        <div class="psec-body hidden" id="psec-today-history">
+          <div style="display:flex;gap:10px;padding:0 16px 10px;font-size:11px;color:var(--text-2);flex-wrap:wrap" id="today-history-legend">
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-squats);display:inline-block"></span>Squats</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
+          </div>
+          <div class="hist-list" id="today-history-list"></div>
+          <div style="height:24px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- LEADERBOARD TAB -->
@@ -2024,7 +2042,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v21</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v22</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2084,7 +2102,7 @@
       </div>
     </div>
 
-  <!-- Bottom Nav (4 tabs) -->
+  <!-- Bottom Nav (3 tabs — History was folded into Today) -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="today">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -2092,9 +2110,6 @@
     <button class="nav-btn" data-tab="leaderboard">
       <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
       Board    </button>
-    <button class="nav-btn" data-tab="history">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      History    </button>
     <button class="nav-btn" data-tab="profile">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile    </button>
@@ -2939,7 +2954,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v21';
+  const APP_VERSION = 'v22';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4244,7 +4259,7 @@
       recEl.innerHTML = '<div style="font-size:11px;color:var(--text-3);font-style:italic">No personal history yet — your submissions will show here.</div>';
     } else {
       recEl.innerHTML =
-        '<div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Your recent sessions</div>' +
+        '<div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📅 History</div>' +
         recent.map(r => {
           const m2 = getPBExerciseMeta(r.exerciseId);
           const u = m2?.metric === 'reps' ? 'reps' : 's';
@@ -5472,17 +5487,28 @@
   }
 
   function renderHistory(day) {
-    const list=document.getElementById('hist-list');
-    list.innerHTML='';
+    // History was folded into Today (May 2026) — render into both the
+    // Today section's list AND the legacy hist-list if either exists.
+    const targets = ['today-history-list', 'hist-list']
+      .map(id => document.getElementById(id)).filter(Boolean);
+    if (targets.length === 0) return;
+    if (!state.campaignData?.startDate) return;
+    // Hide the whole Today history section for PB Maintenance — PB has
+    // its own "Your Recent Sessions" / week-strip stack which is the PB
+    // equivalent of campaign history.
+    const todaySection = document.getElementById('today-history-section');
+    if (todaySection) {
+      todaySection.style.display = (getCampaignType() === 'pb-maintenance') ? 'none' : '';
+    }
+    if (getCampaignType() === 'pb-maintenance') return; // skip render for PB
     const start=new Date(state.campaignData.startDate+'T00:00:00');
+    const html = [];
     for(let d=1;d<=30;d++){
       const date=new Date(start); date.setDate(date.getDate()+d-1);
       const isFuture=d>day;
       const comps=isFuture?{}:getCompletionsForDay(state.userId,d);
       const pts=isFuture?'':getDayScore(state.userId,d,day);
-      const row=document.createElement('div');
-      row.className=`hist-row${isFuture?' future':''} fade-in`;
-      row.innerHTML=`
+      html.push(`<div class="hist-row${isFuture?' future':''} fade-in">
         <div><div class="hist-day-num">D${d}</div><div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
         <div class="hist-checks">
           ${getActiveChallenges().map(ch=>{
@@ -5490,9 +5516,10 @@
             return `<div class="hist-dot${done&&!isFuture?' done':''}${isRest&&!isFuture?' rest':''}" style="--dot-color:${ch.color}" title="${ch.name}">${ch.img?`<img src="${ch.img}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;opacity:${done&&!isFuture?1:0.35}" alt="${ch.name}">`:`${ch.emoji}`}</div>`;
           }).join('')}
         </div>
-        <div class="hist-pts">${pts}</div>`;
-      list.appendChild(row);
+        <div class="hist-pts">${pts}</div></div>`);
     }
+    const out = html.join('');
+    targets.forEach(el => { el.innerHTML = out; });
   }
 
   function renderProfile(day) {
@@ -5955,6 +5982,10 @@
 
   // ─── Tab nav ──────────────────────────────────────────
   function switchTab(tabId) {
+    // History tab was folded into Today (May 2026) — route any stale
+    // 'history' references to Today. Old localStorage values, deep
+    // links, etc. all just go to Today now.
+    if (tabId === 'history') tabId = 'today';
     document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById(`tab-${tabId}`)?.classList.add('active');
@@ -7006,8 +7037,11 @@
   const _origSwitchTab = switchTab;
   switchTab = function(tabId) {
     _origSwitchTab(tabId);
+    // initProfileSections is idempotent and now also wires the
+    // folded-in History section in the Today tab. Run it for both
+    // tabs that contain .psec-hdr blocks.
+    if (tabId === 'today' || tabId === 'profile') initProfileSections();
     if (tabId === 'profile') {
-      initProfileSections();
       setTimeout(initMeTab, 50);
       setTimeout(initFeedbackTab, 50);
     }
@@ -7016,6 +7050,15 @@
       subscribeLbChat(lbSelectedCampaignId || state.campaignId);
     }
   };
+  // Wire the Today history section on first paint (Today is the
+  // default tab so switchTab never fires for it on app load).
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initProfileSections === 'function') initProfileSections();
+  });
+  // Also handle the case where DOMContentLoaded already fired (script runs late).
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(() => { if (typeof initProfileSections === 'function') initProfileSections(); }, 0);
+  }
 
   // Leaderboard campaign dropdown change
   document.getElementById('lb-campaign-select').addEventListener('change', function() {
