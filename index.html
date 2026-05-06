@@ -483,6 +483,11 @@
 
     .profile-info { flex: 1; }
     .profile-name { font-size: 20px; font-weight: 800; color: #F5E6B3; }
+    .profile-xp-pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; padding:4px 11px; border-radius:999px; background:linear-gradient(135deg,#3D1A5E,#1A1A4E); color:#F5E6B3; border:1px solid rgba(201,162,39,0.45); letter-spacing:0.02em; box-shadow:0 2px 8px rgba(0,0,0,0.25); }
+    .profile-xp-pill .xp-tier-icon { font-size:14px; }
+    .profile-xp-pill .xp-tier-name { color:#F5E6B3; }
+    .profile-xp-pill .xp-divider { opacity:0.45; margin:0 1px; }
+    .profile-xp-pill .xp-amount { color:var(--gold); font-weight:900; }
     .profile-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .stat-card { background: #130E03; border: 1px solid rgba(201,162,39,0.4); border-radius: var(--radius); padding: 14px; text-align: center; box-shadow: inset 0 1px 0 rgba(201,162,39,0.08); }
     .stat-val { font-size: 28px; font-weight: 900; color: #C9A227; text-shadow: 0 0 12px rgba(201,162,39,0.4); }
@@ -1795,6 +1800,7 @@
         <div class="profile-top">
           <div class="profile-info">
             <div class="profile-name" id="profile-name">—</div>
+            <div id="profile-xp-tier" style="margin-top:5px;display:none"></div>
             <div id="profile-admin-badge" class="admin-badge" style="display:none">🔑 Admin</div>
             <div id="profile-title-badge" style="margin-top:5px"></div>
           </div>
@@ -1888,7 +1894,7 @@
           <div class="me-card">
             <div class="me-form-grid">
               <div class="me-field me-field-full">
-                <label class="me-label">Fitness Level</label>
+                <label class="me-label">Fitness Level <span style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:none;letter-spacing:0">— auto-assigned by your XP</span></label>
                 <div class="me-fitness-btns" id="me-fitness-btns">
                   <button class="me-fit-btn" data-level="beginner">🌱 Beginner</button>
                   <button class="me-fit-btn" data-level="intermediate">💪 Intermediate</button>
@@ -1985,7 +1991,7 @@
           <div id="pin-section" style="margin-bottom:10px"></div>
           <button class="btn-logout" id="btn-logout-app" style="margin-bottom:8px;width:100%;padding:15px;border-radius:8px;font-size:16px;font-weight:700;border:1px solid var(--border)">🔒 Log Out (keep campaign)</button>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 2px">
-            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v17</div>
+            <div id="app-version-tag" style="font-size:11px;color:var(--text-3);opacity:0.55;letter-spacing:0.05em">CardioCrew v18</div>
             <button id="update-btn" onclick="forceAppUpdate()" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;border:none;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);cursor:pointer">Check for Update</button>
           </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
@@ -2628,6 +2634,137 @@
   ];
 
   const AVATARS = ['🦁','🐯','🐺','🦊','🐻','🐼','🦅','🦆','🐲','🦈','🐊','🦄','🔥','⚡','💎','🌊','🚀','🌟','💪','🥊','👑','😈','🤖','🎯'];
+  // ── Career XP + Fitness Tier (May 2026) ───────────────────────
+  // XP is the sum of points earned across every campaign you've ever
+  // been in. Stored as a per-campaign mirror on users/{uid}.xpHistory
+  // so the leaderboard can rank by career XP without trawling member
+  // docs across the whole DB. Tier is derived from XP (auto-assigned),
+  // replacing the old self-select fitness level.
+  const XP_TIERS = [
+    { id:'beginner',     icon:'🌱', label:'Beginner',     min:0,    max:99 },
+    { id:'intermediate', icon:'💪', label:'Intermediate', min:100,  max:499 },
+    { id:'advanced',     icon:'🔥', label:'Advanced',     min:500,  max:1499 },
+    { id:'athlete',      icon:'⚡', label:'Athlete',      min:1500, max:Infinity },
+  ];
+  function getXPTier(xp) {
+    const safe = Math.max(0, Math.floor(xp || 0));
+    return XP_TIERS.find(t => safe >= t.min && safe <= t.max) || XP_TIERS[0];
+  }
+  // Career XP = sum of snapshots in users/{uid}.xpHistory + live points
+  // from the currently-loaded campaign (so today's tick shows in the
+  // visible total immediately).
+  function getCareerXP(userId) {
+    if (userId !== state.userId) return 0; // we only have own user doc subscribed
+    const hist = state.myUser?.xpHistory || {};
+    let total = 0;
+    Object.keys(hist).forEach(cid => {
+      const entry = hist[cid];
+      // Skip the current campaign's snapshot — it's superseded by live points below
+      if (cid === state.campaignId) return;
+      total += (entry?.points || 0);
+    });
+    // Add live points from the active campaign
+    if (state.campaignId && state.campaignData) {
+      try { total += getTotalPoints(state.userId) || 0; } catch {}
+    }
+    return total;
+  }
+  // Live mirror — writes the current campaign's running point total to
+  // the user doc. Called whenever a points-affecting event happens
+  // (toggleCompletion, toggleMission, submitPB, deletePBEntry).
+  // Idempotent and safe to call repeatedly — just overwrites the same
+  // key. Errors swallowed so a Firestore hiccup never blocks gameplay.
+  let _xpMirrorPending = false;
+  async function _writeXPMirror() {
+    if (_xpMirrorPending) return;
+    if (!state.userId || !state.campaignId || !state.campaignData) return;
+    _xpMirrorPending = true;
+    try {
+      const points = getTotalPoints(state.userId) || 0;
+      const entry = {
+        campaignName: state.campaignData.name || 'Untitled Campaign',
+        campaignType: getCampaignType(),
+        points,
+        startDate: state.campaignData.startDate || null,
+        lastUpdatedAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'users', state.userId), {
+        xpHistory: { [state.campaignId]: entry },
+      }, { merge: true });
+    } catch (e) {
+      console.warn('XP mirror write failed:', e);
+    } finally {
+      _xpMirrorPending = false;
+    }
+  }
+  // Compute points for a (campaign, member) pair WITHOUT touching state.
+  // Used by backfill so we don't disturb the live render. Walks the
+  // member's completions map and applies the same scoring rules as
+  // getTotalPoints, just statelessly.
+  function _computeMemberPoints(campData, memberData) {
+    if (!memberData) return 0;
+    const completions = memberData.completions || {};
+    const ctype = campData?.campaignType || 'classic';
+    if (ctype === 'pb-maintenance') {
+      // PB Maintenance: each daily Beast win + each Most Improved win = 1 pt.
+      // Consistency points only fire when a week is settled — for backfill
+      // we only count what's safely banked: per-day score field written by
+      // the midnight judgment.
+      let pts = 0;
+      Object.keys(completions).forEach(k => {
+        const m = k.match(/^d(\d+)_score$/);
+        if (m && typeof completions[k] === 'number') pts += completions[k];
+      });
+      return pts;
+    }
+    // Classic / template / kids — count truthy completions across the
+    // map (each ticked box = 1 point; mission completion = day's pts).
+    let pts = 0;
+    Object.keys(completions).forEach(k => {
+      const v = completions[k];
+      if (k.endsWith('_value')) return;            // PB value (PB-only key)
+      if (k.endsWith('_at')) return;                // PB timestamp
+      if (k.endsWith('_status')) return;            // PB status
+      if (k.endsWith('_score')) return;             // PB judged score
+      if (v) pts += 1;                              // boolean / truthy → 1 pt
+    });
+    return pts;
+  }
+  // Backfill — first time post-v18 deploy, walk every campaign this
+  // user is a member of and snapshot their points. Idempotent: skips
+  // entirely if `state.myUser.xpBackfilledAt` is already set. Doesn't
+  // touch state — runs in the background safely.
+  async function backfillXPHistory() {
+    if (!state.userId || !state.myUser) return;
+    if (state.myUser.xpBackfilledAt) return;
+    try {
+      const campSnaps = await getDocs(collection(db, 'campaigns'));
+      const xpHistory = {};
+      for (const campSnap of campSnaps.docs) {
+        const campaignId = campSnap.id;
+        const campData = campSnap.data();
+        try {
+          const memSnap = await getDoc(doc(db, 'campaigns', campaignId, 'members', state.userId));
+          if (!memSnap.exists()) continue;
+          const points = _computeMemberPoints(campData, memSnap.data());
+          xpHistory[campaignId] = {
+            campaignName: campData.name || 'Untitled Campaign',
+            campaignType: campData.campaignType || 'classic',
+            points,
+            startDate: campData.startDate || null,
+            lastUpdatedAt: new Date().toISOString(),
+          };
+        } catch (e) { /* skip campaigns we can't read */ }
+      }
+      await setDoc(doc(db, 'users', state.userId), {
+        xpHistory,
+        xpBackfilledAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {
+      console.warn('XP backfill failed:', e);
+    }
+  }
+
   // ── Badge overhaul (May 2026) ─────────────────────────────────
   // Five EPIC, end-of-campaign-only badges. No participation trophies, no
   // mid-campaign popups, no "you showed up on Day 1" filler. Earn them at
@@ -2720,7 +2857,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v17';
+  const APP_VERSION = 'v18';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -2905,6 +3042,7 @@
     const ref = doc(db, 'campaigns', state.campaignId, 'members', state.userId);
     await updateDoc(ref, { [`completions.${key}`]: !current });
     scheduleLocalNotifications(); // update SW with latest workoutComplete status
+    _writeXPMirror(); // career XP mirror update
   }
 
   // Classic-only version (used internally by helpers when not a template campaign)
@@ -3453,6 +3591,7 @@
       isLifetimePB ? 3500 : 2200
     );
     if (typeof launchConfetti === 'function' && (!cur || value > (cur || 0))) launchConfetti();
+    _writeXPMirror(); // career XP mirror update
   }
   async function deletePBEntry(day){
     if (!state.campaignId || !state.userId) return;
@@ -3465,6 +3604,7 @@
       [`completions.d${day}_${exId}_status`]: deleteField(),
     });
     toast('✓ Entry cleared', 1500);
+    _writeXPMirror(); // career XP mirror update
   }
   function getRecentPBSubmissions(userId, currentDay, limit){
     const out = [];
@@ -4103,6 +4243,7 @@
     const newVal = current ? false : serverTimestamp();
     await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ [`completions.${key}`]: newVal });
     scheduleLocalNotifications(); // update SW with latest workoutComplete status
+    _writeXPMirror(); // career XP mirror update
   }
 
   async function updateAvatar(newAvatar) {
@@ -4262,6 +4403,10 @@
         if (snap.exists()) {
           state.myUser = snap.data();
           scheduleRender(false);
+          // Career XP — kick off backfill once per user account, only
+          // after the user doc has loaded. Function is idempotent and
+          // self-gates on xpBackfilledAt.
+          backfillXPHistory();
         }
       }));
     }
@@ -4818,6 +4963,18 @@
   function renderProfile(day) {
     const me=state.members[state.userId]; if(!me) return;
     document.getElementById('profile-name').textContent=me.name;
+    // XP + Tier pill — and keep the fitness tier buttons in sync with
+    // the live XP total (they re-render every time XP changes).
+    const xpEl = document.getElementById('profile-xp-tier');
+    const xp = getCareerXP(state.userId);
+    const tier = getXPTier(xp);
+    if (xpEl) {
+      xpEl.innerHTML = `<span class="profile-xp-pill"><span class="xp-tier-icon">${tier.icon}</span><span class="xp-tier-name">${tier.label}</span><span class="xp-divider">·</span><span class="xp-amount">${xp.toLocaleString()} XP</span></span>`;
+      xpEl.style.display = 'block';
+    }
+    document.querySelectorAll('.me-fit-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.level === tier.id);
+    });
     // Show/hide admin badge
     const adminBadge=document.getElementById('profile-admin-badge');
     if(adminBadge) adminBadge.style.display=sessionStorage.getItem('cardioAdminUnlocked')==='true'?'inline-flex':'none';
@@ -6374,9 +6531,13 @@
 
       document.getElementById('me-gym-toggle').checked = !!profile.gym;
 
-      // Fitness level buttons
+      // Fitness level buttons — auto-assigned by career XP, no longer
+      // user-selectable. We still highlight the active tier so the UI
+      // reads as "this is where you stand" rather than empty.
+      const xp = getCareerXP(state.userId);
+      const tier = getXPTier(xp);
       document.querySelectorAll('.me-fit-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.level === (profile.fitnessLevel || ''));
+        b.classList.toggle('active', b.dataset.level === tier.id);
       });
 
     } catch(e) { console.warn('Me tab profile load error:', e); }
@@ -6436,13 +6597,14 @@
   }
 
   // ── Body stats save ───────────────────────────────────────
-  let _meSelectedFitnessLevel = '';
-
+  // Fitness level is now auto-assigned from career XP (May 2026).
+  // The four buttons are kept in the DOM purely as a tier display —
+  // clicking them does nothing user-visible. The save button only
+  // persists `gym` since that's still user-input.
   document.querySelectorAll('.me-fit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _meSelectedFitnessLevel = btn.dataset.level;
-      document.querySelectorAll('.me-fit-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toast('Tier is auto-assigned by your XP — keep training to level up!', 2400);
     });
   });
 
@@ -6451,8 +6613,8 @@
     btn.textContent = '…'; btn.disabled = true;
     try {
       const profile = {
-        fitnessLevel: document.querySelector('.me-fit-btn.active')?.dataset.level || '',
-        gym:          document.getElementById('me-gym-toggle').checked,
+        // fitnessLevel intentionally NOT written — derived from XP at read time.
+        gym: document.getElementById('me-gym-toggle').checked,
       };
       await setDoc(doc(db, 'users', state.userId), { profile }, { merge: true });
       const confirmEl = document.getElementById('me-stats-saved');
