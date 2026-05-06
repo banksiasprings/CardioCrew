@@ -717,6 +717,99 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(201,162,39,0.15);
     }
 
+    /* ── Family Accounts switcher ── */
+    .fam-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .fam-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      background: var(--surface); border: 1.5px solid var(--border);
+      cursor: pointer; transition: all 0.15s; min-height: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fam-card:active { transform: scale(0.98); background: var(--surface-2); }
+    .fam-card.active {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(201,162,39,0.12), rgba(201,162,39,0.04));
+      box-shadow: 0 0 0 1px rgba(201,162,39,0.35), inset 0 1px 0 rgba(201,162,39,0.15);
+      cursor: default;
+    }
+    .fam-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .fam-card.active .fam-avatar { border-color: var(--gold); }
+    .fam-info { flex: 1; min-width: 0; }
+    .fam-name { font-size: 15px; font-weight: 700; color: var(--text-1); }
+    .fam-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .fam-pill {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.07em; padding: 4px 9px; border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .fam-pill.active-pill {
+      background: var(--gold); color: #000;
+    }
+    .fam-pill.tap-pill {
+      background: rgba(88,166,255,0.15); color: var(--primary);
+      border: 1px solid rgba(88,166,255,0.3);
+    }
+    .fam-pill.lock-pill {
+      background: var(--surface-2); color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+    .fam-add-btn {
+      width: 100%; padding: 12px; border-radius: var(--radius-sm);
+      background: var(--surface); color: var(--text-2);
+      border: 1.5px dashed var(--border);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .fam-add-btn:active { transform: scale(0.98); }
+    .fam-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .fam-add-form {
+      margin-top: 10px; padding: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .fam-add-tabs {
+      display: flex; gap: 4px; padding: 4px; margin-bottom: 12px;
+      background: var(--surface-2); border-radius: 8px;
+    }
+    .fam-add-tab {
+      flex: 1; padding: 8px; border: none; border-radius: 6px;
+      background: transparent; color: var(--text-2);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .fam-add-tab.active { background: var(--gold); color: #000; }
+    .fam-add-row { margin-bottom: 8px; }
+    .fam-add-label {
+      display: block; font-size: 10px; font-weight: 700;
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .fam-add-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .fam-add-actions .btn { flex: 1; padding: 10px; font-size: 13px; }
+    .fam-error { color: #F85149; font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .fam-search-results { max-height: 180px; overflow-y: auto; margin-top: 6px; }
+    .fam-search-result {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface-2);
+      margin-bottom: 6px;
+    }
+    .fam-search-result:active { background: rgba(88,166,255,0.12); }
+    .fam-search-result .fam-avatar { width: 32px; height: 32px; font-size: 16px; }
+    .fam-search-result .fam-name { font-size: 13px; }
+    .fam-pin-prompt {
+      display: flex; gap: 8px; align-items: center;
+      padding: 10px 12px; background: var(--surface-2);
+      border: 1px solid rgba(201,162,39,0.4); border-radius: 8px;
+      margin-top: 8px;
+    }
+    .fam-pin-prompt .input { flex: 1; font-size: 14px; }
+
     /* ── Clan trophy popup ── */
     #clan-trophy-popup { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 1002; pointer-events: none; }
     .clan-trophy-inner { background: linear-gradient(135deg,#1a1a2e,#16213e); border: 2px solid #4B9FFF; border-radius: var(--radius); padding: 24px 28px; text-align: center; transform: scale(0); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
@@ -1919,6 +2012,15 @@
           <div id="profile-warrior-section"></div>
         </div>
 
+        <!-- ── Family Accounts (parent ↔ kids quick switcher) ── -->
+        <div class="psec-hdr" data-sec="family">
+          <span class="psec-label">👨‍👩‍👧 Family Accounts</span>
+          <span class="psec-arrow">▾</span>
+        </div>
+        <div class="psec-body" id="psec-family">
+          <div id="family-accounts-section"></div>
+        </div>
+
         <!-- ── Clan ── -->
         <div class="psec-hdr" data-sec="clan">
           <span class="psec-label">🦅 My Clan</span>
@@ -2075,7 +2177,7 @@
             <div class="settings-row">
               <div class="settings-row-text">
                 <div class="settings-row-title">Version</div>
-                <div id="app-version-tag" class="settings-row-sub">CardioCrew v25</div>
+                <div id="app-version-tag" class="settings-row-sub">CardioCrew v30</div>
               </div>
               <button id="update-btn" onclick="forceAppUpdate()" class="settings-secondary-btn">Check for update</button>
             </div>
@@ -2994,7 +3096,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v29';
+  const APP_VERSION = 'v30';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -5691,6 +5793,9 @@
     // Warrior section
     renderWarriorProfile();
 
+    // Family Accounts (parent ↔ kids switcher) — render before clan
+    renderFamilyAccounts();
+
     // Clan section
     const clanSec=document.getElementById('profile-clan-section');
     const myClanId=me.clanId||null;
@@ -5965,6 +6070,356 @@
       }
       switchTab('today');
       toast(`Switched to ${newName} 👋`, 2500);
+    } catch(e) { toast('Switch failed: ' + e.message); }
+  }
+
+  // ─── Family Accounts (parent ↔ kids quick-switcher) ───
+  // Per-device cache of linked accounts so a parent can hop between
+  // their own profile and their kids' profiles without logout/login.
+  // Stored in localStorage as an array of {userId,name,avatar} entries.
+  const FAM_KEY = 'cc_family_accounts';
+  function loadFamilyAccounts() {
+    try { return JSON.parse(localStorage.getItem(FAM_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveFamilyAccounts(list) {
+    localStorage.setItem(FAM_KEY, JSON.stringify(list));
+  }
+  function addToFamilyAccounts(user) {
+    if (!user || !user.userId) return;
+    const list = loadFamilyAccounts();
+    const idx = list.findIndex(u => u.userId === user.userId);
+    const entry = { userId: user.userId, name: user.name || 'Warrior', avatar: user.avatar || '⚔️' };
+    if (idx >= 0) list[idx] = entry;
+    else list.push(entry);
+    saveFamilyAccounts(list);
+  }
+  // Make sure the active user is always present in the device's family list.
+  function ensureSelfInFamily() {
+    if (!state.userId) return;
+    const me = state.members[state.userId];
+    addToFamilyAccounts({
+      userId: state.userId,
+      name: me?.name || state.userName,
+      avatar: me?.avatar || '⚔️',
+    });
+  }
+
+  // Renders the Family Accounts section (cards + Add button).
+  // Active card has a gold "✓ Active" pill and isn't tappable;
+  // others show a "Tap to switch" pill (or "🔒 PIN" if the user has one).
+  async function renderFamilyAccounts() {
+    const wrap = document.getElementById('family-accounts-section');
+    if (!wrap) return;
+    ensureSelfInFamily();
+    const fam = loadFamilyAccounts();
+
+    // Look up which family members have a PIN so we show the lock pill.
+    const pinFlags = {};
+    await Promise.all(fam.map(async u => {
+      if (u.userId === state.userId) { pinFlags[u.userId] = false; return; }
+      try {
+        const snap = await getDoc(doc(db, 'users', u.userId));
+        pinFlags[u.userId] = !!(snap.exists() && snap.data()?.pinHash);
+      } catch { pinFlags[u.userId] = false; }
+    }));
+
+    const cards = fam.map(u => {
+      const isActive = u.userId === state.userId;
+      const pin = pinFlags[u.userId];
+      const pillHtml = isActive
+        ? '<span class="fam-pill active-pill">✓ Active</span>'
+        : pin
+          ? '<span class="fam-pill lock-pill">🔒 PIN</span>'
+          : '<span class="fam-pill tap-pill">Tap to switch</span>';
+      const sub = isActive ? 'Currently viewing' : (u.userId === loadFamilyAccounts()[0]?.userId ? 'Primary' : 'Linked profile');
+      return `
+        <div class="fam-card${isActive ? ' active' : ''}" data-fam-id="${escHtml(u.userId)}">
+          <div class="fam-avatar">${escHtml(u.avatar || '⚔️')}</div>
+          <div class="fam-info">
+            <div class="fam-name">${escHtml(u.name || 'Warrior')}</div>
+            <div class="fam-sub">${escHtml(sub)}</div>
+          </div>
+          ${pillHtml}
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="fam-list">${cards}</div>
+      <button class="fam-add-btn" id="btn-fam-add">+ Add child or link account</button>
+      <div id="fam-add-form-wrap"></div>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.5;margin-top:10px;text-align:center">
+        Tap a profile to switch instantly — no logout needed.
+      </div>
+    `;
+
+    // Wire card taps (skip the active one).
+    wrap.querySelectorAll('.fam-card').forEach(card => {
+      const id = card.dataset.famId;
+      if (id === state.userId) return;
+      card.addEventListener('click', () => switchToFamilyMember(id));
+    });
+    document.getElementById('btn-fam-add').addEventListener('click', toggleFamilyAddForm);
+  }
+
+  function toggleFamilyAddForm() {
+    const wrap = document.getElementById('fam-add-form-wrap');
+    if (!wrap) return;
+    if (wrap.innerHTML) { wrap.innerHTML = ''; return; }
+    renderFamilyAddForm('child');
+  }
+
+  function renderFamilyAddForm(mode) {
+    const wrap = document.getElementById('fam-add-form-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = `
+      <div class="fam-add-form">
+        <div class="fam-add-tabs">
+          <button class="fam-add-tab${mode === 'child' ? ' active' : ''}" data-mode="child">➕ New child</button>
+          <button class="fam-add-tab${mode === 'link' ? ' active' : ''}" data-mode="link">🔗 Link existing</button>
+        </div>
+        <div id="fam-add-body"></div>
+      </div>
+    `;
+    wrap.querySelectorAll('.fam-add-tab').forEach(tab => {
+      tab.addEventListener('click', () => renderFamilyAddForm(tab.dataset.mode));
+    });
+    if (mode === 'child') renderFamilyChildForm();
+    else renderFamilyLinkForm();
+  }
+
+  function renderFamilyChildForm() {
+    const body = document.getElementById('fam-add-body');
+    if (!body) return;
+    body.innerHTML = `
+      <div class="fam-add-row">
+        <label class="fam-add-label">Child's name</label>
+        <input class="input" id="fam-child-name" type="text" placeholder="e.g. Lottie" maxlength="32" autocomplete="off">
+      </div>
+      <div class="fam-add-row">
+        <label class="fam-add-label">PIN (optional, 4–8 digits)</label>
+        <input class="input" id="fam-child-pin" type="password" inputmode="numeric" maxlength="8" placeholder="leave blank for no PIN" autocomplete="off">
+      </div>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.5">
+        Creates a new account and joins them to your current campaign so you can track their progress side by side.
+      </div>
+      <div class="fam-add-actions">
+        <button class="btn btn-primary" id="btn-fam-create">Create child account</button>
+      </div>
+      <div class="fam-error" id="fam-add-error"></div>
+    `;
+    document.getElementById('btn-fam-create').addEventListener('click', handleCreateChildAccount);
+  }
+
+  function renderFamilyLinkForm() {
+    const body = document.getElementById('fam-add-body');
+    if (!body) return;
+    body.innerHTML = `
+      <div class="fam-add-row">
+        <label class="fam-add-label">Account name</label>
+        <input class="input" id="fam-link-search" type="text" placeholder="Type to search…" autocomplete="off">
+      </div>
+      <div id="fam-search-results" class="fam-search-results"></div>
+      <div class="fam-error" id="fam-add-error"></div>
+    `;
+    let timer;
+    document.getElementById('fam-link-search').addEventListener('input', e => {
+      clearTimeout(timer);
+      const q = e.target.value.trim();
+      timer = setTimeout(() => searchUsersForLink(q), 200);
+    });
+  }
+
+  async function searchUsersForLink(q) {
+    const results = document.getElementById('fam-search-results');
+    if (!results) return;
+    if (!q || q.length < 2) {
+      results.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 4px">Type at least 2 characters to search.</div>';
+      return;
+    }
+    results.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 4px">Searching…</div>';
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('name')));
+      const lower = q.toLowerCase();
+      const fam = loadFamilyAccounts();
+      const famIds = new Set(fam.map(u => u.userId));
+      const matches = [];
+      snap.forEach(d => {
+        const data = d.data();
+        const name = (data.name || '').toLowerCase();
+        if (!name.includes(lower)) return;
+        if (famIds.has(d.id)) return;
+        matches.push({ userId: d.id, name: data.name || 'Warrior', hasPin: !!data.pinHash });
+      });
+      if (!matches.length) {
+        results.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px 4px">No matching accounts.</div>';
+        return;
+      }
+      results.innerHTML = matches.slice(0, 12).map(m => `
+        <div class="fam-search-result" data-uid="${escHtml(m.userId)}" data-name="${escHtml(m.name)}" data-has-pin="${m.hasPin ? '1' : '0'}">
+          <div class="fam-avatar">⚔️</div>
+          <div class="fam-info"><div class="fam-name">${escHtml(m.name)}</div></div>
+          <span class="fam-pill ${m.hasPin ? 'lock-pill' : 'tap-pill'}">${m.hasPin ? '🔒 PIN' : 'Link'}</span>
+        </div>
+      `).join('');
+      results.querySelectorAll('.fam-search-result').forEach(el => {
+        el.addEventListener('click', () => handleLinkExistingAccount(el.dataset.uid, el.dataset.name, el.dataset.hasPin === '1'));
+      });
+    } catch(e) {
+      results.innerHTML = '<div style="font-size:12px;color:#F85149;padding:8px 4px">Search failed: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  async function handleLinkExistingAccount(targetId, targetName, hasPin) {
+    const errEl = document.getElementById('fam-add-error');
+    if (errEl) errEl.textContent = '';
+    let pinTry = '';
+    if (hasPin) {
+      pinTry = (prompt(`🔒 Enter ${targetName}'s PIN to link this account:`) || '').trim();
+      if (!pinTry) { if (errEl) errEl.textContent = 'PIN is required to link this account'; return; }
+    }
+    try {
+      const snap = await getDoc(doc(db, 'users', targetId));
+      if (!snap.exists()) { if (errEl) errEl.textContent = 'Account not found'; return; }
+      const storedHash = snap.data().pinHash || null;
+      if (storedHash) {
+        const h = await hashPin(pinTry);
+        if (h !== storedHash) { if (errEl) errEl.textContent = 'Incorrect PIN — try again'; return; }
+      }
+      // Try to find an avatar from any campaign membership for this user
+      let avatar = '⚔️';
+      try {
+        const campaignsSnap = await getDocs(collection(db, 'campaigns'));
+        for (const cd of campaignsSnap.docs) {
+          const memSnap = await getDoc(doc(db, 'campaigns', cd.id, 'members', targetId));
+          if (memSnap.exists() && memSnap.data().avatar) { avatar = memSnap.data().avatar; break; }
+        }
+      } catch {}
+      addToFamilyAccounts({ userId: targetId, name: snap.data().name || targetName, avatar });
+      toast(`✓ Linked ${snap.data().name || targetName}`, 2200);
+      const wrap = document.getElementById('fam-add-form-wrap');
+      if (wrap) wrap.innerHTML = '';
+      renderFamilyAccounts();
+    } catch(e) {
+      if (errEl) errEl.textContent = 'Link failed: ' + e.message;
+    }
+  }
+
+  async function handleCreateChildAccount() {
+    const errEl = document.getElementById('fam-add-error');
+    if (errEl) errEl.textContent = '';
+    const name = (document.getElementById('fam-child-name')?.value || '').trim();
+    const pin  = (document.getElementById('fam-child-pin')?.value  || '').trim();
+    if (!name) { if (errEl) errEl.textContent = 'Enter the child’s name'; return; }
+    if (name.length > 32) { if (errEl) errEl.textContent = 'Name is too long'; return; }
+    if (pin && (pin.length < 4 || !/^\d+$/.test(pin))) { if (errEl) errEl.textContent = 'PIN must be 4–8 digits, or leave blank'; return; }
+    const btn = document.getElementById('btn-fam-create');
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+    try {
+      const newId = genId(8);
+      const userDoc = { name, nameLower: name.toLowerCase(), createdAt: serverTimestamp() };
+      if (pin) userDoc.pinHash = await hashPin(pin);
+      await setDoc(doc(db, 'users', newId), userDoc, { merge: true });
+      // Add them to the parent's current campaign so they show on the same leaderboard
+      const childAvatar = '🧒';
+      if (state.campaignId) {
+        await setDoc(doc(db, 'campaigns', state.campaignId, 'members', newId), {
+          name, avatar: childAvatar, joinedAt: serverTimestamp(), completions: {}, wagerOptIn: false,
+        });
+      }
+      addToFamilyAccounts({ userId: newId, name, avatar: childAvatar });
+      toast(`✓ ${name} added to your family`, 2400);
+      const wrap = document.getElementById('fam-add-form-wrap');
+      if (wrap) wrap.innerHTML = '';
+      renderFamilyAccounts();
+    } catch(e) {
+      if (errEl) errEl.textContent = 'Could not create account: ' + e.message;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Create child account'; }
+    }
+  }
+
+  // Switch the active session to a family member's profile.
+  // Mirrors handleAccountSwitch but tap-driven and self-contained:
+  // PIN is asked via prompt() if the target user has one set.
+  async function switchToFamilyMember(targetId) {
+    if (!targetId || targetId === state.userId) return;
+    try {
+      const snap = await getDoc(doc(db, 'users', targetId));
+      if (!snap.exists()) { toast('Account not found'); return; }
+      const data = snap.data();
+      const newName = data.name || 'Warrior';
+      const pinHash = data.pinHash || null;
+      if (pinHash) {
+        const entered = (prompt(`🔒 Enter ${newName}'s PIN to switch:`) || '').trim();
+        if (!entered) { toast('PIN required'); return; }
+        const h = await hashPin(entered);
+        if (h !== pinHash) { toast('Incorrect PIN'); return; }
+      }
+
+      // Find this user's campaign (their member record might be on a different campaign).
+      let targetCampaignId = state.campaignId;
+      let targetMemberData = null;
+      try {
+        // First check the current campaign — common case.
+        if (state.campaignId) {
+          const memSnap = await getDoc(doc(db, 'campaigns', state.campaignId, 'members', targetId));
+          if (memSnap.exists()) { targetMemberData = memSnap.data(); }
+        }
+        // Otherwise scan campaigns for their first membership.
+        if (!targetMemberData) {
+          const campaignsSnap = await getDocs(collection(db, 'campaigns'));
+          for (const cd of campaignsSnap.docs) {
+            const memSnap = await getDoc(doc(db, 'campaigns', cd.id, 'members', targetId));
+            if (memSnap.exists()) {
+              targetCampaignId = cd.id;
+              targetMemberData = memSnap.data();
+              break;
+            }
+          }
+        }
+      } catch(e) { console.warn('Campaign lookup for switch failed', e); }
+
+      const campaignChanging = targetCampaignId && targetCampaignId !== state.campaignId;
+      toast(`Switching to ${newName}…`, 1600);
+
+      if (campaignChanging) {
+        try {
+          const [campSnap, membersSnap, clansSnap] = await Promise.all([
+            getDoc(doc(db, 'campaigns', targetCampaignId)),
+            getDocs(collection(db, 'campaigns', targetCampaignId, 'members')),
+            getDocs(collection(db, 'campaigns', targetCampaignId, 'clans')),
+          ]);
+          if (!campSnap.exists()) throw new Error('Campaign not found');
+          state.userId       = targetId;
+          state.userName     = newName;
+          state.campaignId   = targetCampaignId;
+          state.campaignData = campSnap.data();
+          state.members      = {};
+          state.clans        = {};
+          membersSnap.forEach(d => { state.members[d.id] = d.data(); });
+          clansSnap.forEach(d => { state.clans[d.id] = d.data(); });
+          state.voiceGreetingShown = false;
+          saveLocal();
+          subscribeAll();
+          renderAll();
+        } catch(e2) {
+          console.warn('Campaign switch failed, falling back to user switch only:', e2);
+          state.userId = targetId; state.userName = newName;
+          saveLocal(); renderAll();
+        }
+      } else {
+        state.userId = targetId; state.userName = newName;
+        saveLocal(); renderAll();
+      }
+      // Refresh the cached avatar/name in the family entry from member data if available
+      addToFamilyAccounts({
+        userId: targetId,
+        name: newName,
+        avatar: targetMemberData?.avatar || (loadFamilyAccounts().find(u => u.userId === targetId)?.avatar) || '⚔️',
+      });
+      switchTab('today');
+      toast(`Switched to ${newName} 👋`, 2400);
     } catch(e) { toast('Switch failed: ' + e.message); }
   }
 
@@ -7115,7 +7570,7 @@
   }
   window.addEventListener('load', checkForUpdateOnLaunch);
   function initProfileSections() {
-    const DEFAULT_OPEN = new Set(['warrior', 'clan', 'community']);
+    const DEFAULT_OPEN = new Set(['warrior', 'family', 'clan', 'community']);
     document.querySelectorAll('.psec-hdr').forEach(hdr => {
       if (hdr._psecInited) return;
       hdr._psecInited = true;
