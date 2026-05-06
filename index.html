@@ -2994,7 +2994,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v27';
+  const APP_VERSION = 'v28';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -9749,22 +9749,28 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-// Motion Rep Counter  — DTW-style template matching via DeviceMotion
-// Training: records ~8s of accelerometer, auto-detects peaks, learns
-// the user's personal rep pattern (threshold + min gap per exercise).
-// Counting: threshold-crossing state machine counts reps in real time.
+// Motion Rep Counter — three-factor validation via DeviceMotion
+//
+// Training: 8s recording → learns three parameters per exercise:
+//   threshold        – signal midpoint between rest and peak
+//   minAboveMs       – minimum milliseconds signal must stay above
+//                      threshold to count (filters brief shakes)
+//   minPeakAmp       – minimum peak height during the above-period
+//                      (filters small movements that graze threshold)
+//   minGapMs         – minimum time between consecutive reps
+//
+// Counting: 3-second countdown before counting begins (user settles
+// into position). Each rep must satisfy ALL four criteria.
 // ═══════════════════════════════════════════════════════════════════
 const _mc = (() => {
   const STORAGE = 'cc_motion_profiles';
   let _handler = null, _active = false, _above = false;
 
-  // Magnitude of accelerometer vector (gravity-inclusive gives stable signal)
   function _mag(e) {
     const a = e.accelerationIncludingGravity || {};
     return Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
   }
 
-  // Simple moving average smoothing
   function _smooth(arr, w=5) {
     return arr.map((v,i) => {
       const sl = arr.slice(Math.max(0,i-w+1), i+1);
@@ -9772,7 +9778,6 @@ const _mc = (() => {
     });
   }
 
-  // Find local maxima above threshold, enforcing minimum distance between peaks
   function _peaks(sig, minDist, thr) {
     const out = [];
     for (let i=1; i<sig.length-1; i++) {
@@ -9789,7 +9794,7 @@ const _mc = (() => {
       try { return (await DeviceMotionEvent.requestPermission()) === 'granted'; }
       catch { return false; }
     }
-    return true; // Android — no explicit permission needed
+    return true;
   }
 
   function loadProfiles() {
@@ -9801,7 +9806,6 @@ const _mc = (() => {
     localStorage.setItem(STORAGE, JSON.stringify(all));
   }
 
-  // Record durationMs of motion, derive threshold + minGapMs from peaks
   async function train(durationMs, onSample) {
     if (!(await requestPermission())) throw new Error('PERMISSION_DENIED');
     const samples = [], t0 = Date.now();
@@ -9809,64 +9813,121 @@ const _mc = (() => {
     return new Promise((resolve, reject) => {
       _handler = (e) => {
         if (!_active) return;
-        const m = _mag(e);
-        samples.push({ t: Date.now()-t0, mag: m });
-        if (onSample) onSample(m);
+        samples.push({ t: Date.now()-t0, mag: _mag(e) });
+        if (onSample) onSample(samples[samples.length-1].mag);
       };
       window.addEventListener('devicemotion', _handler);
       setTimeout(() => {
         window.removeEventListener('devicemotion', _handler);
         _active = false; _handler = null;
         if (samples.length < 15) { reject(new Error('NO_SIGNAL')); return; }
+
         const mags = _smooth(samples.map(s=>s.mag));
         const sorted = [...mags].sort((a,b)=>a-b);
-        const p20 = sorted[Math.floor(sorted.length*0.2)];
-        const p85 = sorted[Math.floor(sorted.length*0.85)];
+        const p20  = sorted[Math.floor(sorted.length*0.2)];
+        const p85  = sorted[Math.floor(sorted.length*0.85)];
         const threshold = p20 + (p85-p20)*0.5;
+
         const hz = samples.length / (durationMs/1000);
         const minDistSamples = Math.max(5, Math.floor(hz*0.35));
         const peaks = _peaks(mags, minDistSamples, threshold);
+
+        // For each detected peak, measure how long signal stayed above
+        // threshold and how high the peak reached. These become our
+        // per-exercise filters that distinguish real reps from shakes.
+        const aboveDurations = [], peakAmplitudes = [];
+        for (const pi of peaks) {
+          let li = pi; while (li > 0 && mags[li-1] > threshold) li--;
+          let ri = pi; while (ri < mags.length-1 && mags[ri+1] > threshold) ri++;
+          aboveDurations.push((samples[ri]?.t||0) - (samples[li]?.t||0));
+          peakAmplitudes.push(mags[pi]);
+        }
+        aboveDurations.sort((a,b)=>a-b);
+        peakAmplitudes.sort((a,b)=>a-b);
+
+        const medAbove = aboveDurations.length
+          ? aboveDurations[Math.floor(aboveDurations.length/2)] : 300;
+        const medPeak  = peakAmplitudes.length
+          ? peakAmplitudes[Math.floor(peakAmplitudes.length/2)] : threshold*1.3;
+
+        // Inter-peak gap → min gap for counting
         let minGapMs = 600;
         if (peaks.length >= 2) {
           const gaps = [];
-          for (let i=1; i<peaks.length; i++) gaps.push(samples[peaks[i]].t - samples[peaks[i-1]].t);
+          for (let i=1; i<peaks.length; i++)
+            gaps.push(samples[peaks[i]].t - samples[peaks[i-1]].t);
           gaps.sort((a,b)=>a-b);
           minGapMs = Math.max(250, gaps[Math.floor(gaps.length/2)] * 0.65);
         }
-        resolve({ threshold, minGapMs, detectedReps: peaks.length });
+
+        resolve({
+          threshold,
+          minGapMs,
+          minAboveMs:  Math.max(150, medAbove * 0.4),  // 40% of median rep duration
+          minPeakAmp:  medPeak * 0.65,                  // 65% of median rep height
+          detectedReps: peaks.length,
+        });
       }, durationMs);
     });
   }
 
-  // Live counting: threshold-crossing state machine.
-  // A rep fires when signal drops back below threshold after exceeding it,
-  // AND enough time has passed since the previous rep (minGapMs).
-  async function startCounting(profile, onCount, onSignal) {
+  // THREE-FACTOR VALIDATION:
+  // 1. Signal above threshold for at least minAboveMs  → rules out shakes
+  // 2. Peak reaches at least minPeakAmp                → rules out grazing touches
+  // 3. minGapMs since last rep                         → rules out double-counts
+  // Plus a 3-second warmup so the initial movement never counts.
+  async function startCounting(profile, onCount, onSignal, onReady) {
     if (!(await requestPermission())) throw new Error('PERMISSION_DENIED');
+
+    // Warmup countdown — caller shows UI, we call onReady when done
+    let warmupDone = false;
+    const warmupTimer = setTimeout(() => {
+      warmupDone = true;
+      if (onReady) onReady();
+    }, 3000);
+
     let count = 0, lastRepTime = 0;
+    let aboveStart = null, peakInCurrent = 0;
     const buf = [];
     _active = true; _above = false;
+
     _handler = (e) => {
       if (!_active) return;
       buf.push(_mag(e));
       if (buf.length > 6) buf.shift();
       const v = buf.reduce((a,b)=>a+b,0)/buf.length;
       if (onSignal) onSignal(v, profile.threshold);
+
       const now = Date.now();
+
       if (!_above && v > profile.threshold) {
         _above = true;
-      } else if (_above && v <= profile.threshold) {
-        _above = false;
-        if (now - lastRepTime >= profile.minGapMs) {
-          count++;
-          lastRepTime = now;
-          if (onCount) onCount(count);
+        aboveStart = now;
+        peakInCurrent = v;
+      } else if (_above) {
+        peakInCurrent = Math.max(peakInCurrent, v);
+        if (v <= profile.threshold) {
+          _above = false;
+          const aboveDuration = now - (aboveStart||now);
+          const sinceLastRep  = now - lastRepTime;
+          // All three gates must pass — AND warmup must be over
+          if (warmupDone
+              && aboveDuration  >= profile.minAboveMs
+              && peakInCurrent  >= profile.minPeakAmp
+              && sinceLastRep   >= profile.minGapMs) {
+            count++;
+            lastRepTime = now;
+            if (onCount) onCount(count);
+          }
+          aboveStart = null;
+          peakInCurrent = 0;
         }
       }
     };
     window.addEventListener('devicemotion', _handler);
     return {
       stop: () => {
+        clearTimeout(warmupTimer);
         window.removeEventListener('devicemotion', _handler);
         _active = false; _handler = null; return count;
       }
@@ -10016,10 +10077,11 @@ async function openMotionCounter(exerciseId, exerciseName, exerciseIcon) {
 
   // ── COUNTING FLOW ───────────────────────────────────────────
   async function showCounting() {
+    // Render the counting UI shell (count starts at 0, "Get ready" state)
     inner.innerHTML = `
       <div style="font-size:14px;color:var(--gold);font-weight:700;margin-bottom:4px">${exerciseIcon} ${exerciseName}</div>
-      <div style="font-size:12px;color:var(--text-3);margin-bottom:20px">Keep going — counting your reps</div>
-      <div id="mc-count" style="font-size:100px;font-weight:900;color:var(--text-1);line-height:1;margin-bottom:4px;transition:transform 0.12s">0</div>
+      <div id="mc-status-label" style="font-size:13px;color:var(--text-3);margin-bottom:20px">Get ready…</div>
+      <div id="mc-count" style="font-size:100px;font-weight:900;color:var(--text-3);line-height:1;margin-bottom:4px;transition:transform 0.12s,color 0.3s">0</div>
       <div style="font-size:14px;color:var(--text-2);margin-bottom:18px">reps</div>
       <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Motion signal</div>
       ${makeBars('mc-count-bars', 16)}
@@ -10036,14 +10098,23 @@ async function openMotionCounter(exerciseId, exerciseName, exerciseIcon) {
     try {
       controller = await _mc.startCounting(
         storedProfile,
+        // onCount — rep registered
         (count) => {
           const el = document.getElementById('mc-count');
           if (!el) return;
           el.textContent = count;
-          el.style.transform = 'scale(1.18)';
-          setTimeout(() => { if(el) el.style.transform='scale(1)'; }, 120);
+          el.style.transform = 'scale(1.2)';
+          setTimeout(() => { if(el) el.style.transform='scale(1)'; }, 130);
         },
-        (v, thr) => updateBars('mc-count-bars', v, thr)
+        // onSignal — live bars
+        (v, thr) => updateBars('mc-count-bars', v, thr),
+        // onReady — warmup complete, activate counting
+        () => {
+          const lbl = document.getElementById('mc-status-label');
+          const cnt = document.getElementById('mc-count');
+          if (lbl) lbl.textContent = 'Go — counting your reps';
+          if (cnt) cnt.style.color = 'var(--text-1)';
+        }
       );
     } catch(err) {
       inner.innerHTML = `
