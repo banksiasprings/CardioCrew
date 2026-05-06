@@ -1749,10 +1749,15 @@
         <!-- Submission area: number input OR stopwatch (chosen by metric) -->
         <div id="today-pb-input-wrap" style="margin-top:14px;display:none">
           <!-- Number input variant -->
-          <div id="today-pb-num-wrap" style="display:none;align-items:center;justify-content:center;gap:8px">
-            <input type="number" id="today-pb-num" min="1" max="9999" inputmode="numeric"
-              style="width:120px;padding:14px 12px;font-size:24px;font-weight:800;text-align:center;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text-1)">
-            <div id="today-pb-unit" style="font-size:14px;color:var(--text-2);font-weight:700">reps</div>
+          <div id="today-pb-num-wrap" style="display:none;flex-direction:column;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+              <input type="number" id="today-pb-num" min="1" max="9999" inputmode="numeric"
+                style="width:120px;padding:14px 12px;font-size:24px;font-weight:800;text-align:center;border-radius:10px;border:2px solid var(--border);background:var(--surface);color:var(--text-1)">
+              <div id="today-pb-unit" style="font-size:14px;color:var(--text-2);font-weight:700">reps</div>
+            </div>
+            <button id="today-pb-count-btn" style="background:none;border:1px solid var(--border);border-radius:8px;padding:7px 16px;font-size:12px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.2s,color 0.2s">
+              📱 Count for me
+            </button>
           </div>
           <!-- Stopwatch variant (plank) -->
           <div id="today-pb-sw-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px">
@@ -2989,7 +2994,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v26';
+  const APP_VERSION = 'v27';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -4381,6 +4386,10 @@
         }).join('') +
         '</div>';
     }
+
+    // Wire motion counter button
+    const countBtn = document.getElementById('today-pb-count-btn');
+    if (countBtn) countBtn.onclick = () => openMotionCounter(exId, meta.name, meta.icon || '💪');
 
     // Wire button handlers (idempotent — set onclick directly each render).
     const submitBtn = document.getElementById('today-pb-submit');
@@ -9737,5 +9746,335 @@
     </div>
   </div>
 </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// Motion Rep Counter  — DTW-style template matching via DeviceMotion
+// Training: records ~8s of accelerometer, auto-detects peaks, learns
+// the user's personal rep pattern (threshold + min gap per exercise).
+// Counting: threshold-crossing state machine counts reps in real time.
+// ═══════════════════════════════════════════════════════════════════
+const _mc = (() => {
+  const STORAGE = 'cc_motion_profiles';
+  let _handler = null, _active = false, _above = false;
+
+  // Magnitude of accelerometer vector (gravity-inclusive gives stable signal)
+  function _mag(e) {
+    const a = e.accelerationIncludingGravity || {};
+    return Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+  }
+
+  // Simple moving average smoothing
+  function _smooth(arr, w=5) {
+    return arr.map((v,i) => {
+      const sl = arr.slice(Math.max(0,i-w+1), i+1);
+      return sl.reduce((a,b)=>a+b,0)/sl.length;
+    });
+  }
+
+  // Find local maxima above threshold, enforcing minimum distance between peaks
+  function _peaks(sig, minDist, thr) {
+    const out = [];
+    for (let i=1; i<sig.length-1; i++) {
+      if (sig[i]>=sig[i-1] && sig[i]>=sig[i+1] && sig[i]>thr) {
+        if (!out.length || i-out[out.length-1]>=minDist) out.push(i);
+      }
+    }
+    return out;
+  }
+
+  async function requestPermission() {
+    if (typeof DeviceMotionEvent === 'undefined') return false;
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      try { return (await DeviceMotionEvent.requestPermission()) === 'granted'; }
+      catch { return false; }
+    }
+    return true; // Android — no explicit permission needed
+  }
+
+  function loadProfiles() {
+    try { return JSON.parse(localStorage.getItem(STORAGE)||'{}'); } catch { return {}; }
+  }
+  function getProfile(id) { return loadProfiles()[id]||null; }
+  function saveProfile(id, p) {
+    const all = loadProfiles(); all[id] = p;
+    localStorage.setItem(STORAGE, JSON.stringify(all));
+  }
+
+  // Record durationMs of motion, derive threshold + minGapMs from peaks
+  async function train(durationMs, onSample) {
+    if (!(await requestPermission())) throw new Error('PERMISSION_DENIED');
+    const samples = [], t0 = Date.now();
+    _active = true;
+    return new Promise((resolve, reject) => {
+      _handler = (e) => {
+        if (!_active) return;
+        const m = _mag(e);
+        samples.push({ t: Date.now()-t0, mag: m });
+        if (onSample) onSample(m);
+      };
+      window.addEventListener('devicemotion', _handler);
+      setTimeout(() => {
+        window.removeEventListener('devicemotion', _handler);
+        _active = false; _handler = null;
+        if (samples.length < 15) { reject(new Error('NO_SIGNAL')); return; }
+        const mags = _smooth(samples.map(s=>s.mag));
+        const sorted = [...mags].sort((a,b)=>a-b);
+        const p20 = sorted[Math.floor(sorted.length*0.2)];
+        const p85 = sorted[Math.floor(sorted.length*0.85)];
+        const threshold = p20 + (p85-p20)*0.5;
+        const hz = samples.length / (durationMs/1000);
+        const minDistSamples = Math.max(5, Math.floor(hz*0.35));
+        const peaks = _peaks(mags, minDistSamples, threshold);
+        let minGapMs = 600;
+        if (peaks.length >= 2) {
+          const gaps = [];
+          for (let i=1; i<peaks.length; i++) gaps.push(samples[peaks[i]].t - samples[peaks[i-1]].t);
+          gaps.sort((a,b)=>a-b);
+          minGapMs = Math.max(250, gaps[Math.floor(gaps.length/2)] * 0.65);
+        }
+        resolve({ threshold, minGapMs, detectedReps: peaks.length });
+      }, durationMs);
+    });
+  }
+
+  // Live counting: threshold-crossing state machine.
+  // A rep fires when signal drops back below threshold after exceeding it,
+  // AND enough time has passed since the previous rep (minGapMs).
+  async function startCounting(profile, onCount, onSignal) {
+    if (!(await requestPermission())) throw new Error('PERMISSION_DENIED');
+    let count = 0, lastRepTime = 0;
+    const buf = [];
+    _active = true; _above = false;
+    _handler = (e) => {
+      if (!_active) return;
+      buf.push(_mag(e));
+      if (buf.length > 6) buf.shift();
+      const v = buf.reduce((a,b)=>a+b,0)/buf.length;
+      if (onSignal) onSignal(v, profile.threshold);
+      const now = Date.now();
+      if (!_above && v > profile.threshold) {
+        _above = true;
+      } else if (_above && v <= profile.threshold) {
+        _above = false;
+        if (now - lastRepTime >= profile.minGapMs) {
+          count++;
+          lastRepTime = now;
+          if (onCount) onCount(count);
+        }
+      }
+    };
+    window.addEventListener('devicemotion', _handler);
+    return {
+      stop: () => {
+        window.removeEventListener('devicemotion', _handler);
+        _active = false; _handler = null; return count;
+      }
+    };
+  }
+
+  function stop() {
+    if (_handler) { window.removeEventListener('devicemotion', _handler); _handler = null; }
+    _active = false;
+  }
+
+  return { train, startCounting, stop, getProfile, saveProfile, requestPermission };
+})();
+
+// ── Motion Counter UI ───────────────────────────────────────────
+async function openMotionCounter(exerciseId, exerciseName, exerciseIcon) {
+  const overlay = document.getElementById('mc-overlay');
+  const inner   = document.getElementById('mc-inner');
+  overlay.style.display = 'flex';
+  let storedProfile = _mc.getProfile(exerciseId);
+
+  // Scrolling signal bar visualiser — each call pushes one value
+  const barHist = {};
+  function updateBars(id, value, threshold) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const bars = el.querySelectorAll('div');
+    const n = bars.length;
+    if (!barHist[id]) barHist[id] = new Array(n).fill(0);
+    barHist[id].push(value);
+    if (barHist[id].length > n) barHist[id].shift();
+    const maxV = Math.max(...barHist[id], threshold*1.6, 9.8);
+    barHist[id].forEach((v, i) => {
+      if (!bars[i]) return;
+      bars[i].style.height = Math.max(3, Math.round((v/maxV)*48)) + 'px';
+      bars[i].style.background = v > threshold ? '#66c8ff' : 'var(--gold)';
+    });
+  }
+
+  function makeBars(id, n) {
+    return `<div id="${id}" style="display:flex;gap:3px;align-items:flex-end;justify-content:center;height:52px">`
+      + Array(n).fill('<div style="width:11px;border-radius:3px 3px 0 0;height:3px;background:var(--gold);transition:height 0.08s,background 0.1s"></div>').join('')
+      + '</div>';
+  }
+
+  function close() {
+    _mc.stop();
+    overlay.style.display = 'none';
+    inner.innerHTML = '';
+  }
+
+  // ── TRAINING FLOW ───────────────────────────────────────────
+  function showTraining() {
+    inner.innerHTML = `
+      <div style="font-size:34px;margin-bottom:10px">📱</div>
+      <div style="font-size:19px;font-weight:800;color:var(--text-1);margin-bottom:4px">Train Rep Counter</div>
+      <div style="font-size:14px;color:var(--gold);font-weight:700;margin-bottom:18px">${exerciseIcon} ${exerciseName}</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.75;margin-bottom:14px;text-align:left">
+        1. Slide phone into a <b>snug arm pocket</b> on your upper arm<br>
+        2. Press <b>Start Recording</b> below<br>
+        3. Do <b>5–10 reps</b> at your normal pace
+      </div>
+      <div style="font-size:12px;color:var(--text-3);padding:10px 12px;background:var(--surface);border-radius:8px;margin-bottom:20px;text-align:left;line-height:1.6">
+        💡 The arm pocket keeps the phone still relative to your arm — that's what gives a clean signal. Don't hold it in your hand.
+      </div>
+      <button class="btn btn-primary" id="mc-go" style="min-width:200px">Start Recording</button>
+      ${storedProfile ? `<div><button id="mc-skip-train" style="background:none;border:none;color:var(--text-3);font-size:12px;margin-top:12px;cursor:pointer;padding:8px">Skip — use existing calibration</button></div>` : ''}
+      <div><button id="mc-cancel" style="background:none;border:none;color:var(--text-3);font-size:12px;margin-top:${storedProfile?'4':'12'}px;cursor:pointer;padding:8px">Cancel</button></div>
+    `;
+    document.getElementById('mc-go').onclick = runCountdown;
+    document.getElementById('mc-cancel').onclick = close;
+    const skip = document.getElementById('mc-skip-train');
+    if (skip) skip.onclick = showCounting;
+  }
+
+  async function runCountdown() {
+    for (let i=3; i>=1; i--) {
+      inner.innerHTML = `
+        <div style="font-size:14px;color:var(--text-3);margin-bottom:14px">Get ready…</div>
+        <div style="font-size:100px;font-weight:900;color:var(--gold);line-height:1">${i}</div>
+      `;
+      await new Promise(r => setTimeout(r, 850));
+    }
+    inner.innerHTML = `
+      <div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:4px">🔴 Recording</div>
+      <div id="mc-timer" style="font-size:60px;font-weight:900;color:var(--text-1);line-height:1;margin-bottom:14px">8</div>
+      ${makeBars('mc-train-bars', 20)}
+      <div style="font-size:12px;color:var(--text-3);margin-top:10px">Keep doing your reps…</div>
+    `;
+    const DURATION = 8000;
+    const t0 = Date.now();
+    const tick = setInterval(() => {
+      const el = document.getElementById('mc-timer');
+      if (el) el.textContent = Math.max(0, Math.ceil((DURATION-(Date.now()-t0))/1000));
+    }, 200);
+
+    let profile;
+    try {
+      profile = await _mc.train(DURATION, mag => updateBars('mc-train-bars', mag, 12));
+    } catch(err) {
+      clearInterval(tick);
+      inner.innerHTML = `
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:15px;color:var(--text-1);margin-bottom:8px">
+          ${err.message==='PERMISSION_DENIED' ? 'Motion sensor permission denied' : 'No motion detected'}
+        </div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:20px;line-height:1.6">
+          ${err.message==='PERMISSION_DENIED'
+            ? 'Allow motion & orientation access in your browser or iOS Settings.'
+            : 'Make sure the phone is moving while recording. Try again.'}
+        </div>
+        <button class="btn btn-primary" id="mc-retry" style="min-width:160px">Try Again</button>
+        <div><button id="mc-back" style="background:none;border:none;color:var(--text-3);font-size:12px;margin-top:12px;cursor:pointer;padding:8px">Cancel</button></div>
+      `;
+      document.getElementById('mc-retry').onclick = runCountdown;
+      document.getElementById('mc-back').onclick = close;
+      return;
+    }
+    clearInterval(tick);
+    showTrainingResult(profile);
+  }
+
+  function showTrainingResult(profile) {
+    let n = profile.detectedReps;
+    const render = () => { const el=document.getElementById('mc-rep-n'); if(el) el.textContent=n; };
+    inner.innerHTML = `
+      <div style="font-size:34px;margin-bottom:10px">✅</div>
+      <div style="font-size:14px;color:var(--text-2);margin-bottom:14px">I counted this many reps in your recording:</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px">
+        <button id="mc-dn" style="width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-size:20px;color:var(--text-1);cursor:pointer">−</button>
+        <div id="mc-rep-n" style="font-size:56px;font-weight:900;color:var(--gold);min-width:70px;text-align:center">${n}</div>
+        <button id="mc-up" style="width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-size:20px;color:var(--text-1);cursor:pointer">+</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:20px">Adjust if it miscounted — fixes calibration</div>
+      <button class="btn btn-primary" id="mc-save" style="min-width:200px">Save & Start Counting</button>
+      <div><button id="mc-retrain" style="background:none;border:none;color:var(--text-3);font-size:12px;margin-top:12px;cursor:pointer;padding:8px">Retrain</button></div>
+    `;
+    document.getElementById('mc-dn').onclick = () => { n=Math.max(0,n-1); render(); };
+    document.getElementById('mc-up').onclick = () => { n++; render(); };
+    document.getElementById('mc-retrain').onclick = showTraining;
+    document.getElementById('mc-save').onclick = () => {
+      _mc.saveProfile(exerciseId, profile);
+      storedProfile = profile;
+      showCounting();
+    };
+  }
+
+  // ── COUNTING FLOW ───────────────────────────────────────────
+  async function showCounting() {
+    inner.innerHTML = `
+      <div style="font-size:14px;color:var(--gold);font-weight:700;margin-bottom:4px">${exerciseIcon} ${exerciseName}</div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:20px">Keep going — counting your reps</div>
+      <div id="mc-count" style="font-size:100px;font-weight:900;color:var(--text-1);line-height:1;margin-bottom:4px;transition:transform 0.12s">0</div>
+      <div style="font-size:14px;color:var(--text-2);margin-bottom:18px">reps</div>
+      <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Motion signal</div>
+      ${makeBars('mc-count-bars', 16)}
+      <div style="margin-top:22px">
+        <button class="btn btn-primary" id="mc-done" style="min-width:220px;font-size:16px;padding:14px">Use This Count ✓</button>
+      </div>
+      <div style="display:flex;gap:20px;justify-content:center;margin-top:12px">
+        <button id="mc-retrain-from-count" style="background:none;border:none;color:var(--text-3);font-size:12px;cursor:pointer;padding:8px">Retrain</button>
+        <button id="mc-cancel-count" style="background:none;border:none;color:var(--text-3);font-size:12px;cursor:pointer;padding:8px">Cancel</button>
+      </div>
+    `;
+
+    let controller;
+    try {
+      controller = await _mc.startCounting(
+        storedProfile,
+        (count) => {
+          const el = document.getElementById('mc-count');
+          if (!el) return;
+          el.textContent = count;
+          el.style.transform = 'scale(1.18)';
+          setTimeout(() => { if(el) el.style.transform='scale(1)'; }, 120);
+        },
+        (v, thr) => updateBars('mc-count-bars', v, thr)
+      );
+    } catch(err) {
+      inner.innerHTML = `
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:14px;color:var(--text-1);margin-bottom:16px">Could not access motion sensor</div>
+        <button class="btn btn-primary" id="mc-close">Close</button>
+      `;
+      document.getElementById('mc-close').onclick = close;
+      return;
+    }
+
+    document.getElementById('mc-done').onclick = () => {
+      const n = controller.stop();
+      const inp = document.getElementById('today-pb-num');
+      if (inp) { inp.value = n; inp.dispatchEvent(new Event('input')); }
+      close();
+      if (n > 0) toast(`📱 ${n} reps counted`, 2000);
+    };
+    document.getElementById('mc-retrain-from-count').onclick = () => { controller.stop(); showTraining(); };
+    document.getElementById('mc-cancel-count').onclick = () => { controller.stop(); close(); };
+  }
+
+  // Start in training if no profile, counting if already trained
+  storedProfile ? showCounting() : showTraining();
+}
+</script>
+
+<!-- ── Motion Rep Counter Modal ── -->
+<div id="mc-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9800;display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px">
+  <div id="mc-inner" style="width:100%;max-width:340px;text-align:center"></div>
+</div>
+
 </body>
 </html>
