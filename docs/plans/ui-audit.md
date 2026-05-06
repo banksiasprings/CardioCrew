@@ -1,8 +1,9 @@
 # UI Audit & Polish
 
-**Status**: in progress
-**Owner**: Steven (autonomous Claude execution while Steven's at work)
+**Status**: ✅ COMPLETE (2026-05-06)
+**Owner**: Steven (autonomous Claude execution while Steven was at work)
 **Created**: 2026-05-06
+**Shipped**: SW v52 → v54, APP_VERSION still v24
 
 ## Goal
 
@@ -47,12 +48,30 @@ Atomic commits per fix-pass so any single change is revertable from dispatch. Bu
 
 | Pass | Goal | Status |
 |---|---|---|
-| 1 | Bump `--text-3` contrast in both themes (token fix, cascades) | pending |
-| 2 | Outline button visibility — border + active state | pending |
-| 3 | Specific element overrides (history header, week tracker, stars) | pending |
-| 4 | Polish: bottom-nav, stat-card labels, section spacing | pending |
-| 5 | Cleanup: delete legacy `#tab-history`, dead JS | pending |
-| 6 | Smoke test both themes across all screens | pending |
+| 1 | Bump `--text-3` contrast in both themes (token fix, cascades) | ✅ SW v52 / commit `d39f520` |
+| 2 | Outline buttons + stars + define missing `--text-1` token | ✅ SW v53 / commit `a323b83` |
+| 3 | Specific element overrides (recent-sessions divider) | ✅ SW v53 / commit `a323b83` |
+| 4 | Stat-card label visibility (day-theme override added) | ✅ SW v53 / commit `a323b83` |
+| 5 | Cleanup: delete legacy `#tab-history` (50 lines), `drawWeightSparkline` (50 lines) | ✅ SW v54 / commit `7322ebe` |
+| 6 | Smoke test both themes across Today / Profile / Board | ✅ |
+
+## Verified live screens
+
+**Night theme (default):**
+- ✅ Today (PB Maintenance) — all helper text readable
+- ✅ Profile — stat-card labels readable, name + tier pill clear
+- ✅ Board All-Time — Julia (123 XP), Steven (121), Claire (110) all visible with tier pills
+
+**Day theme (parchment):**
+- ✅ Today (PB Maintenance) — dark walnut helper text on cream
+- ✅ Profile — dark walnut stat labels, gold values softer
+- ✅ Board All-Time — same as night, both themes pass
+
+## Out of scope (deferred)
+- Major layout rework
+- New features
+- Theme rebrand
+- Mobile-specific tap target sizing beyond visibility
 
 ## Out of scope
 - Major layout rework (e.g. redesigning Today screen)
