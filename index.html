@@ -2941,28 +2941,44 @@
       });
       return pts;
     }
-    // Classic / kids classic — group ticks per day, apply the 5-pt
-    // perfect-day bonus when ≥4 exercises ticked. Slight over-count
-    // possible (catch-up perfect days that should give 4 pts instead
-    // of 5) but live mirror fixes itself on next user action.
-    const dayCounts = {};
-    Object.keys(completions).forEach(k => {
-      // Skip PB-only suffixes
-      if (k.endsWith('_value') || k.endsWith('_at') || k.endsWith('_status') || k.endsWith('_score')) return;
-      // Skip mission completion entries (templates) — handled separately below
-      if (k.endsWith('_mission')) return;
-      if (!completions[k]) return;
-      const m = k.match(/^d(\d+)_/);
-      if (!m) return;
-      dayCounts[m[1]] = (dayCounts[m[1]] || 0) + 1;
-    });
+    // Template campaigns (non-kids) — one mission per day, fixed pts/day.
+    // Without the template metadata at hand we approximate each mission = 5 pts.
+    const tplId = campData?.templateId || '';
+    if (tplId && tplId !== 'kids_classic') {
+      let pts = 0;
+      Object.keys(completions).forEach(k => {
+        if (k.endsWith('_mission') && completions[k]) pts += 5;
+      });
+      return pts;
+    }
+    // Classic / kids_classic — walk the schedule explicitly so rest days
+    // count as auto-ticked (matches getCompletionsForDay's live behaviour),
+    // and so spurious key suffixes like `_firstAt` can't leak into the
+    // per-day tally. Stop at currentDay so future-day rest-freebies don't
+    // inflate the score before the user has reached those days. Slight
+    // over-count still possible for catch-up perfect days (no on-time
+    // check here — live mirror corrects on next user action).
+    const challenges = (tplId === 'kids_classic') ? KIDS_CHALLENGES : CHALLENGES;
+    let currentDay = 30;
+    const startStr = campData?.startDate;
+    if (startStr) {
+      const parts = startStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (parts) {
+        const start = new Date(+parts[1], +parts[2] - 1, +parts[3]);
+        start.setHours(0, 0, 0, 0);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        currentDay = Math.max(1, Math.min(30, Math.floor((today - start) / 86400000) + 1));
+      }
+    }
     let pts = 0;
-    Object.values(dayCounts).forEach(c => { pts += (c >= 4) ? 5 : c; });
-    // Template campaigns store one mission per day. Without the template
-    // metadata at hand we assume each mission = 5 pts (typical value).
-    Object.keys(completions).forEach(k => {
-      if (k.endsWith('_mission') && completions[k]) pts += 5;
-    });
+    for (let day = 1; day <= currentDay; day++) {
+      let ticks = 0;
+      for (const ch of challenges) {
+        if (ch.schedule[day - 1] === null) ticks++;            // rest day — auto-tick
+        else if (completions[`d${day}_${ch.id}`]) ticks++;     // active exercise ticked
+      }
+      pts += (ticks >= 4) ? 5 : ticks;
+    }
     return pts;
   }
   // Backfill — first time post-v18 deploy, walk every campaign this
@@ -2971,7 +2987,7 @@
   // touch state — runs in the background safely.
   // Bump this when the scoring algorithm in _computeMemberPoints changes,
   // so existing users with stale backfill data get re-snapshotted.
-  const XP_BACKFILL_VERSION = 2;
+  const XP_BACKFILL_VERSION = 3;
   async function backfillXPHistory() {
     if (!state.userId || !state.myUser) return;
     if ((state.myUser.xpBackfillVersion || 0) >= XP_BACKFILL_VERSION) return;
@@ -3096,7 +3112,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v31';
+  const APP_VERSION = 'v32';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -5562,34 +5578,37 @@
       return result;
     }
 
-    // Classic / kids classic — group by day, apply 5-pt perfect bonus.
-    const dayCounts = {};
-    Object.keys(completions).forEach(k => {
-      if (k.endsWith('_value') || k.endsWith('_at') || k.endsWith('_status') || k.endsWith('_score')) return;
-      if (k.endsWith('_mission')) return;
-      if (!completions[k]) return;
-      const m = k.match(/^d(\d+)_/);
-      if (!m) return;
-      const day = +m[1];
-      if (day < 1 || day > maxDay) return;
-      dayCounts[day] = (dayCounts[day] || 0) + 1;
-    });
-    Object.keys(dayCounts).forEach(dayStr => {
-      const day = +dayStr;
-      const pts = dayCounts[day] >= 4 ? 5 : dayCounts[day];
-      const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
-      result[dateStr] = (result[dateStr] || 0) + pts;
-    });
-    // Template missions (5 pts each)
-    Object.keys(completions).forEach(k => {
-      if (!k.endsWith('_mission') || !completions[k]) return;
-      const m = k.match(/^d(\d+)_mission$/);
-      if (!m) return;
-      const day = +m[1];
-      if (day < 1 || day > maxDay) return;
-      const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
-      result[dateStr] = (result[dateStr] || 0) + 5;
-    });
+    // Template missions (non-kids, 5 pts each)
+    const tplId = campData.templateId || '';
+    if (tplId && tplId !== 'kids_classic') {
+      Object.keys(completions).forEach(k => {
+        if (!k.endsWith('_mission') || !completions[k]) return;
+        const m = k.match(/^d(\d+)_mission$/);
+        if (!m) return;
+        const day = +m[1];
+        if (day < 1 || day > maxDay) return;
+        const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+        result[dateStr] = (result[dateStr] || 0) + 5;
+      });
+      return result;
+    }
+
+    // Classic / kids_classic — walk the schedule explicitly so rest days
+    // count as auto-ticked and spurious key suffixes (`_firstAt` etc.)
+    // can't leak into the per-day tally.
+    const challenges = (tplId === 'kids_classic') ? KIDS_CHALLENGES : CHALLENGES;
+    for (let day = 1; day <= maxDay; day++) {
+      let ticks = 0;
+      for (const ch of challenges) {
+        if (ch.schedule[day - 1] === null) ticks++;
+        else if (completions[`d${day}_${ch.id}`]) ticks++;
+      }
+      const pts = (ticks >= 4) ? 5 : ticks;
+      if (pts > 0) {
+        const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+        result[dateStr] = (result[dateStr] || 0) + pts;
+      }
+    }
     return result;
   }
   // Cache compiled timelines per (userId) for the session. Skip the
