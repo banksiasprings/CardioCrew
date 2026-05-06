@@ -2706,10 +2706,11 @@
     const completions = memberData.completions || {};
     const ctype = campData?.campaignType || 'classic';
     if (ctype === 'pb-maintenance') {
-      // PB Maintenance: each daily Beast win + each Most Improved win = 1 pt.
-      // Consistency points only fire when a week is settled — for backfill
-      // we only count what's safely banked: per-day score field written by
-      // the midnight judgment.
+      // PB Maintenance: per-day score field written by midnight judgment
+      // (Beast + Most Improved). Consistency settlement requires walking
+      // the schedule and check every day's submission status — too much
+      // for a stateless backfill, and live mirror takes over once the
+      // user submits anything new. Approximation OK.
       let pts = 0;
       Object.keys(completions).forEach(k => {
         const m = k.match(/^d(\d+)_score$/);
@@ -2717,16 +2718,27 @@
       });
       return pts;
     }
-    // Classic / template / kids — count truthy completions across the
-    // map (each ticked box = 1 point; mission completion = day's pts).
-    let pts = 0;
+    // Classic / kids classic — group ticks per day, apply the 5-pt
+    // perfect-day bonus when ≥4 exercises ticked. Slight over-count
+    // possible (catch-up perfect days that should give 4 pts instead
+    // of 5) but live mirror fixes itself on next user action.
+    const dayCounts = {};
     Object.keys(completions).forEach(k => {
-      const v = completions[k];
-      if (k.endsWith('_value')) return;            // PB value (PB-only key)
-      if (k.endsWith('_at')) return;                // PB timestamp
-      if (k.endsWith('_status')) return;            // PB status
-      if (k.endsWith('_score')) return;             // PB judged score
-      if (v) pts += 1;                              // boolean / truthy → 1 pt
+      // Skip PB-only suffixes
+      if (k.endsWith('_value') || k.endsWith('_at') || k.endsWith('_status') || k.endsWith('_score')) return;
+      // Skip mission completion entries (templates) — handled separately below
+      if (k.endsWith('_mission')) return;
+      if (!completions[k]) return;
+      const m = k.match(/^d(\d+)_/);
+      if (!m) return;
+      dayCounts[m[1]] = (dayCounts[m[1]] || 0) + 1;
+    });
+    let pts = 0;
+    Object.values(dayCounts).forEach(c => { pts += (c >= 4) ? 5 : c; });
+    // Template campaigns store one mission per day. Without the template
+    // metadata at hand we assume each mission = 5 pts (typical value).
+    Object.keys(completions).forEach(k => {
+      if (k.endsWith('_mission') && completions[k]) pts += 5;
     });
     return pts;
   }
@@ -2734,9 +2746,12 @@
   // user is a member of and snapshot their points. Idempotent: skips
   // entirely if `state.myUser.xpBackfilledAt` is already set. Doesn't
   // touch state — runs in the background safely.
+  // Bump this when the scoring algorithm in _computeMemberPoints changes,
+  // so existing users with stale backfill data get re-snapshotted.
+  const XP_BACKFILL_VERSION = 2;
   async function backfillXPHistory() {
     if (!state.userId || !state.myUser) return;
-    if (state.myUser.xpBackfilledAt) return;
+    if ((state.myUser.xpBackfillVersion || 0) >= XP_BACKFILL_VERSION) return;
     try {
       const campSnaps = await getDocs(collection(db, 'campaigns'));
       const xpHistory = {};
@@ -2758,6 +2773,7 @@
       }
       await setDoc(doc(db, 'users', state.userId), {
         xpHistory,
+        xpBackfillVersion: XP_BACKFILL_VERSION,
         xpBackfilledAt: new Date().toISOString(),
       }, { merge: true });
     } catch (e) {
