@@ -1940,7 +1940,7 @@
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
-            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#A78BFA;display:inline-block"></span>Pilates 🧘</span>
+            <span data-pilates-legend style="display:none;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#A78BFA;display:inline-block"></span>Pilates 🧘</span>
           </div>
           <div class="hist-list" id="today-history-list"></div>
           <div style="height:24px"></div>
@@ -2939,11 +2939,14 @@
     if (!memberData) return 0;
     const completions = memberData.completions || {};
     const ctype = campData?.campaignType || 'classic';
-    // Pilates daily bonus (+1 per day) — applies to all campaign types.
+    // Pilates daily bonus (+1 per day) — only for campaigns whose name
+    // contains "PB" or "Maintenance" (case-insensitive).
     let pilatesPts = 0;
-    Object.keys(completions).forEach(k => {
-      if (/^d\d+_pilates$/.test(k) && completions[k]) pilatesPts += 1;
-    });
+    if (isPilatesEligibleCampaign(campData)) {
+      Object.keys(completions).forEach(k => {
+        if (/^d\d+_pilates$/.test(k) && completions[k]) pilatesPts += 1;
+      });
+    }
     if (ctype === 'pb-maintenance') {
       // PB Maintenance: per-day score field written by midnight judgment
       // (Beast + Most Improved). Consistency settlement requires walking
@@ -3003,7 +3006,7 @@
   // touch state — runs in the background safely.
   // Bump this when the scoring algorithm in _computeMemberPoints changes,
   // so existing users with stale backfill data get re-snapshotted.
-  const XP_BACKFILL_VERSION = 4;
+  const XP_BACKFILL_VERSION = 5;
   async function backfillXPHistory() {
     if (!state.userId || !state.myUser) return;
     if ((state.myUser.xpBackfillVersion || 0) >= XP_BACKFILL_VERSION) return;
@@ -3128,7 +3131,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v33';
+  const APP_VERSION = 'v34';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -3263,11 +3266,20 @@
 
   // ─── Pilates daily bonus (+1/day for posting Pilates video in the group chat) ──
   // Stored under completions[`d{day}_pilates`] (boolean true / serverTimestamp / falsy).
-  // Permanent feature across all campaign types — independent of the perfect-day bonus.
+  // Scoped to campaigns whose NAME contains "PB" or "Maintenance" (case-insensitive)
+  // — independent of the perfect-day bonus, hidden in all other campaigns.
+  function isPilatesEligibleCampaign(campData) {
+    const name = campData?.name || '';
+    return /(pb|maintenance)/i.test(name);
+  }
+  function isPilatesEligibleCurrent() {
+    return isPilatesEligibleCampaign(state.campaignData);
+  }
   function isPilatesDone(userId, day) {
     return !!(state.members[userId]?.completions?.[`d${day}_pilates`]);
   }
   function getPilatesPoints(userId, day) {
+    if (!isPilatesEligibleCurrent()) return 0;
     return isPilatesDone(userId, day) ? 1 : 0;
   }
 
@@ -4294,10 +4306,13 @@
         const sc = m.completions[k];
         total += (sc?.beast || 0) + (sc?.mostImproved || 0);
       });
-      // Pilates daily bonus (+1/day) — permanent feature across campaigns.
-      Object.keys(m.completions).forEach(k => {
-        if (/^d\d+_pilates$/.test(k) && m.completions[k]) total += 1;
-      });
+      // Pilates daily bonus (+1/day) — only for campaigns whose name
+      // contains "PB" or "Maintenance".
+      if (isPilatesEligibleCurrent()) {
+        Object.keys(m.completions).forEach(k => {
+          if (/^d\d+_pilates$/.test(k) && m.completions[k]) total += 1;
+        });
+      }
     }
     return total;
   }
@@ -4871,14 +4886,16 @@
         state.pbJudgmentRan = true;
         setTimeout(() => { runPBDailyJudgment().catch(()=>{}); }, 800);
       }
-      // Pilates daily bonus is permanent across all campaign types — render the
-      // card into challenges-list (visible in pb-mode; not hidden by CSS).
+      // Pilates daily bonus — only for campaigns whose name contains "PB" or
+      // "Maintenance" (renderPilatesCard self-checks eligibility).
       const pbList = document.getElementById('challenges-list');
-      if (pbList) {
+      if (pbList && isPilatesEligibleCurrent()) {
         pbList.innerHTML = '';
         const pbDay = viewDay !== null ? viewDay : currentDay;
         const pbLocked = isLockedDay(pbDay, currentDay) || pbDay > currentDay;
         renderPilatesCard(pbList, pbDay, pbLocked);
+      } else if (pbList) {
+        pbList.innerHTML = '';
       }
       return; // PB mode renders its own full UI — don't fall through to classic
     }
@@ -4953,6 +4970,7 @@
       const missionDone = isMissionComplete(state.userId, day);
       const dayPts = td ? td.pts : 0;
       const pilatesPt = getPilatesPoints(state.userId, day);
+      const pilatesAvailable = !isLocked && isPilatesEligibleCurrent();
 
       // Score dots: 1 dot = mission complete
       for (let i = 0; i < 4; i++) { const d=document.getElementById(`dot-${i}`); d.classList.toggle('done', i === 0 && missionDone); }
@@ -4960,7 +4978,7 @@
       bonusDot.style.opacity = pilatesPt ? '1' : '0';
       bonusDot.style.boxShadow = pilatesPt ? '0 0 8px rgba(167,139,250,0.7)' : 'none';
       const tplScore = (missionDone ? dayPts : 0) + pilatesPt;
-      const tplMax = dayPts + (isLocked ? 0 : 1);
+      const tplMax = dayPts + (pilatesAvailable ? 1 : 0);
       document.getElementById('daily-pts').innerHTML = `${tplScore} <span>/ ${tplMax} pts</span>`;
 
       const isPerfect = missionDone;
@@ -4993,7 +5011,7 @@
       const pts   = Object.values(comps).filter(Boolean).length;
       const bonusEarned = pts >= 4 && wasDayCompletedOnTime(state.userId, day);
       const pilatesPt = getPilatesPoints(state.userId, day);
-      const pilatesAvailable = !isLocked;
+      const pilatesAvailable = !isLocked && isPilatesEligibleCurrent();
       const maxPts = (bonusEarned ? 5 : 4) + (pilatesAvailable ? 1 : 0);
       const score  = (bonusEarned ? 5 : pts) + pilatesPt;
       document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
@@ -5040,9 +5058,11 @@
   }
 
   // Append the Pilates Video bonus card to a list container. Same tap-to-toggle
-  // pattern as exercise cards; locked days are non-interactive.
+  // pattern as exercise cards; locked days are non-interactive. No-op when the
+  // current campaign isn't eligible (name doesn't contain "PB" or "Maintenance").
   function renderPilatesCard(list, day, isLocked) {
     if (!list) return;
+    if (!isPilatesEligibleCurrent()) return;
     const done = isPilatesDone(state.userId, day);
     const card = document.createElement('div');
     card.className = `challenge-card pilates-card${done ? ' completed' : ''}${isLocked ? ' locked' : ''}`;
@@ -5650,8 +5670,11 @@
     const maxDay = ctype === 'pb-maintenance' ? Math.min(28, currentDay) : Math.min(30, currentDay);
 
     // Pilates daily bonus (+1/day) — credited per campaign type below so it
-    // lands on the same calendar day as the rest of that day's points.
+    // lands on the same calendar day as the rest of that day's points. Only
+    // for campaigns whose name contains "PB" or "Maintenance".
+    const pilatesEligible = isPilatesEligibleCampaign(campData);
     const addPilatesToTimeline = () => {
+      if (!pilatesEligible) return;
       Object.keys(completions).forEach(k => {
         const m = k.match(/^d(\d+)_pilates$/);
         if (!m || !completions[k]) return;
@@ -5831,6 +5854,8 @@
       todaySection.style.display = (getCampaignType() === 'pb-maintenance') ? 'none' : '';
     }
     if (getCampaignType() === 'pb-maintenance') return; // skip render for PB
+    const pilatesLegend = document.querySelector('[data-pilates-legend]');
+    if (pilatesLegend) pilatesLegend.style.display = isPilatesEligibleCurrent() ? 'flex' : 'none';
     const start=new Date(state.campaignData.startDate+'T00:00:00');
     const html = [];
     for(let d=1;d<=30;d++){
@@ -5838,8 +5863,11 @@
       const isFuture=d>day;
       const comps=isFuture?{}:getCompletionsForDay(state.userId,d);
       const pts=isFuture?'':getDayScore(state.userId,d,day);
-      const pilatesDone = !isFuture && isPilatesDone(state.userId, d);
-      const pilatesDot = `<div class="hist-dot${pilatesDone?' done':''}" style="--dot-color:#A78BFA;${pilatesDone?'background:rgba(167,139,250,0.85)':'opacity:0.35'}" title="Pilates Video">🧘</div>`;
+      const pilatesEligible = isPilatesEligibleCurrent();
+      const pilatesDone = pilatesEligible && !isFuture && isPilatesDone(state.userId, d);
+      const pilatesDot = pilatesEligible
+        ? `<div class="hist-dot${pilatesDone?' done':''}" style="--dot-color:#A78BFA;${pilatesDone?'background:rgba(167,139,250,0.85)':'opacity:0.35'}" title="Pilates Video">🧘</div>`
+        : '';
       html.push(`<div class="hist-row${isFuture?' future':''} fade-in">
         <div><div class="hist-day-num">D${d}</div><div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
         <div class="hist-checks">
@@ -9559,11 +9587,12 @@
     document.getElementById('btn-admin-close').addEventListener('click', closeAdminPanel);
 
     // ── Campaign helpers ──
-    function calcMemberPoints(memberData, startDate) {
+    function calcMemberPoints(memberData, startDate, campaignName) {
       if (!startDate || !memberData?.completions) return 0;
       const dayNum = Math.max(1, Math.min(
         Math.floor((new Date() - new Date(startDate + 'T00:00:00')) / 86400000) + 1, 30
       ));
+      const pilatesEligible = /(pb|maintenance)/i.test(campaignName || '');
       let total = 0;
       for (let d = 1; d <= dayNum; d++) {
         let dayPts = 0;
@@ -9572,7 +9601,7 @@
         });
         if (d === dayNum && dayPts >= 4) total += 5;
         else total += dayPts;
-        if (memberData.completions[`d${d}_pilates`]) total += 1;
+        if (pilatesEligible && memberData.completions[`d${d}_pilates`]) total += 1;
       }
       return total;
     }
@@ -10062,6 +10091,7 @@
       try {
         const campSnap = await getDoc(doc(db, 'campaigns', campId));
         const startDate = campSnap.exists() ? campSnap.data().startDate : null;
+        const campaignName = campSnap.exists() ? (campSnap.data().name || '') : '';
         const clansSnap = await getDocs(collection(db, 'campaigns', campId, 'clans'));
         const clansMap = {};
         clansSnap.docs.forEach(d => { clansMap[d.id] = d.data(); });
@@ -10072,9 +10102,9 @@
           return;
         }
         const members = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => calcMemberPoints(b, startDate) - calcMemberPoints(a, startDate));
+          .sort((a, b) => calcMemberPoints(b, startDate, campaignName) - calcMemberPoints(a, startDate, campaignName));
         members.forEach(m => {
-          const pts = calcMemberPoints(m, startDate);
+          const pts = calcMemberPoints(m, startDate, campaignName);
           const clanName = m.clanId && clansMap[m.clanId] ? clansMap[m.clanId].name : 'No clan';
           const row = document.createElement('div');
           row.className = 'admin-member-row-v2';
