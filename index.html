@@ -388,6 +388,16 @@
     .card-tick svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
     .challenge-card.completed .card-tick svg, .challenge-card.rest-day .card-tick svg { opacity: 1; }
     .challenge-card.rest-day .card-tick { background: var(--text-3); border-color: var(--text-3); }
+    /* Pilates bonus card — daily +1 for posting Pilates video in the group chat */
+    .pilates-card { background: linear-gradient(135deg, rgba(167,139,250,0.10), rgba(167,139,250,0.04)); border: 2px dashed rgba(167,139,250,0.55); }
+    .pilates-card.completed { border-style: solid; border-color: #A78BFA; background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(167,139,250,0.08)); }
+    .pilates-card.locked { opacity: 0.55; cursor: default; }
+    .pilates-card .card-icon { background: rgba(167,139,250,0.15); }
+    .pilates-card .card-name { color: #A78BFA; }
+    .pilates-card .card-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+    .pilates-card .card-bonus { font-size: 10px; font-weight: 800; color: #A78BFA; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
+    .pilates-card.completed .card-tick { background: #A78BFA; border-color: #A78BFA; }
+    .pilates-card.completed .card-tick svg { opacity: 1; }
     .completed-banner { display: none; margin: 0 16px 12px; background: linear-gradient(135deg,#1a3a1a,#0f2d0f); border: 1px solid #3FB950; border-radius: var(--radius); padding: 14px; text-align: center; }
     .completed-banner.show { display: block; animation: slideDown 0.4s ease; }
     @keyframes slideDown { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -1930,6 +1940,7 @@
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-pushups);display:inline-block"></span>Push-ups</span>
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-plank);display:inline-block"></span>Plank</span>
             <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:var(--c-crunches);display:inline-block"></span>Crunches</span>
+            <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#A78BFA;display:inline-block"></span>Pilates 🧘</span>
           </div>
           <div class="hist-list" id="today-history-list"></div>
           <div style="height:24px"></div>
@@ -2928,6 +2939,11 @@
     if (!memberData) return 0;
     const completions = memberData.completions || {};
     const ctype = campData?.campaignType || 'classic';
+    // Pilates daily bonus (+1 per day) — applies to all campaign types.
+    let pilatesPts = 0;
+    Object.keys(completions).forEach(k => {
+      if (/^d\d+_pilates$/.test(k) && completions[k]) pilatesPts += 1;
+    });
     if (ctype === 'pb-maintenance') {
       // PB Maintenance: per-day score field written by midnight judgment
       // (Beast + Most Improved). Consistency settlement requires walking
@@ -2939,7 +2955,7 @@
         const m = k.match(/^d(\d+)_score$/);
         if (m && typeof completions[k] === 'number') pts += completions[k];
       });
-      return pts;
+      return pts + pilatesPts;
     }
     // Template campaigns (non-kids) — one mission per day, fixed pts/day.
     // Without the template metadata at hand we approximate each mission = 5 pts.
@@ -2949,7 +2965,7 @@
       Object.keys(completions).forEach(k => {
         if (k.endsWith('_mission') && completions[k]) pts += 5;
       });
-      return pts;
+      return pts + pilatesPts;
     }
     // Classic / kids_classic — walk the schedule explicitly so rest days
     // count as auto-ticked (matches getCompletionsForDay's live behaviour),
@@ -2979,7 +2995,7 @@
       }
       pts += (ticks >= 4) ? 5 : ticks;
     }
-    return pts;
+    return pts + pilatesPts;
   }
   // Backfill — first time post-v18 deploy, walk every campaign this
   // user is a member of and snapshot their points. Idempotent: skips
@@ -2987,7 +3003,7 @@
   // touch state — runs in the background safely.
   // Bump this when the scoring algorithm in _computeMemberPoints changes,
   // so existing users with stale backfill data get re-snapshotted.
-  const XP_BACKFILL_VERSION = 3;
+  const XP_BACKFILL_VERSION = 4;
   async function backfillXPHistory() {
     if (!state.userId || !state.myUser) return;
     if ((state.myUser.xpBackfillVersion || 0) >= XP_BACKFILL_VERSION) return;
@@ -3112,7 +3128,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v32';
+  const APP_VERSION = 'v33';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -3245,6 +3261,16 @@
   let selectedAvatar = AVATARS[0];
 
 
+  // ─── Pilates daily bonus (+1/day for posting Pilates video in the group chat) ──
+  // Stored under completions[`d{day}_pilates`] (boolean true / serverTimestamp / falsy).
+  // Permanent feature across all campaign types — independent of the perfect-day bonus.
+  function isPilatesDone(userId, day) {
+    return !!(state.members[userId]?.completions?.[`d${day}_pilates`]);
+  }
+  function getPilatesPoints(userId, day) {
+    return isPilatesDone(userId, day) ? 1 : 0;
+  }
+
   // ─── Scoring ──────────────────────────────────────────
   function getCompletionsForDay(userId, day) {
     const m = state.members[userId]; if(!m) return {};
@@ -3363,12 +3389,13 @@
   // Catch-up completions (timestamped on a later day) are capped at 4.
   // Legacy boolean completions (no timestamp) get the benefit of the doubt.
   function getDayScore(userId, day, currentDay) {
+    const pilates = getPilatesPoints(userId, day);
     if (isTemplateCampaign()) {
-      return getDayPoints(userId, day);
+      return getDayPoints(userId, day) + pilates;
     }
     const pts = getDayPoints(userId, day);
-    if (pts >= 4 && wasDayCompletedOnTime(userId, day)) return 5;
-    return pts;
+    const base = (pts >= 4 && wasDayCompletedOnTime(userId, day)) ? 5 : pts;
+    return base + pilates;
   }
 
   function getTotalPoints(userId) {
@@ -4267,6 +4294,10 @@
         const sc = m.completions[k];
         total += (sc?.beast || 0) + (sc?.mostImproved || 0);
       });
+      // Pilates daily bonus (+1/day) — permanent feature across campaigns.
+      Object.keys(m.completions).forEach(k => {
+        if (/^d\d+_pilates$/.test(k) && m.completions[k]) total += 1;
+      });
     }
     return total;
   }
@@ -4564,6 +4595,22 @@
     _writeXPMirror(); // career XP mirror update
   }
 
+  async function togglePilates(day) {
+    // Match per-day editability — same catch-up window rules as exercise toggles.
+    const startStr = state.campaignData?.startDate;
+    const currentDay = (getCampaignType() === 'pb-maintenance')
+      ? getPBCurrentDay(startStr)
+      : getDayNumber(startStr);
+    if (!isEditableDay(day, currentDay)) { toast('🔒 This day is locked', 2000); return; }
+    const m = state.members[state.userId]; if (!m) return;
+    const key = `d${day}_pilates`;
+    const current = !!(m.completions?.[key]);
+    if (!current) announceTaskComplete('Pilates Video');
+    const newVal = current ? false : serverTimestamp();
+    await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId), { [`completions.${key}`]: newVal });
+    _writeXPMirror();
+  }
+
   async function updateAvatar(newAvatar) {
     await updateDoc(doc(db,'campaigns',state.campaignId,'members',state.userId),{ avatar:newAvatar });
     toast('Avatar updated! ' + newAvatar);
@@ -4824,6 +4871,15 @@
         state.pbJudgmentRan = true;
         setTimeout(() => { runPBDailyJudgment().catch(()=>{}); }, 800);
       }
+      // Pilates daily bonus is permanent across all campaign types — render the
+      // card into challenges-list (visible in pb-mode; not hidden by CSS).
+      const pbList = document.getElementById('challenges-list');
+      if (pbList) {
+        pbList.innerHTML = '';
+        const pbDay = viewDay !== null ? viewDay : currentDay;
+        const pbLocked = isLockedDay(pbDay, currentDay) || pbDay > currentDay;
+        renderPilatesCard(pbList, pbDay, pbLocked);
+      }
       return; // PB mode renders its own full UI — don't fall through to classic
     }
 
@@ -4896,12 +4952,16 @@
       const td  = getTemplateDay(day - 1); // { task, pts }
       const missionDone = isMissionComplete(state.userId, day);
       const dayPts = td ? td.pts : 0;
+      const pilatesPt = getPilatesPoints(state.userId, day);
 
       // Score dots: 1 dot = mission complete
       for (let i = 0; i < 4; i++) { const d=document.getElementById(`dot-${i}`); d.classList.toggle('done', i === 0 && missionDone); }
       const bonusDot = document.getElementById('dot-bonus');
-      bonusDot.style.opacity = '0'; bonusDot.style.boxShadow = 'none';
-      document.getElementById('daily-pts').innerHTML = `${missionDone ? dayPts : 0} <span>/ ${dayPts} pts</span>`;
+      bonusDot.style.opacity = pilatesPt ? '1' : '0';
+      bonusDot.style.boxShadow = pilatesPt ? '0 0 8px rgba(167,139,250,0.7)' : 'none';
+      const tplScore = (missionDone ? dayPts : 0) + pilatesPt;
+      const tplMax = dayPts + (isLocked ? 0 : 1);
+      document.getElementById('daily-pts').innerHTML = `${tplScore} <span>/ ${tplMax} pts</span>`;
 
       const isPerfect = missionDone;
       const banner = document.getElementById('completed-banner');
@@ -4926,13 +4986,16 @@
         if (!isLocked) card.addEventListener('click', async () => { await toggleMission(day); });
         list.appendChild(card);
       }
+      renderPilatesCard(list, day, isLocked);
     } else {
       // ── Classic campaign rendering ──
       const comps = getCompletionsForDay(state.userId, day);
       const pts   = Object.values(comps).filter(Boolean).length;
       const bonusEarned = pts >= 4 && wasDayCompletedOnTime(state.userId, day);
-      const maxPts = bonusEarned ? 5 : 4;
-      const score  = bonusEarned ? 5 : pts;
+      const pilatesPt = getPilatesPoints(state.userId, day);
+      const pilatesAvailable = !isLocked;
+      const maxPts = (bonusEarned ? 5 : 4) + (pilatesAvailable ? 1 : 0);
+      const score  = (bonusEarned ? 5 : pts) + pilatesPt;
       document.getElementById('daily-pts').innerHTML = `${score} <span>/ ${maxPts} pts</span>`;
       for (let i = 0; i < 4; i++) document.getElementById(`dot-${i}`).classList.toggle('done', i < pts);
       const bonusDot = document.getElementById('dot-bonus');
@@ -4966,6 +5029,7 @@
         }
         list.appendChild(card);
       });
+      renderPilatesCard(list, day, isLocked);
     }
 
     const rem = 30 - currentDay;
@@ -4973,6 +5037,25 @@
 
     // Update countdown default to match the displayed day's plank target (if timer not running)
     if (window._cdInit) window._cdInit(day);
+  }
+
+  // Append the Pilates Video bonus card to a list container. Same tap-to-toggle
+  // pattern as exercise cards; locked days are non-interactive.
+  function renderPilatesCard(list, day, isLocked) {
+    if (!list) return;
+    const done = isPilatesDone(state.userId, day);
+    const card = document.createElement('div');
+    card.className = `challenge-card pilates-card${done ? ' completed' : ''}${isLocked ? ' locked' : ''}`;
+    card.innerHTML = `
+      <div class="card-icon">🧘</div>
+      <div class="card-body">
+        <div class="card-name">Pilates Video</div>
+        <div class="card-sub">${isLocked ? '🔒 LOCKED' : 'Post your video in the group chat!'}</div>
+        <div class="card-bonus">+1 BONUS PT</div>
+      </div>
+      <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+    if (!isLocked) card.addEventListener('click', () => togglePilates(day));
+    list.appendChild(card);
   }
 
   let lbView = 'individual'; // 'individual' | 'clans' | 'alltime'
@@ -5566,6 +5649,19 @@
     const currentDay = Math.max(1, Math.floor((todayMs - startMs) / 86400000) + 1);
     const maxDay = ctype === 'pb-maintenance' ? Math.min(28, currentDay) : Math.min(30, currentDay);
 
+    // Pilates daily bonus (+1/day) — credited per campaign type below so it
+    // lands on the same calendar day as the rest of that day's points.
+    const addPilatesToTimeline = () => {
+      Object.keys(completions).forEach(k => {
+        const m = k.match(/^d(\d+)_pilates$/);
+        if (!m || !completions[k]) return;
+        const day = +m[1];
+        if (day < 1 || day > maxDay) return;
+        const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
+        result[dateStr] = (result[dateStr] || 0) + 1;
+      });
+    };
+
     if (ctype === 'pb-maintenance') {
       Object.keys(completions).forEach(k => {
         const m = k.match(/^d(\d+)_score$/);
@@ -5575,6 +5671,7 @@
         const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
         result[dateStr] = (result[dateStr] || 0) + completions[k];
       });
+      addPilatesToTimeline();
       return result;
     }
 
@@ -5590,6 +5687,7 @@
         const dateStr = _msToDateStr(startMs + (day-1) * 86400000);
         result[dateStr] = (result[dateStr] || 0) + 5;
       });
+      addPilatesToTimeline();
       return result;
     }
 
@@ -5609,6 +5707,7 @@
         result[dateStr] = (result[dateStr] || 0) + pts;
       }
     }
+    addPilatesToTimeline();
     return result;
   }
   // Cache compiled timelines per (userId) for the session. Skip the
@@ -5739,6 +5838,8 @@
       const isFuture=d>day;
       const comps=isFuture?{}:getCompletionsForDay(state.userId,d);
       const pts=isFuture?'':getDayScore(state.userId,d,day);
+      const pilatesDone = !isFuture && isPilatesDone(state.userId, d);
+      const pilatesDot = `<div class="hist-dot${pilatesDone?' done':''}" style="--dot-color:#A78BFA;${pilatesDone?'background:rgba(167,139,250,0.85)':'opacity:0.35'}" title="Pilates Video">🧘</div>`;
       html.push(`<div class="hist-row${isFuture?' future':''} fade-in">
         <div><div class="hist-day-num">D${d}</div><div class="hist-date">${date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
         <div class="hist-checks">
@@ -5746,6 +5847,7 @@
             const isRest=ch.schedule[d-1]===null, done=isRest||comps[ch.id];
             return `<div class="hist-dot${done&&!isFuture?' done':''}${isRest&&!isFuture?' rest':''}" style="--dot-color:${ch.color}" title="${ch.name}">${ch.img?`<img src="${ch.img}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;opacity:${done&&!isFuture?1:0.35}" alt="${ch.name}">`:`${ch.emoji}`}</div>`;
           }).join('')}
+          ${pilatesDot}
         </div>
         <div class="hist-pts">${pts}</div></div>`);
     }
@@ -9470,6 +9572,7 @@
         });
         if (d === dayNum && dayPts >= 4) total += 5;
         else total += dayPts;
+        if (memberData.completions[`d${d}_pilates`]) total += 1;
       }
       return total;
     }
