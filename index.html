@@ -388,7 +388,7 @@
     .card-tick svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.2s; }
     .challenge-card.completed .card-tick svg, .challenge-card.rest-day .card-tick svg { opacity: 1; }
     .challenge-card.rest-day .card-tick { background: var(--text-3); border-color: var(--text-3); }
-    /* Pilates bonus card — daily +1 for posting Pilates video in the group chat */
+    /* Pilates bonus card — daily +1 for completing Pilates exercise */
     .pilates-card { background: linear-gradient(135deg, rgba(167,139,250,0.10), rgba(167,139,250,0.04)); border: 2px dashed rgba(167,139,250,0.55); }
     .pilates-card.completed { border-style: solid; border-color: #A78BFA; background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(167,139,250,0.08)); }
     .pilates-card.locked { opacity: 0.55; cursor: default; }
@@ -3131,7 +3131,7 @@
     atwood:   'The Atwoods emerged from the English tradition of landed families whose strength lay in the soil and the communities they served. Their lion crest speaks to courage and quiet authority, while their motto \'Strong in adversity\' captures a spirit forged through generations of hardship, harvest, and resilience. A family bound not by castle walls but by the enduring loyalty of those who stood beside them.',
     deane:    'Clan Deane is a sept of the ancient Clan Davidson, whose origins stretch deep into the Scottish lowlands. The Davidsons were fierce fighters whose alliances with the Mackintoshes shaped the political landscape of medieval Scotland. As a sept family, the Deanes carry this warrior heritage alongside a tradition of wisdom and sincerity — knowing that true strength lies as much in honest counsel as in the sword.',
   };
-  const APP_VERSION = 'v34';
+  const APP_VERSION = 'v35';
   const CLAN_CRESTS = ['🏰','⚔️','🛡️','🦁','🐉','🦅','🌟','👑','🔱','⚡','🗡️','🐺'];
   const CLAN_TROPHY_DEFS = [
     { id:'clan_founded',  icon:'🏰', name:'Clan Founded',   desc:'Create a clan' },
@@ -3264,7 +3264,7 @@
   let selectedAvatar = AVATARS[0];
 
 
-  // ─── Pilates daily bonus (+1/day for posting Pilates video in the group chat) ──
+  // ─── Pilates daily bonus (+1/day for Pilates exercise) ────────────────────────
   // Stored under completions[`d{day}_pilates`] (boolean true / serverTimestamp / falsy).
   // Scoped to campaigns whose NAME contains "PB" or "Maintenance" (case-insensitive)
   // — independent of the perfect-day bonus, hidden in all other campaigns.
@@ -5070,7 +5070,7 @@
       <div class="card-icon">🧘</div>
       <div class="card-body">
         <div class="card-name">Pilates Video</div>
-        <div class="card-sub">${isLocked ? '🔒 LOCKED' : 'Post your video in the group chat!'}</div>
+
         <div class="card-bonus">+1 BONUS PT</div>
       </div>
       <div class="card-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
